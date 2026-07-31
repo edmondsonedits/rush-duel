@@ -26,19 +26,14 @@ button{cursor:pointer}
 .hit-button,.hit-select,.hit-range{position:absolute;z-index:4;background:transparent;border:none;color:transparent;appearance:none;-webkit-appearance:none;outline:none;touch-action:none;user-select:none;-webkit-user-select:none}
 .hit-button:active{background:rgba(255,255,255,.06)}
 #titleScreen .press-hit{left:14%;top:82.8%;width:72%;height:10.4%;border-radius:18px}
-.title-rule-update{position:absolute;z-index:3;top:64.6%;width:35.8%;height:15.5%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4% 3%;border-radius:8px;background:linear-gradient(180deg,rgba(17,14,38,.99),rgba(5,8,21,.99));text-align:center;pointer-events:none;box-shadow:inset 0 0 16px rgba(255,255,255,.035)}
-.title-rule-update.attack{left:10.3%;border:2px solid #b967e8;color:#e8b8ff}.title-rule-update.win{left:53.9%;border:2px solid #f2cb4e;color:#fff0a0}.title-rule-update b{display:block;margin-bottom:8%;font-size:clamp(9px,2.9cqw,17px);letter-spacing:.12em}.title-rule-update span{color:#eef4ff;font-size:clamp(6.5px,1.8cqw,11px);font-weight:800;line-height:1.4}
+.title-rule-update{position:absolute;z-index:3;top:68.8%;width:35.2%;height:11.2%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:1.2% 2.7% 1%;background:linear-gradient(180deg,rgba(7,8,25,.98),rgba(7,8,23,.99));text-align:center;pointer-events:none}
+.title-rule-update.attack{left:10.6%;color:#e6a3ff;box-shadow:inset 0 10px 18px rgba(201,79,255,.035)}.title-rule-update.win{left:54.1%;color:#ffe36d;box-shadow:inset 0 10px 18px rgba(255,214,68,.035)}.title-rule-update b{display:block;width:68%;margin-bottom:4.8%;padding-bottom:3.8%;border-bottom:1px dashed currentColor;font-size:clamp(9px,2.75cqw,16px);letter-spacing:.12em;text-shadow:0 0 8px currentColor}.title-rule-update span{color:#eef4ff;font-size:clamp(6.5px,1.72cqw,10.5px);font-weight:800;line-height:1.38}
 #optionsScreen .difficulty-hit{left:14.3%;top:26.3%;width:71.5%;height:6.8%;font-size:24px;opacity:.01}
-#optionsScreen .opacity-hit{left:15%;top:51.5%;width:70%;height:3.7%;opacity:1;accent-color:#ff58b7}
-#optionsScreen .opacity-hit::-webkit-slider-runnable-track{height:7px;border:1px solid #684b83;border-radius:999px;background:#101729}
-#optionsScreen .opacity-hit::-webkit-slider-thumb{margin-top:-6px;width:19px;height:19px;border:2px solid #ffd3ed;border-radius:50%;background:#ff52b5;appearance:none;-webkit-appearance:none;box-shadow:0 0 10px #ff4eb1}
-#optionsScreen .sound-hit{left:10%;top:54.8%;width:80%;height:7%;border-radius:18px}
 #optionsScreen .back-hit{left:10.2%;top:87.2%;width:33.5%;height:6.8%;border-radius:14px}
 #optionsScreen .play-hit{left:45.4%;top:87.2%;width:43.2%;height:6.8%;border-radius:14px}
 .difficulty-visual{position:absolute;z-index:3;left:14.3%;top:26.6%;width:71.5%;height:6.2%;display:flex;align-items:center;padding:0 4%;border:1px solid #4aa9ca;border-radius:5px;background:#071326;color:#f5f8ff;font-size:clamp(9px,2.8cqw,16px);font-weight:900;letter-spacing:.03em;pointer-events:none}
 .difficulty-description{position:absolute;z-index:3;left:14.4%;top:33.8%;width:71.5%;min-height:8.5%;padding:1.2% 2.5%;background:#071225;color:#c6d4ec;font-size:clamp(6.5px,1.65cqw,10px);line-height:1.42;pointer-events:none}
-.opacity-caption{position:absolute;z-index:3;left:14.2%;top:47.6%;width:71.8%;height:8%;padding:1.2% 2.7%;display:flex;align-items:flex-start;justify-content:space-between;background:#100b21;color:#dce6f8;font-size:clamp(6.5px,1.65cqw,10px);pointer-events:none}.opacity-caption b{color:#ff82ca}
-.option-state{position:absolute;z-index:5;right:4%;top:3.2%;padding:5px 8px;border:1px solid #ff69ba;border-radius:999px;background:rgba(10,4,18,.9);color:#ffb4dd;font-size:8px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
+.options-clean-panel{position:absolute;z-index:3;left:9.5%;top:43.2%;width:81%;height:39.5%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4%;padding:5% 8%;overflow:hidden;border:2px solid #31547b;border-radius:12px;background:linear-gradient(180deg,rgba(6,17,37,.995),rgba(7,7,23,.995));color:#d8e7fa;text-align:center;box-shadow:0 0 0 3px rgba(2,6,16,.92),inset 0 0 28px rgba(75,221,255,.07),0 0 20px rgba(62,207,255,.08);pointer-events:none}.options-clean-panel::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(74,225,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(74,225,255,.035) 1px,transparent 1px);background-size:18px 18px}.options-clean-panel>*{position:relative}.options-clean-panel strong{color:#6eeeff;font-size:clamp(10px,3cqw,17px);letter-spacing:.14em;text-shadow:0 0 10px rgba(88,232,255,.45)}.options-clean-panel span{font-size:clamp(7px,1.9cqw,11px);font-weight:800;line-height:1.5}.options-clean-panel em{color:#ffe36d;font-size:clamp(6.5px,1.65cqw,10px);font-style:normal;letter-spacing:.08em;text-transform:uppercase}
 #gameScreen{padding:0;background:#03050b;isolation:isolate}
 .game-art-backdrop{position:absolute;z-index:0;inset:-2%;background-size:cover;background-position:center 42%;opacity:.13;filter:blur(1.5px) saturate(.8);transform:scale(1.035);pointer-events:none}
 #gameScreen::before{content:"";position:absolute;z-index:1;inset:0;background:radial-gradient(circle at 48% 15%,rgba(68,218,255,.16),transparent 34%),radial-gradient(circle at 80% 80%,rgba(255,71,174,.14),transparent 35%),linear-gradient(180deg,rgba(2,4,11,.82),rgba(2,4,10,.96));pointer-events:none}
@@ -166,19 +161,16 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
     <div class="screen-art options-bg"></div>
     <div class="difficulty-visual" id="difficultyVisual">Easy — Cannot rush you</div>
     <div class="difficulty-description" id="difficultyDescription">Build at your own pace. Easy cannot trigger a rush drop.</div>
-    <div class="opacity-caption"><span>Opponent visibility</span><b id="opacityVisual">42%</b></div>
-    <div class="option-state" id="optionSoundState">Sound on</div>
+    <div class="options-clean-panel"><strong>CHOOSE YOUR CHALLENGE</strong><span>Select a bot difficulty above. Every level moves at a readable pace while smarter rivals make stronger placements.</span><em>Then press Play Duel</em></div>
     <select class="hit-select difficulty-hit" id="difficulty" aria-label="Bot difficulty">
       <option value="easy" selected>Easy — Cannot rush you</option>
       <option value="medium">Medium — Occasionally rushes</option>
       <option value="hard">Hard — Rushes often</option>
       <option value="impossible">Impossible — Rushes quickly</option>
     </select>
-    <input class="hit-range opacity-hit" id="opacity" type="range" min="25" max="80" value="42" aria-label="Opponent visibility">
-    <button class="hit-button sound-hit" id="optionSoundBtn" aria-label="Toggle sound"></button>
     <button class="hit-button back-hit" id="backBtn" aria-label="Back"></button>
     <button class="hit-button play-hit" id="playBtn" aria-label="Play Duel"></button>
-    <div class="offscreen"><div id="difficultyCopy"></div><span id="opacityValue">42%</span></div>
+    <div class="offscreen"><div id="difficultyCopy"></div></div>
   </div>
 </section>
 
@@ -1066,8 +1058,6 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
   function syncSoundButtons(){
     soundBtn.setAttribute('aria-label',game.sound?'Sound on':'Sound off');
     soundBtn.textContent=game.sound?'♪':'×';
-    $('optionSoundBtn').setAttribute('aria-label',game.sound?'Sound on':'Sound off');
-    $('optionSoundState').textContent=game.sound?'Sound on':'Sound off';
   }
   $('startBtn').addEventListener('click',()=>showScreen('modeScreen'));
   $('classicBtn').addEventListener('click',startClassic);
@@ -1089,10 +1079,8 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
   $('copyCodeBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(network.room);network.status(`Copied ${network.room}. Send it to your rival!`);}catch{network.status(`Room code: ${network.room}`);}});
   const toggleSound=()=>{game.sound=!game.sound;game.updateUI();syncSoundButtons();if(game.sound)game.playTone('move');};
   soundBtn.addEventListener('click',toggleSound);
-  $('optionSoundBtn').addEventListener('click',toggleSound);
   $('fullBtn').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch{}});
   $('difficulty').addEventListener('change',e=>game.setDifficulty(e.target.value));
-  $('opacity').addEventListener('input',e=>{game.opponentOpacity=Number(e.target.value)/100;$('opacityValue').textContent=e.target.value+'%';$('opacityVisual').textContent=e.target.value+'%';});
   $('saveScoreBtn').addEventListener('click',saveCurrentSoloScore);$('scoreName').addEventListener('keydown',e=>{if(e.key==='Enter')saveCurrentSoloScore();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){releaseAllInputs();if(activeScreen==='gameScreen'&&game.started&&!game.paused&&!game.winner&&!(game.mode==='online'&&network.role==='guest')){game.togglePause();if(game.mode==='online'&&network.role==='host')network.broadcast(true);}}});
 
@@ -1122,6 +1110,8 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       const controlActions=[...document.querySelectorAll('#gameScreen [data-control]')].map(el=>el.dataset.control).sort();
       check('all seven gameplay controls map uniquely',JSON.stringify(controlActions)===JSON.stringify(['ccw','cw','down','drop','left','pause','right']),'missing or duplicate touch controls');
       check('gameplay controls are visible code UI',[...document.querySelectorAll('#gameScreen [data-control]')].every(el=>el.textContent.trim().length>0)&&!!document.querySelector('#gameScreen .battle-hud'),'gameplay still depends on invisible image hitboxes');
+      check('title rules use matching artwork cards',document.querySelectorAll('.title-rule-update').length===2&&!!document.querySelector('.title-rule-update.attack')&&!!document.querySelector('.title-rule-update.win'),'title rule cards are missing');
+      check('bot options omit display and sound controls',!$('optionSoundBtn')&&!$('opacity')&&!document.querySelector('#optionsScreen [aria-label*="sound" i],#optionsScreen [aria-label*="visibility" i]'),'removed options are still present');
       check('portrait player board fills the available height',COMPACT_PLAYER_VIEW.cell*ROWS/620>=.93,'portrait board is too small');
       const survivalProbe=new RushDuel();survivalProbe.player.lines=999;survivalProbe.bot.lines=998;
       check('line totals never end a match',!survivalProbe.hasMatchEnded(),'a line target still ends matches');
