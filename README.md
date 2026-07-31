@@ -34,7 +34,7 @@ Then open `http://127.0.0.1:4173/`.
 
 ## Built-in checks
 
-Open `index.html?selftest=1` to run the browser self-tests. They cover piece rotation, collision boundaries, line clearing and scoring, garbage rows, bot planning, unique interface IDs, touch controls, and online-lobby availability.
+Open `index.html?selftest=1` to run the browser self-tests. They cover piece rotation, collision boundaries, line clearing and scoring, garbage rows, bot planning, unique interface IDs, unique touch-control mappings, and online-lobby availability.
 
 ## Project files
 
