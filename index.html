@@ -866,6 +866,13 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       message:{x:8,y:566,w:282,h:32}
     };
   }
+  function getMessagePlacement(view,mode){
+    if(mode==='classic'){
+      const w=view.compact?104:210;
+      return {x:view.railX-w/2,y:view.compact?359:318,w,h:view.compact?26:24,rail:true};
+    }
+    return {...view.message,rail:false};
+  }
   function drawBlock(x,y,color,cell,alpha=1){
     ctx.save();ctx.globalAlpha=alpha;
     ctx.fillStyle=color;ctx.fillRect(x+1,y+1,cell-2,cell-2);
@@ -919,7 +926,7 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       const x=view.railX;
       if(game.mode==='classic'){
         text('NEXT',x,118,9,'#ffe36d','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,x,158+i*48,8,.9));
-        text('SCORE',x,330,8,'#7f8daa','center');text(localBoard.score.toLocaleString(),x,347,13,'#fff','center');text(`${localBoard.lines} LINES`,x,380,9,'#55e7ff','center');text(`PIECE ${Math.max(1,game.round)}`,x,408,8,'#aab6ce','center');text(`SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,434,8,'#63f59b','center');text('SWIPE UP',x,478,7,'#8493b2','center');text('HARD DROP',x,491,7,'#ffe36d','center');
+        text('SCORE',x,330,8,'#7f8daa','center');text(localBoard.score.toLocaleString(),x,347,13,'#fff','center');text(`${localBoard.lines} LINES`,x,398,9,'#55e7ff','center');text(`PIECE ${Math.max(1,game.round)}`,x,425,8,'#aab6ce','center');text(`SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,449,8,'#63f59b','center');text('SWIPE UP',x,490,7,'#8493b2','center');text('HARD DROP',x,503,7,'#ffe36d','center');
       }else{
         text('SHARED',x,226,9,'#9eabc6','center');miniPiece(game.currentShape,x,264,11,1);
         text('NEXT',x,304,8,'#7786a4','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,326+i*38,330,6.5,.84));
@@ -930,7 +937,7 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
     }else{
       const x=view.railX;
       if(game.mode==='classic'){
-        text('NEXT PIECES',x,58,11,'#ffe36d','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,x,112+i*58,10,.9));text('SCORE',x,286,9,'#7f8daa','center');text(localBoard.score.toLocaleString(),x,306,18,'#fff','center');text(`${localBoard.lines} LINES`,x,344,11,'#55e7ff','center');text(`FALL SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,372,9,'#63f59b','center');text('SPACE = HARD DROP',x,405,10,'#ffe36d','center');
+        text('NEXT PIECES',x,58,11,'#ffe36d','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,x,112+i*58,10,.9));text('SCORE',x,286,9,'#7f8daa','center');text(localBoard.score.toLocaleString(),x,306,18,'#fff','center');text(`${localBoard.lines} LINES`,x,358,11,'#55e7ff','center');text(`FALL SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,386,9,'#63f59b','center');text('SPACE = HARD DROP',x,419,10,'#ffe36d','center');
       }else{
         text('SHARED PIECE',x,58,11,'#9eabc6','center');miniPiece(game.currentShape,x,112,15,1);text('NEXT',x,153,9,'#7786a4','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,335+i*45,190,8,.85));
         ctx.fillStyle='#111827';ctx.fillRect(300,225,160,12);ctx.fillStyle=pct>.55?'#63f59b':pct>.25?'#ffd45a':'#ff5a6e';ctx.fillRect(302,227,156*pct,8);
@@ -938,7 +945,10 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
         text(`RUSH ${guestView?game.botRushes:game.rushWins} - ${guestView?game.rushWins:game.botRushes}`,x,294,12,'#ffd45a','center');text(`ROUND ${Math.max(1,game.round)}`,x,322,10,'#aab6ce','center');text(`FALL SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,342,9,'#55e7ff','center');text('SPACE = FORCE BOTH',x,372,10,'#55e7ff','center');text('LAST BOARD STANDING',x,391,9,'#8997b2','center');
       }
     }
-    if(game.message&&now<game.messageUntil){const m=view.message;ctx.fillStyle='rgba(7,10,18,.88)';ctx.fillRect(m.x,m.y,m.w,m.h);text(game.message,m.x+m.w/2,m.y+(view.compact?16:11),view.compact?9:9,'#fff','center',900);}
+    if(game.message&&now<game.messageUntil){
+      const m=getMessagePlacement(view,game.mode);ctx.fillStyle=m.rail?'rgba(16,25,43,.96)':'rgba(7,10,18,.88)';ctx.fillRect(m.x,m.y,m.w,m.h);
+      text(game.message,m.x+m.w/2,m.y+(m.rail?(view.compact?8:7):(view.compact?16:11)),m.rail?(view.compact?7:9):9,m.rail?'#ffe36d':'#fff','center',900);
+    }
     if(game.paused){ctx.fillStyle='rgba(4,6,12,.78)';ctx.fillRect(0,0,canvas.width,canvas.height);text('PAUSED',canvas.width/2,canvas.height*.42,view.compact?34:36,'#fff','center',1000);text('Press P or tap Pause',canvas.width/2,canvas.height*.50,12,'#b7c3dc','center');}
     for(const p of game.particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size);}ctx.globalAlpha=1;
     ctx.restore();
@@ -1130,6 +1140,8 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       const sortedScores=normalizeSoloScores([{name:'LOW',score:100,lines:4},{name:'HIGH<script>',score:900,lines:8},{name:'MID',score:400,lines:5}]);
       check('solo scores are sanitized and sorted',sortedScores[0].score===900&&sortedScores[0].name==='HIGHscript'&&sortedScores[2].score===100,'saved-score ordering or sanitizing failed');
       check('solo score saving interface is available',!!$('scoreSavePanel')&&!!$('scoreName')&&!!$('saveScoreBtn')&&!!$('menuScoreList'),'score saving controls missing');
+      const messageProbe=getMessagePlacement({compact:true,railX:363,message:{x:8,y:566,w:282,h:32}},'classic');
+      check('solo notifications stay in the right score rail',messageProbe.rail&&messageProbe.x>=306&&messageProbe.y>347,'a solo notification can cover the playfield');
     }catch(error){check('self-test runner',false,error?.message||String(error));}
     return {pass:tests.every(test=>test.pass),tests};
   }
