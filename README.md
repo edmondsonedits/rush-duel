@@ -2,6 +2,18 @@
 
 Rush Duel is a neon, browser-based block battle that combines the polished interface from the newer prototype with the responsive synchronized-round gameplay from the smoother prototype.
 
+The gameplay screen is built from responsive HTML, CSS, and canvas code. The original artwork remains as a subtle atmospheric background, while the boards, HUD, meters, and controls resize independently for phone, tablet, and desktop play.
+
+## Gameplay design
+
+- Seven-piece bag randomization keeps the sequence fair and learnable.
+- SRS-style, piece-specific wall kicks make rotations dependable beside walls and stacks.
+- Ghost pieces and a three-piece preview support planning without visual clutter.
+- Tuned delayed auto-shift, repeat speed, soft drop, and last-pressed-direction handling keep keyboard and touch movement responsive.
+- Desktop uses two full-size boards; portrait layouts prioritize the player's board and keep the opponent readable in a compact rail.
+
+The handling and presentation were informed by the open-source [Tetr.js](https://github.com/simonlc/tetr.js) project and the broader mode/UI ideas in [Techmino](https://github.com/26F-Studio/Techmino). Rush Duel retains its own shared-piece and rush-drop battle rules.
+
 ## Play modes
 
 - **Solo vs Bot:** Easy, Medium, Hard, and Impossible opponents. Easy never triggers a rush drop; higher difficulties react and rush more aggressively.
@@ -34,7 +46,7 @@ Then open `http://127.0.0.1:4173/`.
 
 ## Built-in checks
 
-Open `index.html?selftest=1` to run the browser self-tests. They cover piece rotation, collision boundaries, line clearing and scoring, garbage rows, bot planning, unique interface IDs, unique touch-control mappings, and online-lobby availability.
+Open `index.html?selftest=1` to run the browser self-tests. They cover rotation stability, piece-specific wall-kick data, collision boundaries, line clearing and scoring, garbage rows, bot planning, unique interface IDs, visible code-rendered controls, control mappings, and online-lobby availability.
 
 ## Project files
 
