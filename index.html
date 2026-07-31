@@ -94,7 +94,7 @@ button{cursor:pointer}
 .game-toast{position:absolute;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%);display:none;width:min(80%,430px);padding:14px;border:2px solid #ffe56a;border-radius:10px;background:rgba(4,7,16,.95);color:#fff;text-align:center;font-size:12px;font-weight:900;line-height:1.5;box-shadow:0 0 25px rgba(255,218,83,.22)}.game-toast.active{display:block}
 .debug-controls #gameScreen .ctrl{outline:2px solid #ffe346}.debug-controls .hit-button{background:rgba(90,232,255,.18);outline:2px solid #5ceaff}
 .self-test-output{position:fixed;left:-9999px;width:1px;height:1px;overflow:hidden}
-@media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-btn{min-height:74px}.rules-strip{font-size:9px}.menu-card{gap:13px}.join-row{grid-template-columns:1fr}.join-row .lobby-btn{min-height:44px}.game-shell{gap:4px}.battle-hud{gap:4px;grid-template-columns:minmax(62px,.8fr) minmax(116px,1.65fr) minmax(62px,.8fr) 34px}.hud-tools{grid-template-columns:1fr;gap:3px}.tool-btn{min-width:34px;height:26px;padding:0;font-size:6px;opacity:.9}.hud-panel{min-height:55px;padding:6px}.hud-stat{font-size:6px}.hud-stat b{font-size:9px}.hud-center-bottom{gap:5px;font-size:6px}.hud-center-bottom b{font-size:8px}.control-deck{gap:4px;padding:4px}.control-row{gap:4px}#gameScreen .ctrl{min-height:48px;border-radius:10px}#gameScreen .ctrl .hint{font-size:6px}}
+@media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-btn{min-height:74px}.rules-strip{font-size:9px}.menu-card{gap:13px}.join-row{grid-template-columns:1fr}.join-row .lobby-btn{min-height:44px}.game-shell{gap:3px}.battle-hud{gap:3px;grid-template-columns:52px minmax(128px,1fr) 52px 58px}.hud-panel{min-height:42px;height:42px;padding:4px 5px;border-radius:8px}.hud-side{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}.hud-side .hud-stat{display:none}.hud-name{font-size:7px;line-height:1}.hud-lines{font-size:18px}.hud-lines::after{content:" lines";font-size:6px;letter-spacing:.04em}.hud-center{grid-template-rows:auto 7px auto;gap:3px}.hud-status{font-size:7px}.hud-center-bottom{gap:4px;font-size:5px}.hud-center-bottom b{font-size:7px}.hud-tools{grid-template-columns:repeat(2,1fr);gap:3px}.tool-btn{min-width:0;width:100%;height:42px;padding:0;font-size:6px;opacity:.94}.control-deck{gap:4px;padding:4px}.control-row{gap:4px}#gameScreen .ctrl{min-height:48px;border-radius:10px}#gameScreen .ctrl .hint{font-size:6px}}
 @media(min-width:821px) and (orientation:landscape){.game-shell{grid-template-columns:minmax(0,1fr) minmax(285px,330px);grid-template-rows:auto minmax(0,1fr)}.battle-hud{grid-column:1/-1}.arena{grid-column:1;grid-row:2}.screen-wrap{aspect-ratio:760/500}.control-deck{grid-column:2;grid-row:2;align-self:center}.control-row.primary{grid-template-columns:1fr 1fr}.control-row.primary .rush-hit{grid-column:1/-1;grid-row:1;min-height:88px}.control-row.primary .rotL-hit{grid-column:1;grid-row:2}.control-row.primary .rotR-hit{grid-column:2;grid-row:2}.control-row.move{grid-template-columns:repeat(3,1fr)}.control-row.move .pause-hit{grid-column:1/-1}#gameScreen .ctrl{min-height:60px;font-size:26px}}
 @media(max-height:650px) and (orientation:landscape){.game-shell{gap:4px}.hud-panel{min-height:48px;padding:5px 7px}.control-deck{gap:4px;padding:4px}#gameScreen .ctrl{min-height:48px}.control-row.primary .rush-hit{min-height:64px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}.press-hit{animation:none!important}}
@@ -180,18 +180,18 @@ button{cursor:pointer}
       <section class="hud-panel hud-side">
         <span class="hud-name">YOU</span>
         <span class="hud-stat">SCORE<b id="playerScore">0</b></span>
-        <strong class="hud-lines" id="playerLines">0 / 20</strong>
+        <strong class="hud-lines" id="playerLines">0</strong>
         <span class="hud-stat">RUSH<b id="rushWins">0</b></span>
       </section>
       <section class="hud-panel hud-center">
-        <div class="hud-status" id="topStatus">EASY BOT · FIRST TO 20 LINES</div>
+        <div class="hud-status" id="topStatus">EASY BOT · NO TIME LIMIT</div>
         <div class="rush-meter" aria-label="Rush timer"><span id="timerFill"></span></div>
         <div class="hud-center-bottom"><span>TIME <b id="timerText">8.0s</b></span><span>ROUND <b id="roundText">1</b></span><span>SPEED <b id="speedText">1.00×</b></span></div>
       </section>
       <section class="hud-panel hud-side rival">
         <span class="hud-name">RIVAL</span>
         <span class="hud-stat">SCORE<b id="botScore">0</b></span>
-        <strong class="hud-lines" id="botLines">0 / 20</strong>
+        <strong class="hud-lines" id="botLines">0</strong>
         <span class="hud-stat">RUSH<b id="botRushes">0</b></span>
       </section>
       <div class="hud-tools" aria-label="Game options">
@@ -241,7 +241,7 @@ button{cursor:pointer}
   const ctx = canvas.getContext('2d', {alpha:true});
   ctx.imageSmoothingEnabled = false;
 
-  const COLS=10, ROWS=20, TARGET_LINES=20;
+  const COLS=10, ROWS=20;
   const BASE_GRAVITY=980, MIN_GRAVITY=120, BASE_ROUND_MS=8200, MIN_ROUND_MS=4200;
   const COLORS={I:'#35e7ff',J:'#4e72ff',L:'#ff9b3e',O:'#ffe353',S:'#59ed8b',T:'#c16cff',Z:'#ff5877'};
   const SHAPES=[
@@ -519,6 +519,7 @@ button{cursor:pointer}
     movePlayer(dx,dy){if(!this.canAct())return false;const ok=this.player.move(dx,dy);if(ok){if(dy>0)this.player.score+=1;this.playTone(dx?'move':'soft');}return ok;}
     rotatePlayer(cw=true){if(!this.canAct())return false;const ok=this.player.rotate(cw);if(ok)this.playTone('rotate');return ok;}
     canAct(){return this.started&&!this.paused&&this.phase==='active'&&!this.winner;}
+    hasMatchEnded(){return this.player.toppedOut||this.bot.toppedOut;}
     commitRound(source){
       if(!this.canAct())return;
       this.phase='resolving';
@@ -542,7 +543,7 @@ button{cursor:pointer}
       if(toBot)this.message+=`  ·  SENT ${toBot} GARBAGE`;
       if(toPlayer)this.message+=`  ·  TOOK ${toPlayer} GARBAGE`;
       this.messageUntil=performance.now()+1300;this.shake=Math.max(this.shake,4+Math.max(p.lines,b.lines)*2);this.flash=.7;this.playTone(source==='player'?'rush':source==='bot'?'forced':'lock');
-      if(p.toppedOut||b.toppedOut||this.player.toppedOut||this.bot.toppedOut||this.player.lines>=TARGET_LINES||this.bot.lines>=TARGET_LINES){
+      if(p.toppedOut||b.toppedOut||this.hasMatchEnded()){
         this.autoNextAt=performance.now()+420;this.phase='ending';
       } else { this.autoNextAt=performance.now()+(p.lines||b.lines?300:150); }
       this.updateUI();
@@ -554,9 +555,7 @@ button{cursor:pointer}
     finishByBoardState(){
       let winner='draw';
       const pDead=this.player.toppedOut,bDead=this.bot.toppedOut;
-      if(this.player.lines>=TARGET_LINES&&this.bot.lines<TARGET_LINES)winner='player';
-      else if(this.bot.lines>=TARGET_LINES&&this.player.lines<TARGET_LINES)winner='bot';
-      else if(bDead&&!pDead)winner='player';
+      if(bDead&&!pDead)winner='player';
       else if(pDead&&!bDead)winner='bot';
       else if(this.player.lines!==this.bot.lines)winner=this.player.lines>this.bot.lines?'player':'bot';
       else if(this.player.score!==this.bot.score)winner=this.player.score>this.bot.score?'player':'bot';
@@ -564,7 +563,7 @@ button{cursor:pointer}
       const guestView=this.mode==='online'&&network.role==='guest';
       const localWinner=guestView?(winner==='player'?'bot':winner==='bot'?'player':'draw'):winner;
       const title=localWinner==='player'?'VICTORY':localWinner==='bot'?'DEFEAT':'DRAW';
-      const reason=(this.player.lines>=TARGET_LINES||this.bot.lines>=TARGET_LINES)?'The 20-line target was reached.':'A board topped out.';
+      const reason='A board topped out.';
       document.getElementById('resultTitle').textContent=title;
       const localBoard=guestView?this.bot:this.player,rivalBoard=guestView?this.player:this.bot;
       const opponentLabel=this.mode==='online'?'your rival':'the bot';
@@ -618,12 +617,12 @@ button{cursor:pointer}
     updateUI(){
       const guestView=this.mode==='online'&&network.role==='guest';
       const localBoard=guestView?this.bot:this.player,rivalBoard=guestView?this.player:this.bot;
-      playerLines.textContent=`${localBoard.lines} / ${TARGET_LINES}`;botLines.textContent=`${rivalBoard.lines} / ${TARGET_LINES}`;
+      playerLines.textContent=localBoard.lines;botLines.textContent=rivalBoard.lines;
       playerScore.textContent=localBoard.score.toLocaleString();botScore.textContent=rivalBoard.score.toLocaleString();rushWins.textContent=guestView?this.botRushes:this.rushWins;botRushes.textContent=guestView?this.rushWins:this.botRushes;roundText.textContent=this.round;
       speedText.textContent=`${this.getSpeedMultiplier().toFixed(2)}×`;
       pauseBtn.setAttribute('aria-label',this.paused?'Resume':'Pause');soundBtn.setAttribute('aria-label',this.sound?'Sound on':'Sound off');
       if(pauseBtn.firstChild)pauseBtn.firstChild.nodeValue=this.paused?'▶':'Ⅱ';const pauseHint=pauseBtn.querySelector('.hint');if(pauseHint)pauseHint.textContent=this.paused?'Resume':'Pause';
-      topStatus.textContent=this.mode==='online'?`ONLINE RIVAL · FIRST TO ${TARGET_LINES} LINES`:this.difficulty==='easy'?`EASY BOT · NO TIME LIMIT`:`${DIFFICULTIES[this.difficulty].label} BOT · FIRST TO ${TARGET_LINES} LINES`;
+      topStatus.textContent=this.mode==='online'?`ONLINE RIVAL · LAST BOARD STANDING`:this.difficulty==='easy'?`EASY BOT · NO TIME LIMIT`:`${DIFFICULTIES[this.difficulty].label} BOT · LAST BOARD STANDING`;
     }
   }
 
@@ -789,7 +788,7 @@ button{cursor:pointer}
   const pauseBtn=$('pauseBtn'),soundBtn=$('soundBtn'),topStatus=$('topStatus'),timerText=$('timerText'),timerFill=$('timerFill');
   const network=new NetworkDuel();
 
-  const COMPACT_PLAYER_VIEW=Object.freeze({x:10,y:34,cell:27});
+  const COMPACT_PLAYER_VIEW=Object.freeze({x:4,y:20,cell:29});
   let compactView=false;
   function configureCanvas(){
     compactView=window.matchMedia('(max-width: 820px), (orientation: portrait)').matches;
@@ -807,9 +806,9 @@ button{cursor:pointer}
     return {
       compact:true,
       player:{...COMPACT_PLAYER_VIEW},
-      bot:{x:322,y:34,cell:8.2},
+      bot:{x:322,y:20,cell:8.4},
       railX:363,
-      message:{x:12,y:576,w:282,h:36}
+      message:{x:8,y:566,w:282,h:32}
     };
   }
   function drawBlock(x,y,color,cell,alpha=1){
@@ -857,8 +856,9 @@ button{cursor:pointer}
     const duration=Math.max(1,Number.isFinite(game.currentRoundDuration)?game.currentRoundDuration:BASE_ROUND_MS),pct=game.phase==='active'?(untimed?1:remaining/duration):0;
     const timerDisplay=untimed?'NO LIMIT':game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'LOCKED';
     const pW=COLS*view.player.cell,bW=COLS*view.bot.cell,status=botStatus();
-    text('YOU',view.player.x,view.player.y-31,16,'#55e7ff');text(`${localBoard.lines}/${TARGET_LINES} LINES`,view.player.x+pW,view.player.y-28,view.compact?10:11,'#bcefff','right');
-    text(game.mode==='online'?'RIVAL':'BOT',view.bot.x,view.bot.y-29,view.compact?11:16,'#ff73b7');text(`${rivalBoard.lines}/${TARGET_LINES}`,view.bot.x+bW,view.bot.y-26,view.compact?8:11,'#ffd0e6','right');
+    const playerLabelY=view.compact?3:view.player.y-31,rivalLabelY=view.compact?4:view.bot.y-29;
+    text('YOU',view.player.x,playerLabelY,view.compact?11:16,'#55e7ff');text(`${localBoard.lines} LINES`,view.player.x+pW,view.compact?5:view.player.y-28,view.compact?8:11,'#bcefff','right');
+    text(game.mode==='online'?'RIVAL':'BOT',view.bot.x,rivalLabelY,view.compact?9:16,'#ff73b7');text(`${rivalBoard.lines} LINES`,view.bot.x+bW,view.compact?6:view.bot.y-26,view.compact?7:11,'#ffd0e6','right');
     drawBoard(localBoard,view.player,1,false);drawBoard(rivalBoard,view.bot,view.compact?Math.max(.55,game.opponentOpacity):game.opponentOpacity,true);
     if(view.compact){
       const x=view.railX;
@@ -872,7 +872,7 @@ button{cursor:pointer}
       text('SHARED PIECE',x,58,11,'#9eabc6','center');miniPiece(game.currentShape,x,112,15,1);text('NEXT',x,153,9,'#7786a4','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,335+i*45,190,8,.85));
       ctx.fillStyle='#111827';ctx.fillRect(300,225,160,12);ctx.fillStyle=pct>.55?'#63f59b':pct>.25?'#ffd45a':'#ff5a6e';ctx.fillRect(302,227,156*pct,8);
       text(timerDisplay,x,242,13,'#fff','center');text(status.label,x,271,10,status.color,'center');
-      text(`RUSH ${guestView?game.botRushes:game.rushWins} - ${guestView?game.rushWins:game.botRushes}`,x,294,12,'#ffd45a','center');text(`ROUND ${Math.max(1,game.round)}`,x,322,10,'#aab6ce','center');text(`FALL SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,342,9,'#55e7ff','center');text('SPACE = FORCE BOTH',x,372,10,'#55e7ff','center');text('FIRST TO 20 OR KO',x,391,9,'#8997b2','center');
+      text(`RUSH ${guestView?game.botRushes:game.rushWins} - ${guestView?game.rushWins:game.botRushes}`,x,294,12,'#ffd45a','center');text(`ROUND ${Math.max(1,game.round)}`,x,322,10,'#aab6ce','center');text(`FALL SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,342,9,'#55e7ff','center');text('SPACE = FORCE BOTH',x,372,10,'#55e7ff','center');text('LAST BOARD STANDING',x,391,9,'#8997b2','center');
     }
     if(game.message&&now<game.messageUntil){const m=view.message;ctx.fillStyle='rgba(7,10,18,.88)';ctx.fillRect(m.x,m.y,m.w,m.h);text(game.message,m.x+m.w/2,m.y+(view.compact?16:11),view.compact?9:9,'#fff','center',900);}
     if(game.paused){ctx.fillStyle='rgba(4,6,12,.78)';ctx.fillRect(0,0,canvas.width,canvas.height);text('PAUSED',canvas.width/2,canvas.height*.42,view.compact?34:36,'#fff','center',1000);text('Press P or tap Pause',canvas.width/2,canvas.height*.50,12,'#b7c3dc','center');}
@@ -1038,7 +1038,10 @@ button{cursor:pointer}
       const controlActions=[...document.querySelectorAll('#gameScreen [data-control]')].map(el=>el.dataset.control).sort();
       check('all seven gameplay controls map uniquely',JSON.stringify(controlActions)===JSON.stringify(['ccw','cw','down','drop','left','pause','right']),'missing or duplicate touch controls');
       check('gameplay controls are visible code UI',[...document.querySelectorAll('#gameScreen [data-control]')].every(el=>el.textContent.trim().length>0)&&!!document.querySelector('#gameScreen .battle-hud'),'gameplay still depends on invisible image hitboxes');
-      check('portrait player board fills the available height',COMPACT_PLAYER_VIEW.cell*ROWS/620>=.85,'portrait board is too small');
+      check('portrait player board fills the available height',COMPACT_PLAYER_VIEW.cell*ROWS/620>=.93,'portrait board is too small');
+      const survivalProbe=new RushDuel();survivalProbe.player.lines=999;survivalProbe.bot.lines=998;
+      check('line totals never end a match',!survivalProbe.hasMatchEnded(),'a line target still ends matches');
+      survivalProbe.bot.toppedOut=true;check('top-out ends a match',survivalProbe.hasMatchEnded(),'top-out was ignored');
       const timerProbe=new RushDuel();timerProbe.mode='bot';timerProbe.difficulty='easy';const easyDuration=timerProbe.getRoundDuration(0);timerProbe.difficulty='medium';const mediumDuration=timerProbe.getRoundDuration(0);timerProbe.difficulty='hard';const hardDuration=timerProbe.getRoundDuration(0);
       check('Easy mode has no automatic rush timer',easyDuration===Infinity,`duration was ${easyDuration}`);
       check('Medium automatic rush is exactly one second longer',mediumDuration-hardDuration===1000,`${mediumDuration}-${hardDuration}`);

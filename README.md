@@ -32,7 +32,7 @@ Online play needs internet access and two modern browsers. No game account is re
 | Rush drop | Space | Rush Drop |
 | Pause | P or Escape | Pause |
 
-A rush drop locks both current pieces immediately. Clearing two or more lines sends garbage to the opponent. The first player to 20 lines, or the last player with room on the board, wins.
+A rush drop locks both current pieces immediately. Clearing two or more lines sends garbage to the opponent. There is no line target: the match continues until a board tops out, and the last player with room wins.
 
 ## Run locally
 
