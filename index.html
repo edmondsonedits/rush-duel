@@ -26,6 +26,8 @@ button{cursor:pointer}
 .hit-button,.hit-select,.hit-range{position:absolute;z-index:4;background:transparent;border:none;color:transparent;appearance:none;-webkit-appearance:none;outline:none;touch-action:none;user-select:none;-webkit-user-select:none}
 .hit-button:active{background:rgba(255,255,255,.06)}
 #titleScreen .press-hit{left:14%;top:82.8%;width:72%;height:10.4%;border-radius:18px}
+.title-rule-update{position:absolute;z-index:3;top:64.6%;width:35.8%;height:15.5%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4% 3%;border-radius:8px;background:linear-gradient(180deg,rgba(17,14,38,.99),rgba(5,8,21,.99));text-align:center;pointer-events:none;box-shadow:inset 0 0 16px rgba(255,255,255,.035)}
+.title-rule-update.attack{left:10.3%;border:2px solid #b967e8;color:#e8b8ff}.title-rule-update.win{left:53.9%;border:2px solid #f2cb4e;color:#fff0a0}.title-rule-update b{display:block;margin-bottom:8%;font-size:clamp(9px,2.9cqw,17px);letter-spacing:.12em}.title-rule-update span{color:#eef4ff;font-size:clamp(6.5px,1.8cqw,11px);font-weight:800;line-height:1.4}
 #optionsScreen .difficulty-hit{left:14.3%;top:26.3%;width:71.5%;height:6.8%;font-size:24px;opacity:.01}
 #optionsScreen .opacity-hit{left:15%;top:51.5%;width:70%;height:3.7%;opacity:1;accent-color:#ff58b7}
 #optionsScreen .opacity-hit::-webkit-slider-runnable-track{height:7px;border:1px solid #684b83;border-radius:999px;background:#101729}
@@ -105,6 +107,8 @@ button{cursor:pointer}
 <section class="screen active" id="titleScreen" aria-label="Rush Duel title screen">
   <div class="art-shell">
     <div class="screen-art title-bg"></div>
+    <div class="title-rule-update attack"><b>ATTACK</b><span>Every cleared line sends garbage to your opponent.</span></div>
+    <div class="title-rule-update win"><b>WIN</b><span>Stay alive. The last board standing wins.</span></div>
     <button class="hit-button press-hit" id="startBtn" aria-label="Press Start"></button>
   </div>
 </section>
@@ -525,11 +529,8 @@ button{cursor:pointer}
       this.phase='resolving';
       const pBefore=this.player.active?this.player.active.y:0,bBefore=this.bot.active?this.bot.active.y:0;
       const p=this.player.lock(),b=this.bot.lock();
-      const pAttack=this.attackFor(p.lines,this.player.combo),bAttack=this.attackFor(b.lines,this.bot.combo);
-      const toBot=Math.max(0,pAttack-bAttack),toPlayer=Math.max(0,bAttack-pAttack);
       const seed=(this.round*7+this.currentShape*3)%COLS;
-      if(toBot)this.bot.addGarbage(toBot,seed);
-      if(toPlayer)this.player.addGarbage(toPlayer,(seed+4)%COLS);
+      const {toBot,toPlayer}=this.sendLineGarbage(p.lines,b.lines,seed);
       if(source==='player'){
         this.rushWins++;this.player.score+=150+Math.max(0,bBefore-pBefore)*10;
         this.message=this.botAI.aligned?'YOU WON THE DROP RACE!':'YOU RUSHED THE BOT MID-MOVE!';
@@ -549,8 +550,14 @@ button{cursor:pointer}
       this.updateUI();
     }
     attackFor(lines,combo){
-      const base=[0,0,1,2,4][lines]||5;
+      const base=[0,1,2,4,6][lines]??7;
       return base+(lines>0&&combo>=2?Math.floor(combo/2):0);
+    }
+    sendLineGarbage(playerLines,botLines,seed=0){
+      const toBot=this.attackFor(playerLines,this.player.combo),toPlayer=this.attackFor(botLines,this.bot.combo);
+      if(toBot)this.bot.addGarbage(toBot,seed);
+      if(toPlayer)this.player.addGarbage(toPlayer,(seed+4)%COLS);
+      return {toBot,toPlayer};
     }
     finishByBoardState(){
       let winner='draw';
@@ -1032,6 +1039,11 @@ button{cursor:pointer}
       const clear=new Board('clear');clear.grid[19]=Array(COLS).fill('#777');clear.grid[19][4]=null;clear.grid[19][5]=null;clear.active={shapeIndex:3,name:'O',color:COLORS.O,m:cloneMatrix(SHAPES[3].m),rot:0,x:3,y:16};const result=clear.lock();
       check('completed row clears and scores',result.lines===1&&clear.lines===1&&clear.grid.length===ROWS,JSON.stringify(result));
       const garbage=new Board('garbage');garbage.addGarbage(2,3);check('garbage has one changing hole per row',garbage.grid[18].filter(v=>v===null).length===1&&garbage.grid[19].filter(v=>v===null).length===1,'garbage holes invalid');
+      const playerAttack=new RushDuel(),playerGridBefore=JSON.stringify(playerAttack.player.grid);const playerSent=playerAttack.sendLineGarbage(1,0,2);
+      check('a player line clear attacks only the opponent',playerSent.toBot===1&&playerSent.toPlayer===0&&JSON.stringify(playerAttack.player.grid)===playerGridBefore&&playerAttack.bot.grid[19].filter(Boolean).length===COLS-1,'player clear was routed to the wrong board');
+      const botAttack=new RushDuel(),botGridBefore=JSON.stringify(botAttack.bot.grid);const botSent=botAttack.sendLineGarbage(0,1,2);
+      check('a bot or online-rival line clear attacks only the player',botSent.toPlayer===1&&botSent.toBot===0&&JSON.stringify(botAttack.bot.grid)===botGridBefore&&botAttack.player.grid[19].filter(Boolean).length===COLS-1,'opponent clear was routed to the wrong board');
+      const mutualAttack=new RushDuel();const mutualSent=mutualAttack.sendLineGarbage(1,1,2);check('simultaneous line clears both reach the opposing board',mutualSent.toBot===1&&mutualSent.toPlayer===1&&mutualAttack.player.grid[19].filter(Boolean).length===COLS-1&&mutualAttack.bot.grid[19].filter(Boolean).length===COLS-1,'simultaneous attacks were cancelled');
       const planner=new Board('planner');planner.spawn(5);const plan=chooseBotPlan(planner,5,'hard');check('bot chooses a legal placement',!!plan&&planner.canPlace(plan.m,plan.x,-3),'no legal bot plan');
       const ids=[...document.querySelectorAll('[id]')].map(el=>el.id),duplicates=ids.filter((id,index)=>ids.indexOf(id)!==index);
       check('interface IDs are unique',duplicates.length===0,duplicates.join(','));
