@@ -254,10 +254,10 @@ button{cursor:pointer}
     {name:'Z',color:COLORS.Z,m:[[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]]}
   ];
   const DIFFICULTIES={
-    easy:{label:'EASY',reaction:650,step:205,drop:[Infinity,Infinity],forceChance:0,choice:8,error:.32,copy:'Easy starts by default. This bot can move and build, but it can never rush-drop your piece. You control when both pieces are forced down.'},
-    medium:{label:'MEDIUM',reaction:340,step:115,drop:[900,1750],forceChance:.32,choice:4,error:.13,copy:'The bot occasionally decides to rush. Most rounds are safe, but sometimes it will force both pieces down before you are ready.'},
-    hard:{label:'HARD',reaction:145,step:62,drop:[420,900],forceChance:.76,choice:2,error:.035,copy:'The bot rush-drops often and moves quickly. Watch its faint board and commit before it finishes lining up.'},
-    impossible:{label:'IMPOSSIBLE',reaction:48,step:28,drop:[110,300],forceChance:1,choice:1,error:0,copy:'The bot chooses strong placements, moves almost immediately, and rush-drops every round. It is intentionally extremely difficult.'}
+    easy:{label:'EASY',reaction:850,step:260,drop:[Infinity,Infinity],forceChance:0,choice:8,error:.34,timerBonus:Infinity,copy:'No timer and no bot rushes. Take as long as you need to plan each piece, then press Rush Drop when you are ready.'},
+    medium:{label:'MEDIUM',reaction:700,step:220,drop:[1900,2750],forceChance:.28,choice:4,error:.14,timerBonus:1000,copy:'The automatic round rush gives you one extra second. The bot moves deliberately and only occasionally uses Rush Drop.'},
+    hard:{label:'HARD',reaction:560,step:170,drop:[1700,2700],forceChance:.52,choice:1,error:.015,timerBonus:0,copy:'The bot moves at a readable pace but evaluates the board very carefully and chooses consistently strong placements.'},
+    impossible:{label:'IMPOSSIBLE',reaction:420,step:130,drop:[750,1400],forceChance:.90,choice:1,error:0,timerBonus:0,copy:'The bot is smart, deliberate, and relentless. It still moves visibly, but it uses Rush Drop far more often than the easier bots.'}
   };
 
   const cloneMatrix=m=>m.map(r=>r.slice());
@@ -499,7 +499,7 @@ button{cursor:pointer}
       this.round++;this.currentShape=this.queue.shift();this.fillQueue();this.botMoved=false;
       const pOK=this.player.spawn(this.currentShape),bOK=this.bot.spawn(this.currentShape);
       if(!pOK||!bOK){this.finishByBoardState();return;}
-      this.roundStart=now;this.gravityInterval=this.getGravityInterval(now);this.currentRoundDuration=this.getRoundDuration(now);this.deadline=now+this.currentRoundDuration;this.gravityAcc=0;this.phase='active';
+      this.roundStart=now;this.gravityInterval=this.getGravityInterval(now);this.currentRoundDuration=this.getRoundDuration(now);this.deadline=Number.isFinite(this.currentRoundDuration)?now+this.currentRoundDuration:Infinity;this.gravityAcc=0;this.phase='active';
       if(this.mode==='bot')this.botAI.begin(now,this.currentShape);
       this.message=`ROUND ${this.round} · SHARED ${SHAPES[this.currentShape].name} PIECE`;this.messageUntil=now+900;this.updateUI();
     }
@@ -510,7 +510,10 @@ button{cursor:pointer}
     }
     getRoundDuration(now=performance.now()){
       const gained=BASE_GRAVITY-this.getGravityInterval(now);
-      return Math.max(MIN_ROUND_MS,BASE_ROUND_MS-gained*3.5);
+      const base=Math.max(MIN_ROUND_MS,BASE_ROUND_MS-gained*3.5);
+      if(this.mode!=='bot')return base;
+      const bonus=DIFFICULTIES[this.difficulty].timerBonus;
+      return Number.isFinite(bonus)?base+bonus:Infinity;
     }
     getSpeedMultiplier(now=performance.now()){return BASE_GRAVITY/this.getGravityInterval(now);}
     movePlayer(dx,dy){if(!this.canAct())return false;const ok=this.player.move(dx,dy);if(ok){if(dy>0)this.player.score+=1;this.playTone(dx?'move':'soft');}return ok;}
@@ -620,7 +623,7 @@ button{cursor:pointer}
       speedText.textContent=`${this.getSpeedMultiplier().toFixed(2)}×`;
       pauseBtn.setAttribute('aria-label',this.paused?'Resume':'Pause');soundBtn.setAttribute('aria-label',this.sound?'Sound on':'Sound off');
       if(pauseBtn.firstChild)pauseBtn.firstChild.nodeValue=this.paused?'▶':'Ⅱ';const pauseHint=pauseBtn.querySelector('.hint');if(pauseHint)pauseHint.textContent=this.paused?'Resume':'Pause';
-      topStatus.textContent=this.mode==='online'?`ONLINE RIVAL · FIRST TO ${TARGET_LINES} LINES`:`${DIFFICULTIES[this.difficulty].label} BOT · FIRST TO ${TARGET_LINES} LINES`;
+      topStatus.textContent=this.mode==='online'?`ONLINE RIVAL · FIRST TO ${TARGET_LINES} LINES`:this.difficulty==='easy'?`EASY BOT · NO TIME LIMIT`:`${DIFFICULTIES[this.difficulty].label} BOT · FIRST TO ${TARGET_LINES} LINES`;
     }
   }
 
@@ -842,13 +845,16 @@ button{cursor:pointer}
   }
   function text(str,x,y,size,color='#fff',align='left',weight=800){ctx.font=`${weight} ${size}px ui-monospace,monospace`;ctx.textAlign=align;ctx.textBaseline='top';ctx.fillStyle=color;ctx.fillText(str,x,y);}
   function miniPiece(index,cx,cy,scale=12,alpha=1){if(index===undefined)return;const s=SHAPES[index];ctx.save();ctx.globalAlpha=alpha;for(let y=0;y<4;y++)for(let x=0;x<4;x++)if(s.m[y][x])drawBlock(cx+(x-1.5)*scale,cy+(y-1.5)*scale,s.color,scale,alpha);ctx.restore();}
-  function botStatus(){if(game.mode==='online')return {label:network.connected?'RIVAL CONNECTED':'RIVAL OFFLINE',color:network.connected?'#63f5d4':'#ff7c9f'};if(game.difficulty==='easy')return {label:'BOT CANNOT RUSH',color:'#63f59b'};if(!game.botAI.willForce)return {label:'BOT HOLDING',color:'#94a2c1'};if(game.botAI.aligned)return {label:'BOT READY TO RUSH',color:'#ff8fcf'};return {label:'BOT MOVING',color:'#ffe0ef'};}
+  function botStatus(){if(game.mode==='online')return {label:network.connected?'RIVAL CONNECTED':'RIVAL OFFLINE',color:network.connected?'#63f5d4':'#ff7c9f'};if(game.difficulty==='easy')return {label:'NO TIMER · YOU CONTROL RUSH',color:'#63f59b'};if(!game.botAI.willForce)return {label:'BOT HOLDING',color:'#94a2c1'};if(game.botAI.aligned)return {label:'BOT READY TO RUSH',color:'#ff8fcf'};return {label:'BOT MOVING',color:'#ffe0ef'};}
   function render(now){
     game.lastTime=now;configureCanvas();const view=getView();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#050914';ctx.fillRect(0,0,canvas.width,canvas.height);
     const sx=game.shake?(Math.random()-.5)*game.shake:0,sy=game.shake?(Math.random()-.5)*game.shake:0;
     const guestView=game.mode==='online'&&network.role==='guest',localBoard=guestView?game.bot:game.player,rivalBoard=guestView?game.player:game.bot;
     ctx.save();ctx.translate(sx,sy);
-    const remaining=game.phase==='active'?Math.max(0,game.deadline-now):0;const duration=Math.max(1,game.currentRoundDuration||BASE_ROUND_MS),pct=game.phase==='active'?remaining/duration:0;
+    const untimed=game.phase==='active'&&!Number.isFinite(game.deadline);
+    const remaining=game.phase==='active'&&!untimed?Math.max(0,game.deadline-now):0;
+    const duration=Math.max(1,Number.isFinite(game.currentRoundDuration)?game.currentRoundDuration:BASE_ROUND_MS),pct=game.phase==='active'?(untimed?1:remaining/duration):0;
+    const timerDisplay=untimed?'NO LIMIT':game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'LOCKED';
     const pW=COLS*view.player.cell,bW=COLS*view.bot.cell,status=botStatus();
     text('YOU',view.player.x,view.player.y-31,16,'#55e7ff');text(`${localBoard.lines}/${TARGET_LINES} LINES`,view.player.x+pW,view.player.y-28,view.compact?10:11,'#bcefff','right');
     text(game.mode==='online'?'RIVAL':'BOT',view.bot.x,view.bot.y-29,view.compact?11:16,'#ff73b7');text(`${rivalBoard.lines}/${TARGET_LINES}`,view.bot.x+bW,view.bot.y-26,view.compact?8:11,'#ffd0e6','right');
@@ -858,13 +864,13 @@ button{cursor:pointer}
       text('SHARED',x,226,9,'#9eabc6','center');miniPiece(game.currentShape,x,264,11,1);
       text('NEXT',x,304,8,'#7786a4','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,326+i*38,330,6.5,.84));
       ctx.fillStyle='#111827';ctx.fillRect(306,365,108,11);ctx.fillStyle=pct>.55?'#63f59b':pct>.25?'#ffd45a':'#ff5a6e';ctx.fillRect(308,367,104*pct,7);
-      text(game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'LOCKED',x,383,12,'#fff','center');text(status.label,x,412,8,status.color,'center');
+      text(timerDisplay,x,383,12,'#fff','center');text(status.label,x,412,8,status.color,'center');
       text(`RUSH ${guestView?game.botRushes:game.rushWins}-${guestView?game.rushWins:game.botRushes}`,x,436,10,'#ffd45a','center');text(`ROUND ${Math.max(1,game.round)}`,x,459,8,'#aab6ce','center');text(`SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,478,8,'#55e7ff','center');text('SWIPE UP',x,498,7,'#8493b2','center');
     }else{
       const x=view.railX;
       text('SHARED PIECE',x,58,11,'#9eabc6','center');miniPiece(game.currentShape,x,112,15,1);text('NEXT',x,153,9,'#7786a4','center');game.queue.slice(0,3).forEach((shape,i)=>miniPiece(shape,335+i*45,190,8,.85));
       ctx.fillStyle='#111827';ctx.fillRect(300,225,160,12);ctx.fillStyle=pct>.55?'#63f59b':pct>.25?'#ffd45a':'#ff5a6e';ctx.fillRect(302,227,156*pct,8);
-      text(game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'LOCKED',x,242,13,'#fff','center');text(status.label,x,271,10,status.color,'center');
+      text(timerDisplay,x,242,13,'#fff','center');text(status.label,x,271,10,status.color,'center');
       text(`RUSH ${guestView?game.botRushes:game.rushWins} - ${guestView?game.rushWins:game.botRushes}`,x,294,12,'#ffd45a','center');text(`ROUND ${Math.max(1,game.round)}`,x,322,10,'#aab6ce','center');text(`FALL SPEED ${game.getSpeedMultiplier(now).toFixed(2)}×`,x,342,9,'#55e7ff','center');text('SPACE = FORCE BOTH',x,372,10,'#55e7ff','center');text('FIRST TO 20 OR KO',x,391,9,'#8997b2','center');
     }
     if(game.message&&now<game.messageUntil){const m=view.message;ctx.fillStyle='rgba(7,10,18,.88)';ctx.fillRect(m.x,m.y,m.w,m.h);text(game.message,m.x+m.w/2,m.y+(view.compact?16:11),view.compact?9:9,'#fff','center',900);}
@@ -872,7 +878,7 @@ button{cursor:pointer}
     for(const p of game.particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size);}ctx.globalAlpha=1;
     ctx.restore();
     if(game.flash>0){ctx.fillStyle=`rgba(255,255,255,${game.flash*.16})`;ctx.fillRect(0,0,canvas.width,canvas.height);}
-    const uiPct=Math.max(0,Math.min(1,pct));timerFill.style.width=`${uiPct*100}%`;timerText.textContent=game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'—';speedText.textContent=`${game.getSpeedMultiplier(now).toFixed(2)}×`;
+    const uiPct=Math.max(0,Math.min(1,pct));timerFill.style.width=`${uiPct*100}%`;timerText.textContent=untimed?'NO LIMIT':game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'—';speedText.textContent=`${game.getSpeedMultiplier(now).toFixed(2)}×`;
   }
 
   const DAS_MS=115,ARR_MS=32,SOFT_DROP_MS=22;
@@ -1031,6 +1037,12 @@ button{cursor:pointer}
       const controlActions=[...document.querySelectorAll('#gameScreen [data-control]')].map(el=>el.dataset.control).sort();
       check('all seven gameplay controls map uniquely',JSON.stringify(controlActions)===JSON.stringify(['ccw','cw','down','drop','left','pause','right']),'missing or duplicate touch controls');
       check('gameplay controls are visible code UI',[...document.querySelectorAll('#gameScreen [data-control]')].every(el=>el.textContent.trim().length>0)&&!!document.querySelector('#gameScreen .battle-hud'),'gameplay still depends on invisible image hitboxes');
+      const timerProbe=new RushDuel();timerProbe.mode='bot';timerProbe.difficulty='easy';const easyDuration=timerProbe.getRoundDuration(0);timerProbe.difficulty='medium';const mediumDuration=timerProbe.getRoundDuration(0);timerProbe.difficulty='hard';const hardDuration=timerProbe.getRoundDuration(0);
+      check('Easy mode has no automatic rush timer',easyDuration===Infinity,`duration was ${easyDuration}`);
+      check('Medium automatic rush is exactly one second longer',mediumDuration-hardDuration===1000,`${mediumDuration}-${hardDuration}`);
+      check('bot movement remains readable at every difficulty',DIFFICULTIES.easy.step>=250&&DIFFICULTIES.medium.step>=200&&DIFFICULTIES.hard.step>=150&&DIFFICULTIES.impossible.step>=120,'a bot moves too quickly');
+      check('Hard and Impossible prioritize smart placements',DIFFICULTIES.hard.choice===1&&DIFFICULTIES.hard.error<=.02&&DIFFICULTIES.impossible.choice===1&&DIFFICULTIES.impossible.error===0,'placement intelligence was reduced');
+      check('rush frequency rises with difficulty',DIFFICULTIES.easy.forceChance<DIFFICULTIES.medium.forceChance&&DIFFICULTIES.medium.forceChance<DIFFICULTIES.hard.forceChance&&DIFFICULTIES.hard.forceChance<DIFFICULTIES.impossible.forceChance,'rush chances are out of order');
       check('online lobby is available',!!$('hostBtn')&&!!$('joinBtn')&&!!$('joinCode'),'online controls missing');
     }catch(error){check('self-test runner',false,error?.message||String(error));}
     return {pass:tests.every(test=>test.pass),tests};

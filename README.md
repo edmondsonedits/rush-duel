@@ -16,7 +16,7 @@ The handling and presentation were informed by the open-source [Tetr.js](https:/
 
 ## Play modes
 
-- **Solo vs Bot:** Easy, Medium, Hard, and Impossible opponents. Easy never triggers a rush drop; higher difficulties react and rush more aggressively.
+- **Solo vs Bot:** Easy has no automatic rush timer, Medium adds one second to the normal timer, Hard plays slowly but chooses very strong placements, and Impossible stays readable while using Rush Drop much more aggressively.
 - **Online Versus:** One player creates a six-character room code and the other joins it. The match uses a direct WebRTC data connection through PeerJS signaling, with the host acting as the authoritative game clock.
 
 Online play needs internet access and two modern browsers. No game account is required. If a very restrictive network blocks direct WebRTC traffic, players may need to try a different network.
@@ -46,7 +46,7 @@ Then open `http://127.0.0.1:4173/`.
 
 ## Built-in checks
 
-Open `index.html?selftest=1` to run the browser self-tests. They cover rotation stability, piece-specific wall-kick data, collision boundaries, line clearing and scoring, garbage rows, bot planning, unique interface IDs, visible code-rendered controls, control mappings, and online-lobby availability.
+Open `index.html?selftest=1` to run the browser self-tests. They cover rotation stability, piece-specific wall-kick data, collision boundaries, line clearing and scoring, garbage rows, bot planning, difficulty timer and pacing guarantees, unique interface IDs, visible code-rendered controls, control mappings, and online-lobby availability.
 
 ## Project files
 
