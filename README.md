@@ -10,7 +10,7 @@ The gameplay screen is built from responsive HTML, CSS, and canvas code. The ori
 - SRS-style, piece-specific wall kicks make rotations dependable beside walls and stacks.
 - Ghost pieces and a three-piece preview support planning without visual clutter.
 - Tuned delayed auto-shift, repeat speed, soft drop, and last-pressed-direction handling keep keyboard and touch movement responsive.
-- Desktop uses two full-size boards; portrait layouts prioritize the player's board and keep the opponent readable in a compact rail.
+- Desktop uses two full-size boards; portrait layouts devote at least 85% of the gameplay canvas height to the player's board while keeping the opponent readable in a compact rail.
 
 The handling and presentation were informed by the open-source [Tetr.js](https://github.com/simonlc/tetr.js) project and the broader mode/UI ideas in [Techmino](https://github.com/26F-Studio/Techmino). Rush Duel retains its own shared-piece and rush-drop battle rules.
 
