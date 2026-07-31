@@ -16,6 +16,7 @@ The handling and presentation were informed by the open-source [Tetr.js](https:/
 
 ## Play modes
 
+- **Solo Play:** Classic single-board Tetris with normal gravity, line-clear scoring, hard drop, and a device-local top-ten leaderboard. Enter a name after topping out to save the run.
 - **Solo vs Bot:** Easy has no automatic rush timer, Medium adds one second to the normal timer, Hard plays slowly but chooses very strong placements, and Impossible stays readable while using Rush Drop much more aggressively.
 - **Online Versus:** One player creates a six-character room code and the other joins it. The match uses a direct WebRTC data connection through PeerJS signaling, with the host acting as the authoritative game clock.
 
@@ -29,7 +30,7 @@ Online play needs internet access and two modern browsers. No game account is re
 | Soft drop | Down arrow | Soft Drop |
 | Rotate left | Z or Q | Rotate Left |
 | Rotate right | Up, X, or E | Rotate Right |
-| Rush drop | Space | Rush Drop |
+| Hard drop / Rush drop | Space | Hard Drop in Solo Play; Rush Drop in duels |
 | Pause | P or Escape | Pause |
 
 A rush drop locks both current pieces immediately. Every cleared line sends garbage directly to the opponent; simultaneous clears attack both boards instead of cancelling out. There is no line target: the match continues until a board tops out, and the last player with room wins.
@@ -46,7 +47,7 @@ Then open `http://127.0.0.1:4173/`.
 
 ## Built-in checks
 
-Open `index.html?selftest=1` to run the browser self-tests. They cover rotation stability, piece-specific wall-kick data, collision boundaries, line clearing and scoring, garbage rows, bot planning, difficulty timer and pacing guarantees, unique interface IDs, visible code-rendered controls, control mappings, and online-lobby availability.
+Open `index.html?selftest=1` to run the browser self-tests. They cover rotation stability, piece-specific wall-kick data, collision boundaries, classic line clearing and scoring, garbage routing, saved-score sanitizing and ordering, bot planning, difficulty timer and pacing guarantees, unique interface IDs, visible code-rendered controls, control mappings, and online-lobby availability.
 
 ## Project files
 
