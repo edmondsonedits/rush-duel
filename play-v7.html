@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050509">
+<title>Rush Duel Online V7</title>
+<style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#03040a;color:#7ef2ff;font:700 15px "Courier New",monospace;text-align:center}.box{padding:24px}.small{margin-top:10px;color:#9aabc8;font-size:11px;line-height:1.5}</style>
+</head>
+<body><div class="box">LOADING RUSH DUEL ONLINE V7…<div class="small">Using the official PeerJS cloud room server and built-in TURN relay.</div></div>
+<script>
+(async()=>{
+  try{
+    const build='official-peerjs-v7-20260731-2233';
+    const response=await fetch(`./index.html?source=${build}`,{cache:'no-store'});
+    if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    let html=await response.text();
+
+    const oldOptions="function peerServerOptions(){return {host:'0.peerjs.com',port:443,path:'/',secure:true,key:'peerjs',pingInterval:3000,debug:1,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}],iceCandidatePoolSize:8,sdpSemantics:'unified-plan'}};}";
+    const newOptions="function peerServerOptions(){return {host:'0.peerjs.com',port:443,path:'/',secure:true,key:'peerjs',pingInterval:3000,debug:2};}";
+    if(!html.includes(oldOptions))throw new Error('Could not patch the old PeerJS settings.');
+
+    html=html.replace(oldOptions,newOptions);
+    html=html.replaceAll("assets/peerjs-1.5.5.min.js",`https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js?build=${build}`);
+    html=html.replace('Peer-to-peer battle','Official PeerJS battle');
+    html=html.replace('No account needed. The match connects directly between browsers.','ONLINE V7 · Official PeerJS room registration with its built-in TURN relay fallback.');
+    html=html.replace('<title>Rush Duel — Neon Block Battle</title>','<title>Rush Duel — Online V7</title>');
+
+    document.open();document.write(html);document.close();
+  }catch(error){
+    document.body.innerHTML=`<div class="box">V7 COULD NOT LOAD<div class="small">${String(error?.message||error)}<br>Close this tab and reopen the V7 link.</div></div>`;
+  }
+})();
+</script>
+</body>
+</html>
