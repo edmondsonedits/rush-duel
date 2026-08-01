@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050509">
+<title>Rush Duel Online V9</title>
+<style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#03040a;color:#7ef2ff;font:700 15px "Courier New",monospace;text-align:center}.box{padding:24px}.small{margin-top:10px;color:#9aabc8;font-size:11px;line-height:1.5}</style>
+</head>
+<body>
+<div class="box">LOADING RUSH DUEL ONLINE V9…<div class="small">Using the same shared-room handshake that passed the two-device diagnostic.</div></div>
+<script>
+(async()=>{
+  try{
+    const build='online-v9-20260731-2320';
+    const response=await fetch('./index.html?source='+build,{cache:'no-store'});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    let html=await response.text();
+    const originalAsset='assets/peerjs-1.5.5.min.js';
+    if(!html.includes(originalAsset))throw new Error('The game networking asset marker was not found.');
+    html=html.replaceAll(originalAsset,'assets/online-transport-v9.js?build='+build);
+    html=html.replace('Peer-to-peer battle','Confirmed relay battle');
+    html=html.replace('No account needed. The match connects directly between browsers.','ONLINE V9 · Keep the host open on Device A, then join from Device B. Uses the handshake proven by the network diagnostic.');
+    html=html.replace('<title>Rush Duel — Neon Block Battle</title>','<title>Rush Duel — Online V9</title>');
+    html=html.replace('if(!force&&now-this.lastSnapshotAt<75)return;','if(!force&&now-this.lastSnapshotAt<180)return;');
+    html=html.replace("if(type==='peer-unavailable'&&this.role==='guest'){","if(type==='same-device'){this.status('Host and guest must stay open on two different devices.',true);this.badge('Two devices required',true);return;}if(type==='peer-unavailable'&&this.role==='guest'){");
+    const guard='<script>(()=>{const h=document.getElementById("hostBtn"),j=document.getElementById("joinBtn"),c=document.getElementById("joinCode"),b=document.getElementById("onlineBackBtn"),s=document.getElementById("lobbyStatus");const r=()=>{if(h)h.disabled=false;if(j)j.disabled=false;if(c)c.disabled=false};h?.addEventListener("click",()=>{if(j)j.disabled=true;if(c)c.disabled=true;if(s)s.textContent="HOST LOCKED ON DEVICE A · Keep this page open while Device B joins."},{capture:true});j?.addEventListener("click",()=>{if((c?.value||"").replace(/[^A-Za-z0-9]/g,"").length===6){if(h)h.disabled=true;if(s)s.textContent="GUEST LOCKED ON DEVICE B · Waiting for the host confirmation."}},{capture:true});b?.addEventListener("click",()=>setTimeout(r,0));window.__RUSH_DUEL_PAGE_BUILD__="'+build+'"})();<\/script>';
+    html=html.replace('</body>',guard+'</body>');
+    document.open();document.write(html);document.close();
+  }catch(error){
+    document.body.innerHTML='<div class="box">V9 COULD NOT LOAD<div class="small">'+String(error?.message||error)+'<br>Close this tab and reopen the V9 link.</div></div>';
+  }
+})();
+</script>
+</body>
+</html>
