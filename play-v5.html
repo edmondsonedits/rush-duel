@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050509">
+<title>Rush Duel — Loading Update</title>
+<style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#03040a;color:#7ef2ff;font:700 15px "Courier New",monospace;text-align:center}.box{padding:24px}.small{margin-top:10px;color:#9aabc8;font-size:11px}</style>
+</head>
+<body><div class="box">LOADING RUSH DUEL ONLINE V5…<div class="small">Installing the newest multiplayer connection.</div></div>
+<script>
+(async()=>{
+  try{
+    const response=await fetch('./index.html?source=online-v5-20260731',{cache:'no-store'});
+    if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    let html=await response.text();
+    html=html.replaceAll('assets/peerjs-1.5.5.min.js','assets/online-transport-v5.js?build=20260731-2203');
+    html=html.replace('Peer-to-peer battle','Live online battle');
+    html=html.replace('No account needed. The match connects directly between browsers.','No account needed. Both players connect through redundant secure room relays.');
+    document.open();document.write(html);document.close();
+  }catch(error){document.body.innerHTML=`<div class="box">UPDATE COULD NOT LOAD<div class="small">${String(error?.message||error)}</div></div>`;}
+})();
+</script></body>
+</html>
