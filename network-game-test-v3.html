@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050711">
+<title>Rush Duel Two-Phone Game Test V3</title>
+<link rel="stylesheet" href="assets/network-game-test-v3.css?build=2340">
+</head>
+<body><main class="shell"><section class="panel">
+<div class="kicker">RUSH DUEL · SHARED ROOM GAME TEST</div>
+<h1 class="title">Two-Phone Game Test V3</h1>
+<p class="sub">Creating a room immediately creates a shared mini-game below. Device A controls the cyan player. Device B controls the pink player. Both phones must show the same target, positions, scores, and movement.</p>
+<div class="build" id="build"></div>
+<div class="controls" id="controls"><button class="primary" id="hostBtn">DEVICE A · CREATE GAME ROOM</button><div class="join"><input id="code" maxlength="6" placeholder="ROOM CODE"><button class="pink" id="joinBtn">DEVICE B · JOIN GAME</button></div></div>
+<section class="role" id="rolePanel"><div class="role-title" id="roleTitle"></div><div class="room" id="room">------</div><div class="notice" id="roleNotice"></div><div class="share" id="shareBox"><input id="guestLink" readonly><button id="copyLink">Copy Guest Link</button></div></section>
+<div class="status"><strong id="headline">Ready</strong><span id="summary">Use two separate devices. The game will appear below as soon as a room is created or joined.</span></div>
+<div class="checks" id="checks"></div>
+<section class="game-card" id="gameCard">
+  <div class="game-top"><div><div class="game-title">ROOM ARENA</div><div class="game-sub" id="gameSub">Waiting for a room.</div></div><div class="proof" id="proof">NOT CONNECTED</div></div>
+  <div class="scorebar"><div class="score host">DEVICE A<b id="hostScore">0</b></div><div class="score middle">TARGET<b id="targetCount">1</b></div><div class="score guest">DEVICE B<b id="guestScore">0</b></div></div>
+  <div class="arena-wrap"><div class="arena" id="arena"><div class="target" id="target">★</div><div class="player host" id="hostPlayer">A</div><div class="player guest" id="guestPlayer">B</div></div><div class="control-pad"><button class="move" data-dir="up">▲</button><button class="move" data-dir="left">◀</button><button class="move" data-dir="down">▼</button><button class="move" data-dir="right">▶</button><button class="reset-game warn" id="resetGame">HOST RESET GAME</button></div></div>
+  <div class="event" id="event">The host game exists. Waiting for the second phone.</div>
+</section>
+<div class="tools"><button id="copyReport">Copy Test Report</button><button class="warn" id="resetPage">Reset This Device</button></div><pre class="log" id="log"></pre>
+</section></main>
+<script src="assets/network-game-test-v3.js?build=2340"></script></body></html>
