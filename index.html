@@ -328,9 +328,10 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
   function loadPeerLibrary(){
     if(window.Peer)return Promise.resolve(true);
     if(peerLibraryPromise)return peerLibraryPromise;
-    peerLibraryPromise=new Promise(resolve=>{const script=document.createElement('script');script.src='https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js';script.async=true;script.onload=()=>resolve(!!window.Peer);script.onerror=()=>resolve(false);document.head.appendChild(script);});
+    peerLibraryPromise=new Promise(resolve=>{const script=document.createElement('script');script.src='assets/peerjs-1.5.5.min.js';script.async=true;script.onload=()=>resolve(!!window.Peer);script.onerror=()=>resolve(false);document.head.appendChild(script);});
     return peerLibraryPromise;
   }
+  function peerServerOptions(){return {host:'0.peerjs.com',port:443,path:'/',secure:true,key:'peerjs',pingInterval:3000,debug:1,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}],iceCandidatePoolSize:8,sdpSemantics:'unified-plan'}};}
   const normalizeSoloScores=entries=>(Array.isArray(entries)?entries:[]).filter(entry=>entry&&Number.isFinite(Number(entry.score))).map(entry=>({name:String(entry.name||'PLAYER').replace(/[^A-Za-z0-9 _-]/g,'').trim().slice(0,12)||'PLAYER',score:Math.max(0,Math.floor(Number(entry.score))),lines:Math.max(0,Math.floor(Number(entry.lines)||0)),level:Math.max(1,Math.floor(Number(entry.level)||1)),savedAt:String(entry.savedAt||'')})).sort((a,b)=>b.score-a.score||b.lines-a.lines).slice(0,10);
   function loadSoloScores(){try{return normalizeSoloScores(JSON.parse(localStorage.getItem(SOLO_SCORE_KEY)||'[]'));}catch{return [];}}
 
@@ -747,7 +748,7 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
 
   class NetworkDuel {
     constructor(){
-      this.peer=null;this.conn=null;this.role=null;this.room='';this.connected=false;this.closing=false;this.lastSnapshotAt=0;this.localReady=false;this.remoteReady=false;this.latency=0;this.pingTimer=0;this.reconnectTimer=0;this.roomExpireTimer=0;this.reconnectAttempts=0;this.wasInMatch=false;
+      this.peer=null;this.conn=null;this.role=null;this.room='';this.connected=false;this.closing=false;this.signalingReady=false;this.searching=false;this.lastSnapshotAt=0;this.localReady=false;this.remoteReady=false;this.latency=0;this.pingTimer=0;this.reconnectTimer=0;this.signalTimer=0;this.connectTimer=0;this.joinRetryTimer=0;this.reconnectAttempts=0;this.joinAttempts=0;this.maxJoinAttempts=4;this.wasInMatch=false;this.wakeLock=null;
     }
     code(){
       const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -773,7 +774,8 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       this.closing=true;
       try{this.conn?.close();}catch{}
       try{this.peer?.destroy();}catch{}
-      clearInterval(this.pingTimer);clearTimeout(this.reconnectTimer);clearTimeout(this.roomExpireTimer);this.peer=null;this.conn=null;this.role=null;this.room='';this.connected=false;this.lastSnapshotAt=0;this.localReady=false;this.remoteReady=false;this.latency=0;this.reconnectAttempts=0;this.wasInMatch=false;
+      try{this.wakeLock?.release();}catch{}
+      clearInterval(this.pingTimer);clearTimeout(this.reconnectTimer);clearTimeout(this.signalTimer);clearTimeout(this.connectTimer);clearTimeout(this.joinRetryTimer);this.peer=null;this.conn=null;this.role=null;this.room='';this.connected=false;this.signalingReady=false;this.searching=false;this.lastSnapshotAt=0;this.localReady=false;this.remoteReady=false;this.latency=0;this.reconnectAttempts=0;this.joinAttempts=0;this.wasInMatch=false;this.wakeLock=null;
       this.closing=false;this.badge('');this.toast('');
       this.syncReadyUi();if(resetUi){$('roomPanel')?.classList.remove('active');$('onlineScreen')?.classList.remove('hosting');if($('roomCode'))$('roomCode').textContent='------';}
     }
@@ -784,44 +786,122 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       if(!loaded)this.status('Online play could not load. Check your connection and try again.',true);
       return loaded;
     }
+    async keepAwake(){
+      try{
+        if(document.visibilityState==='visible'&&'wakeLock' in navigator){
+          try{await this.wakeLock?.release();}catch{}
+          this.wakeLock=await navigator.wakeLock.request('screen');
+        }
+      }catch{}
+    }
+    hostPeerId(){return `rush-duel-${this.room.toLowerCase()}`;}
     async host(){
       if(!await this.ensurePeer())return;
       this.cleanup();this.role='host';this.room=this.code();
-      $('roomCode').textContent=this.room;$('roomPanel').classList.add('active');$('onlineScreen').classList.add('hosting');
-      this.status('Opening the room…');
-      const peerId=`rush-duel-${this.room.toLowerCase()}`;
-      this.peer=new Peer(peerId,{debug:1});this.bindPeer();
-      this.peer.on('open',()=>this.status(`Room ${this.room} is ready. Waiting for your rival…`));
-      this.peer.on('connection',conn=>{
-        if(this.connected||this.conn?.open){try{conn.close();}catch{}return;}
+      $('roomCode').textContent='------';$('roomPanel').classList.remove('active');$('onlineScreen').classList.add('hosting');
+      this.status('Registering a secure room…');this.createHostPeer();this.keepAwake();
+    }
+    createHostPeer(){
+      if(this.closing||this.role!=='host')return;
+      this.signalingReady=false;
+      const peer=new Peer(this.hostPeerId(),peerServerOptions());this.peer=peer;this.bindPeer(peer);
+      clearTimeout(this.signalTimer);this.signalTimer=setTimeout(()=>{
+        if(peer===this.peer&&!this.signalingReady&&!this.closing)this.rebuildHostPeer('The room server did not answer. Retrying…');
+      },10000);
+      peer.on('open',()=>{
+        if(peer!==this.peer||this.closing)return;
+        clearTimeout(this.signalTimer);this.signalingReady=true;this.reconnectAttempts=0;
+        $('roomCode').textContent=this.room;$('roomPanel').classList.add('active');
+        this.status(`Room ${this.room} is live. Keep this screen open while your rival joins.`);
+      });
+      peer.on('connection',conn=>{
+        if(peer!==this.peer||conn.metadata?.game!=='rush-duel-v2'||this.connected||this.conn?.open){try{conn.close();}catch{}return;}
         this.attach(conn);
       });
+    }
+    rebuildHostPeer(message='Re-registering the room…'){
+      if(this.closing||this.role!=='host')return;
+      this.status(message,true);$('roomPanel').classList.remove('active');$('roomCode').textContent='------';
+      const oldPeer=this.peer;this.peer=null;this.signalingReady=false;
+      try{oldPeer?.destroy();}catch{}
+      setTimeout(()=>{if(!this.closing&&this.role==='host'&&!this.connected)this.createHostPeer();},350);
     }
     async join(rawCode){
       if(!await this.ensurePeer())return;
       const code=(rawCode||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
       if(code.length!==6){this.status('Enter the complete six-letter room code.',true);return;}
-      this.cleanup();this.role='guest';this.room=code;this.status(`Finding room ${code}…`);
-      this.peer=new Peer(undefined,{debug:1});this.bindPeer();
-      this.peer.on('open',()=>{
-        this.connectToHost();
+      this.cleanup();this.role='guest';this.room=code;this.status(`Connecting to room ${code}…`);this.createGuestPeer();this.keepAwake();
+    }
+    createGuestPeer(){
+      if(this.closing||this.role!=='guest')return;
+      this.signalingReady=false;
+      const peer=new Peer(undefined,peerServerOptions());this.peer=peer;this.bindPeer(peer);
+      clearTimeout(this.signalTimer);this.signalTimer=setTimeout(()=>{
+        if(peer===this.peer&&!this.signalingReady&&!this.closing)this.retryGuestSearch('The room server did not answer.');
+      },10000);
+      peer.on('open',()=>{
+        if(peer!==this.peer||this.closing)return;
+        clearTimeout(this.signalTimer);this.signalingReady=true;this.connectToHost();
       });
     }
-    connectToHost(){if(this.role!=='guest'||!this.peer||this.connected)return;const conn=this.peer.connect(`rush-duel-${this.room.toLowerCase()}`,{reliable:true,serialization:'json',metadata:{game:'rush-duel-v2',reconnect:this.reconnectAttempts>0}});this.attach(conn);}
-    bindPeer(){
-      this.peer.on('error',error=>{
-        if(this.closing)return;
+    replaceGuestPeer(){
+      if(this.closing||this.role!=='guest'||this.connected)return;
+      const oldPeer=this.peer,oldConn=this.conn;this.peer=null;this.conn=null;this.signalingReady=false;this.searching=false;
+      try{oldConn?.close();}catch{}try{oldPeer?.destroy();}catch{}
+      this.createGuestPeer();
+    }
+    connectToHost(){
+      if(this.role!=='guest'||!this.peer||!this.signalingReady||this.connected||this.searching)return;
+      this.searching=true;this.status(`Searching for room ${this.room}…`);
+      const conn=this.peer.connect(this.hostPeerId(),{reliable:true,serialization:'json',metadata:{game:'rush-duel-v2',room:this.room,reconnect:this.wasInMatch||this.reconnectAttempts>0}});
+      this.attach(conn);clearTimeout(this.connectTimer);this.connectTimer=setTimeout(()=>{
+        if(!this.connected&&conn===this.conn)this.retryGuestSearch('The room did not answer.');
+      },9000);
+    }
+    retryGuestSearch(reason='Room is not registered yet.'){
+      if(this.closing||this.connected||this.role!=='guest'||this.joinRetryTimer)return;
+      clearTimeout(this.connectTimer);clearTimeout(this.signalTimer);this.searching=false;
+      const oldConn=this.conn;this.conn=null;try{oldConn?.close();}catch{}
+      if(this.joinAttempts>=this.maxJoinAttempts){
+        this.status(`Room ${this.room} could not be reached. On the host, wait until it says the room is live, then try again.`,true);this.badge('Room unavailable',true);return;
+      }
+      this.joinAttempts++;this.status(`${reason} Retrying ${this.joinAttempts}/${this.maxJoinAttempts}…`,true);
+      this.joinRetryTimer=setTimeout(()=>{this.joinRetryTimer=0;this.replaceGuestPeer();},650+this.joinAttempts*350);
+    }
+    bindPeer(peer=this.peer){
+      peer.on('error',error=>{
+        if(this.closing||peer!==this.peer)return;
         const type=error?.type||'';
         if(type==='unavailable-id'&&this.role==='host'){this.status('That code was taken; creating another room…');setTimeout(()=>this.host(),250);return;}
-        const message=type==='peer-unavailable'?'Room not found. Check the code and ask the host to keep this page open.':'Connection problem. Please try the room again.';
-        this.status(message,true);this.badge('Connection problem',true);
+        if(type==='peer-unavailable'&&this.role==='guest'){this.retryGuestSearch('Room is not registered yet.');return;}
+        if(['network','server-error','socket-error','socket-closed'].includes(type)){this.handleSignalingDisconnect();return;}
+        if(type==='webrtc'&&this.role==='guest'&&!this.connected){
+          if(this.joinAttempts<this.maxJoinAttempts){this.retryGuestSearch('Room found, but the direct link failed.');return;}
+          this.status('Room found, but these phones could not form a direct link. Try Wi-Fi or another network.',true);this.badge('Direct link failed',true);return;
+        }
+        this.status('Connection problem. Please try the room again.',true);this.badge('Connection problem',true);
       });
-      this.peer.on('disconnected',()=>{if(!this.closing&&!this.conn?.open)this.handleDisconnect();});
+      peer.on('disconnected',()=>{if(!this.closing&&peer===this.peer)this.handleSignalingDisconnect();});
+    }
+    handleSignalingDisconnect(){
+      if(this.closing)return;this.signalingReady=false;
+      if(this.conn?.open){
+        this.badge('Game connected · restoring room link',true);
+        try{if(this.peer?.disconnected)this.peer.reconnect();}catch{}
+        clearTimeout(this.signalTimer);this.signalTimer=setTimeout(()=>{try{if(!this.closing&&this.peer?.disconnected)this.peer.reconnect();}catch{}},2200);
+        return;
+      }
+      if(this.role==='host'){
+        $('roomPanel').classList.remove('active');$('roomCode').textContent='------';this.status(`Re-registering room ${this.room}…`,true);
+        try{if(this.peer?.disconnected)this.peer.reconnect();}catch{}
+        clearTimeout(this.signalTimer);this.signalTimer=setTimeout(()=>{if(!this.signalingReady&&!this.closing)this.rebuildHostPeer();},2200);
+      }else if(this.role==='guest')this.retryGuestSearch('The room connection was interrupted.');
     }
     attach(conn){
       this.conn=conn;
       conn.on('open',()=>{
-        clearTimeout(this.reconnectTimer);clearTimeout(this.roomExpireTimer);this.connected=true;this.reconnectAttempts=0;this.status(this.wasInMatch?'Connection restored — resuming together…':'Connected! Both players must confirm they are ready.');
+        if(conn!==this.conn||this.closing)return;
+        clearTimeout(this.reconnectTimer);clearTimeout(this.connectTimer);clearTimeout(this.joinRetryTimer);this.joinRetryTimer=0;this.searching=false;this.connected=true;this.signalingReady=true;this.reconnectAttempts=0;this.joinAttempts=0;this.status(this.wasInMatch?'Connection restored — resuming together…':'Connected! Both players must confirm they are ready.');
         this.updateBadge();this.syncReadyUi();
         conn.on('data',data=>this.onData(data));
         clearInterval(this.pingTimer);this.pingTimer=setInterval(()=>{if(this.connected)this.send({type:'ping',at:performance.now()});},2000);
@@ -829,17 +909,24 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
           const now=performance.now();game.paused=false;game.phase='countdown';game.countdownEnd=now+COUNTDOWN_MS;game.deadline=Infinity;this.toast('Connection restored · restarting in 3…');this.send({type:'resume',state:this.snapshot()});this.broadcast(true);this.wasInMatch=false;
         }
       });
-      conn.on('close',()=>{if(!this.closing)this.handleDisconnect();});
-      conn.on('error',()=>{if(!this.closing)this.handleDisconnect();});
+      const lost=()=>{
+        if(this.closing||conn!==this.conn)return;
+        if(!this.connected&&this.role==='guest'){this.retryGuestSearch('The room did not answer.');return;}
+        this.handleDisconnect();
+      };
+      conn.on('close',lost);conn.on('error',lost);
     }
     handleDisconnect(){
-      if(this.closing||(!this.connected&&this.reconnectTimer))return;this.wasInMatch=this.wasInMatch||(game.mode==='online'&&game.started);this.connected=false;this.conn=null;this.localReady=false;this.remoteReady=false;clearInterval(this.pingTimer);this.badge('Reconnecting…',true);this.syncReadyUi();
+      if(this.closing||(!this.connected&&this.reconnectTimer))return;this.wasInMatch=this.wasInMatch||(game.mode==='online'&&game.started);this.connected=false;this.searching=false;this.conn=null;this.localReady=false;this.remoteReady=false;clearInterval(this.pingTimer);clearTimeout(this.connectTimer);this.badge('Reconnecting…',true);this.syncReadyUi();
       if(this.wasInMatch){game.paused=true;this.toast('Rival disconnected · trying to reconnect…');}
-      if(this.role==='guest'&&this.reconnectAttempts<3){this.reconnectAttempts++;this.status(`Connection lost. Reconnecting ${this.reconnectAttempts}/3…`,true);this.reconnectTimer=setTimeout(()=>this.attemptReconnect(),900*this.reconnectAttempts);}
-      else if(this.role==='host'){this.status('Rival disconnected. The room will stay open for 20 seconds.',true);this.roomExpireTimer=setTimeout(()=>{if(!this.connected){this.status('The room expired. Create a new room to try again.',true);this.toast('The reconnect window expired. Tap here for the online lobby.');}},20000);}
+      if(this.role==='guest'&&this.reconnectAttempts<this.maxJoinAttempts){this.reconnectAttempts++;this.status(`Connection lost. Reconnecting ${this.reconnectAttempts}/${this.maxJoinAttempts}…`,true);this.reconnectTimer=setTimeout(()=>this.attemptReconnect(),900*this.reconnectAttempts);}
+      else if(this.role==='host'){
+        if(this.peer?.disconnected)this.handleSignalingDisconnect();
+        else{this.status(`Rival disconnected. Room ${this.room} is still live; they can rejoin with the same code.`,true);this.badge(`HOST · ${this.room}`,true);}
+      }
       else{this.status('Could not reconnect. Check the room code and try again.',true);this.toast('Could not reconnect. Tap here for the online lobby.');}
     }
-    attemptReconnect(){this.reconnectTimer=0;if(this.connected||this.role!=='guest')return;try{if(this.peer?.disconnected)this.peer.reconnect();}catch{}setTimeout(()=>{if(!this.connected)this.connectToHost();},250);}
+    attemptReconnect(){this.reconnectTimer=0;if(this.connected||this.role!=='guest')return;this.joinAttempts=0;if(!this.peer||this.peer.destroyed||this.peer.disconnected){this.replaceGuestPeer();return;}this.signalingReady=true;this.connectToHost();}
     send(payload){
       if(!this.connected||!this.conn?.open)return false;
       try{this.conn.send(payload);return true;}catch{return false;}
@@ -1205,7 +1292,10 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
   $('difficulty').addEventListener('change',e=>game.setDifficulty(e.target.value));
   document.querySelectorAll('[data-difficulty-choice]').forEach(button=>button.addEventListener('click',()=>{const value=button.dataset.difficultyChoice;$('difficulty').value=value;game.setDifficulty(value);game.playTone('move');}));
   $('saveScoreBtn').addEventListener('click',saveCurrentSoloScore);$('scoreName').addEventListener('keydown',e=>{if(e.key==='Enter')saveCurrentSoloScore();});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){releaseAllInputs();if(activeScreen==='gameScreen'&&game.started&&!game.paused&&!game.winner&&!(game.mode==='online'&&network.role==='guest')){game.togglePause();if(game.mode==='online'&&network.role==='host')network.broadcast(true);}}});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){releaseAllInputs();if(activeScreen==='gameScreen'&&game.started&&!game.paused&&!game.winner&&!(game.mode==='online'&&network.role==='guest')){game.togglePause();if(game.mode==='online'&&network.role==='host')network.broadcast(true);}}
+    else if(network.role){network.keepAwake();if(network.peer?.disconnected)network.handleSignalingDisconnect();}
+  });
 
   let last=performance.now();
   function frame(now){const dt=Math.min(40,now-last);last=now;if(activeScreen==='gameScreen'){processHeld(now);if(!(game.mode==='online'&&network.role==='guest'))game.update(now,dt);if(game.mode==='online'&&network.role==='host')network.broadcast();render(now);}requestAnimationFrame(frame);}
@@ -1250,6 +1340,13 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       check('Hard and Impossible prioritize smart placements',DIFFICULTIES.hard.choice===1&&DIFFICULTIES.hard.error<=.02&&DIFFICULTIES.impossible.choice===1&&DIFFICULTIES.impossible.error===0,'placement intelligence was reduced');
       check('rush frequency rises with difficulty',DIFFICULTIES.easy.forceChance<DIFFICULTIES.medium.forceChance&&DIFFICULTIES.medium.forceChance<DIFFICULTIES.hard.forceChance&&DIFFICULTIES.hard.forceChance<DIFFICULTIES.impossible.forceChance,'rush chances are out of order');
       check('online lobby is available',!!$('hostBtn')&&!!$('joinBtn')&&!!$('joinCode'),'online controls missing');
+      const peerOptions=peerServerOptions();
+      check('online signaling uses explicit secure production settings',peerOptions.secure===true&&peerOptions.port===443&&peerOptions.host==='0.peerjs.com','signaling settings are incomplete');
+      check('online play has multiple ICE discovery servers',peerOptions.config?.iceServers?.length>=2,'too few ICE servers');
+      const peerLoaderSource=loadPeerLibrary.toString();
+      check('online library is served with the game',peerLoaderSource.includes('assets/peerjs-1.5.5.min.js')&&!peerLoaderSource.includes('unpkg.com'),'online play still depends on a third-party runtime request');
+      check('room discovery retries transient mobile failures',network.maxJoinAttempts>=4&&typeof network.retryGuestSearch==='function'&&typeof network.replaceGuestPeer==='function','room discovery does not retry');
+      check('host rooms can re-register after signaling drops',typeof network.createHostPeer==='function'&&typeof network.rebuildHostPeer==='function'&&typeof network.handleSignalingDisconnect==='function','host room lifecycle is incomplete');
       check('three battle choices are available',!!$('classicBtn')&&!!$('soloBtn')&&!!$('onlineBtn'),'a battle mode is missing');
       const classicProbe=new RushDuel();classicProbe.mode='classic';classicProbe.started=true;classicProbe.phase='active';classicProbe.player.spawn(3);const classicBotBefore=JSON.stringify(classicProbe.bot.grid);classicProbe.commitRound('player');
       check('classic hard drop locks only the solo board',classicProbe.player.active===null&&JSON.stringify(classicProbe.bot.grid)===classicBotBefore&&classicProbe.bot.active===null,'classic mode changed the rival board');
