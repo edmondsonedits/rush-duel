@@ -11,7 +11,7 @@
 <script>
 (async()=>{
   try{
-    const build='20260731-2210';
+    const build='7dea6f7c';
     const response=await fetch(`./index.html?source=online-v6-${build}`,{cache:'no-store'});
     if(!response.ok)throw new Error(`HTTP ${response.status}`);
     let html=await response.text();
