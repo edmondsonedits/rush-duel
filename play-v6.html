@@ -7,10 +7,14 @@
 <title>Rush Duel Online V6</title>
 <style>html,body{margin:0;min-height:100%;background:#03040a;color:#fff;font-family:monospace}.boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}.boot b{color:#66ebff;font-size:20px}.boot span{display:block;margin-top:10px;color:#aab9d1}</style>
 </head>
-<body><div class="boot" id="boot"><div><b>RUSH DUEL ONLINE V6</b><span>Loading the proven two-phone room transport…</span></div></div>
+<body><div class="boot" id="boot"><div><b>RUSH DUEL ONLINE V6</b><span>Loading automatic room countdown…</span></div></div>
 <script>
 (async()=>{
-  const BUILD='pubnub-peer-v6-20260801-0010';
+  const BUILD='pubnub-auto-v6-20260801-0018';
+  const patch=(source,label,before,after)=>{
+    if(!source.includes(before))throw new Error('Game update mismatch: '+label);
+    return source.replace(before,after);
+  };
   try{
     const response=await fetch('index.html?source='+encodeURIComponent(BUILD),{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load the game page.');
@@ -19,6 +23,38 @@
     html=html.replaceAll('Registering a secure room…','Creating a live room…');
     html=html.replaceAll('Loading secure online play…','Loading proven online room service…');
     html=html.replaceAll('peer-to-peer duels','online duels');
+
+    html=patch(html,'host enters waiting game',
+      "this.cleanup();this.role='host';this.room=this.code();",
+      "this.cleanup();this.role='host';this.room=this.code();game.mode='online';showScreen('gameScreen');game.reset();game.phase='waiting';game.deadline=Infinity;game.countdownEnd=Infinity;game.message='WAITING FOR RIVAL';game.messageUntil=Infinity;game.updateUI();this.badge('HOST · '+this.room+' · CREATING ROOM');this.toast('ROOM '+this.room+' · WAITING FOR RIVAL');"
+    );
+
+    html=patch(html,'host waiting status',
+      "this.status(`Room ${this.room} is live. Keep this screen open while your rival joins.`);",
+      "this.status('Room '+this.room+' is live. Waiting for your rival to join.');this.badge('HOST · '+this.room+' · WAITING');this.toast('ROOM '+this.room+' · WAITING FOR RIVAL');"
+    );
+
+    html=patch(html,'automatic connection status',
+      "this.status(this.wasInMatch?'Connection restored — resuming together…':'Connected! Both players must confirm they are ready.');",
+      "this.status(this.wasInMatch?'Connection restored — resuming together…':'Connected! The match will start automatically.');"
+    );
+
+    html=patch(html,'automatic join acknowledgement',
+      "conn.on('data',data=>this.onData(data));",
+      "conn.on('data',data=>this.onData(data));if(this.role==='guest'&&!this.wasInMatch)this.send({type:'joined'});else if(this.role==='host'&&!this.wasInMatch)this.toast('RIVAL JOINED · PREPARING COUNTDOWN…');"
+    );
+
+    html=patch(html,'automatic countdown trigger',
+      "if(data.type==='pong'){this.latency=Math.max(1,Math.round(performance.now()-Number(data.at||performance.now())));this.updateBadge();return;}",
+      "if(data.type==='pong'){this.latency=Math.max(1,Math.round(performance.now()-Number(data.at||performance.now())));this.updateBadge();return;}if(data.type==='joined'&&this.role==='host'){if(game.mode==='online'&&game.phase==='waiting'){this.status('Rival joined. Starting the countdown…');this.toast('RIVAL JOINED · COUNTDOWN STARTING…');setTimeout(()=>{if(this.connected&&game.phase==='waiting')this.startHostMatch();},300);}return;}"
+    );
+
+    html=patch(html,'remove manual ready step',
+      "syncReadyUi(){const button=$('onlineReadyBtn');if(!button)return;button.classList.toggle('active',this.connected&&activeScreen==='onlineScreen');button.classList.toggle('ready',this.localReady);button.textContent=this.localReady?(this.remoteReady?'Starting…':'Ready · Waiting for Rival'):\"I’m Ready\";}",
+      "syncReadyUi(){const button=$('onlineReadyBtn');if(!button)return;button.classList.remove('active','ready');button.hidden=true;button.textContent='Starts automatically';}"
+    );
+
+    html=html.replace('<title>Rush Duel — Neon Block Battle</title>','<title>Rush Duel — Automatic Online Start</title>');
     document.open();document.write(html);document.close();
   }catch(error){
     document.getElementById('boot').innerHTML='<div><b>GAME COULD NOT LOAD</b><span>'+String(error&&error.message||error)+'</span></div>';
