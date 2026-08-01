@@ -1231,11 +1231,12 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       countdownProbe.beginActiveRound(performance.now());check('countdown cleanly releases controls',countdownProbe.phase==='active'&&countdownProbe.canAct(),'controls stayed locked');
       const lockProbe=new RushDuel();lockProbe.mode='classic';lockProbe.started=true;lockProbe.phase='active';lockProbe.round=1;lockProbe.fillQueue();lockProbe.currentShape=lockProbe.queue.shift();lockProbe.fillQueue();lockProbe.player.spawn(lockProbe.currentShape);while(lockProbe.player.move(0,1)){}lockProbe.groundedAt=1000;lockProbe.update(1200,0);const earlyRound=lockProbe.round;lockProbe.update(1600,0);
       check('classic pieces use a forgiving lock delay',earlyRound===1&&lockProbe.round===2,`rounds were ${earlyRound} then ${lockProbe.round}`);
-      const speedProbe=new RushDuel();speedProbe.mode='classic';speedProbe.level=1;const levelOneSpeed=speedProbe.getGravityInterval(0);speedProbe.level=3;check('solo levels increase gravity every ten lines',speedProbe.getGravityInterval(0)<levelOneSpeed,'higher level did not speed up gravity');
+      const speedProbe=new RushDuel();speedProbe.mode='classic';speedProbe.player.lines=0;const levelOneSpeed=speedProbe.getGravityInterval(0);speedProbe.player.lines=20;check('solo levels increase gravity every ten lines',speedProbe.getGravityInterval(0)<levelOneSpeed&&speedProbe.level===3,'higher level did not speed up gravity');
       const packedProbe=new Board('packed');packedProbe.bestCombo=4;packedProbe.tetrises=2;const packed=network.packBoard(packedProbe);check('online snapshots preserve progression stats',packed.bestCombo===4&&packed.tetrises===2&&network.snapshot().version===2,'snapshot stats or protocol version missing');
       check('online play has ready and reconnect feedback',!!$('onlineReadyBtn')&&typeof network.attemptReconnect==='function'&&typeof network.requestRematch==='function','online reliability controls missing');
       check('first-run tutorial has all four essentials',TUTORIAL_STEPS.length===4&&!!$('tutorialOverlay')&&!!$('tutorialNextBtn'),'tutorial is incomplete');
-      check('large artwork is cached as external assets',!document.documentElement.innerHTML.includes('data:image/jpeg;base64')&&['title.jpg','options.jpg','game.jpg'].every(name=>document.documentElement.innerHTML.includes(`assets/${name}`)),'embedded artwork still delays startup');
+      const artBackgrounds=[['.title-bg','title.jpg'],['.options-bg','options.jpg'],['.game-bg','game.jpg']];
+      check('large artwork is cached as external assets',artBackgrounds.every(([selector,name])=>{const image=getComputedStyle(document.querySelector(selector)).backgroundImage;return image.includes(`assets/${name}`)&&!image.includes('data:image');}),'embedded artwork still delays startup');
     }catch(error){check('self-test runner',false,error?.message||String(error));}
     return {pass:tests.every(test=>test.pass),tests};
   }
