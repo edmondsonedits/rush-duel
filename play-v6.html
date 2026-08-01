@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050509">
+<title>Rush Duel Online V6</title>
+<style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#03040a;color:#7ef2ff;font:700 15px "Courier New",monospace;text-align:center}.box{padding:24px}.small{margin-top:10px;color:#9aabc8;font-size:11px;line-height:1.5}</style>
+</head>
+<body><div class="box">LOADING RUSH DUEL ONLINE V6…<div class="small">Installing room signaling and TURN-relayed gameplay.</div></div>
+<script>
+(async()=>{
+  try{
+    const build='20260731-2210';
+    const response=await fetch(`./index.html?source=online-v6-${build}`,{cache:'no-store'});
+    if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    let html=await response.text();
+    html=html.replaceAll('assets/peerjs-1.5.5.min.js',`assets/online-transport-v6.js?build=${build}`);
+    html=html.replace('Peer-to-peer battle','WebRTC relay battle');
+    html=html.replace('No account needed. The match connects directly between browsers.','ONLINE V6 · The room is signaled through ntfy, then gameplay connects directly or through TURN relay.');
+    html=html.replace('<title>Rush Duel — Neon Block Battle</title>','<title>Rush Duel — Online V6</title>');
+    document.open();document.write(html);document.close();
+  }catch(error){document.body.innerHTML=`<div class="box">UPDATE COULD NOT LOAD<div class="small">${String(error?.message||error)}<br>Close this tab and reopen the V6 link.</div></div>`;}
+})();
+</script></body>
+</html>
