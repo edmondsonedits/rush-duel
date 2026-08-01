@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050509">
+<title>Rush Duel Online V10</title>
+<style>html,body{margin:0;min-height:100%;background:#03040a;color:#fff;font-family:monospace}.boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}.boot b{color:#66ebff;font-size:20px}.boot span{display:block;margin-top:10px;color:#aab9d1}</style>
+</head>
+<body><div class="boot" id="boot"><div><b>RUSH DUEL ONLINE V10</b><span>Loading reliable synchronized match start…</span></div></div>
+<script>
+(async()=>{
+  const BUILD='pubnub-start-sync-v10-20260801-0030';
+  const patch=(source,label,before,after)=>{
+    if(!source.includes(before))throw new Error('Game update mismatch: '+label);
+    return source.replace(before,after);
+  };
+  try{
+    const response=await fetch('index.html?source='+encodeURIComponent(BUILD),{cache:'no-store'});
+    if(!response.ok)throw new Error('Could not load the game page.');
+    let html=await response.text();
+    html=html.replaceAll('assets/peerjs-1.5.5.min.js','assets/pubnub-peer-transport-v6.js?build='+encodeURIComponent(BUILD));
+    html=html.replaceAll('Registering a secure room…','Creating a live room…');
+    html=html.replaceAll('Loading secure online play…','Loading proven online room service…');
+    html=html.replaceAll('peer-to-peer duels','online duels');
+    html=html.replace('</style>','.rush-hit.cooldown,.rush-hit:disabled{filter:grayscale(.55) brightness(.68);opacity:.72;cursor:not-allowed;box-shadow:inset 0 0 18px rgba(255,190,70,.08),0 3px 0 #01040a}.rush-hit.cooldown .hint{color:#ffd86a}</style>');
+
+    html=patch(html,'rush cooldown constant',
+      "const BASE_GRAVITY=980, MIN_GRAVITY=120, BASE_ROUND_MS=8200, MIN_ROUND_MS=4200, LOCK_DELAY_MS=520, LOCK_RESET_LIMIT=15, COUNTDOWN_MS=3000;",
+      "const BASE_GRAVITY=980, MIN_GRAVITY=120, BASE_ROUND_MS=8200, MIN_ROUND_MS=4200, LOCK_DELAY_MS=520, LOCK_RESET_LIMIT=15, COUNTDOWN_MS=3000, RUSH_COOLDOWN_MS=10000;"
+    );
+
+    html=patch(html,'bot respects rush cooldown',
+      "if(this.willForce&&now>=this.readyAt) game.commitRound('bot');",
+      "if(this.willForce&&now>=this.readyAt&&game.canRush('bot',now)) game.commitRound('bot');"
+    );
+
+    html=patch(html,'game cooldown state',
+      "this.mode='bot';this.classicScoreSaved=false;this.countdownEnd=0;this.groundedAt=0;this.lockResets=0;this.level=1;this.playerGlowUntil=0;this.botGlowUntil=0;",
+      "this.mode='bot';this.classicScoreSaved=false;this.countdownEnd=0;this.groundedAt=0;this.lockResets=0;this.level=1;this.playerGlowUntil=0;this.botGlowUntil=0;this.playerRushReadyAt=0;this.botRushReadyAt=0;"
+    );
+
+    html=patch(html,'reset cooldowns',
+      "this.message='';this.particles=[];this.shake=0;this.flash=0;this.winner='';this.paused=false;this.phase='countdown';this.started=true;this.classicScoreSaved=false;this.matchStart=performance.now();this.gravityInterval=BASE_GRAVITY;this.currentRoundDuration=BASE_ROUND_MS;this.level=1;this.groundedAt=0;this.lockResets=0;this.playerGlowUntil=0;this.botGlowUntil=0;",
+      "this.message='';this.particles=[];this.shake=0;this.flash=0;this.winner='';this.paused=false;this.phase='countdown';this.started=true;this.classicScoreSaved=false;this.matchStart=performance.now();this.gravityInterval=BASE_GRAVITY;this.currentRoundDuration=BASE_ROUND_MS;this.level=1;this.groundedAt=0;this.lockResets=0;this.playerGlowUntil=0;this.botGlowUntil=0;this.playerRushReadyAt=0;this.botRushReadyAt=0;"
+    );
+
+    html=patch(html,'rush cooldown helpers',
+      "canAct(){return this.started&&!this.paused&&this.phase==='active'&&!this.winner;}",
+      "canAct(){return this.started&&!this.paused&&this.phase==='active'&&!this.winner;}rushKey(side){return side==='player'?'playerRushReadyAt':'botRushReadyAt';}rushRemaining(side,now=performance.now()){return Math.max(0,this[this.rushKey(side)]-now);}canRush(side,now=performance.now()){return this.mode==='classic'||this.rushRemaining(side,now)<=0;}markRush(side,now=performance.now()){if(this.mode!=='classic')this[this.rushKey(side)]=now+RUSH_COOLDOWN_MS;}showRushWait(side){const left=this.rushRemaining(side);this.message='RUSH RECHARGING · '+Math.max(1,Math.ceil(left/1000))+'s';this.messageUntil=performance.now()+650;this.playTone('move');this.updateUI();}"
+    );
+
+    html=patch(html,'enforce rush cooldown',
+      "commitRound(source){\n      if(!this.canAct())return;",
+      "commitRound(source){\n      if(!this.canAct())return false;\n      if(this.mode!=='classic'&&['player','bot','opponent'].includes(source)){const side=source==='player'?'player':'bot';if(!this.canRush(side)){this.showRushWait(side);return false;}this.markRush(side);}"
+    );
+
+    html=patch(html,'dynamic rush button',
+      "dropBtn.setAttribute('aria-label',this.mode==='classic'?'Hard drop':'Rush drop');if(dropBtn.firstChild)dropBtn.firstChild.nodeValue=this.mode==='classic'?'HARD DROP':'RUSH DROP';const dropHint=dropBtn.querySelector('.hint');if(dropHint)dropHint.textContent=this.mode==='classic'?'Space · Drop piece':'Space · Lock both boards';",
+      "const localRushSide=guestView?'bot':'player',rushLeft=this.mode==='classic'?0:this.rushRemaining(localRushSide);dropBtn.disabled=this.mode!=='classic'&&rushLeft>0;dropBtn.classList.toggle('cooldown',dropBtn.disabled);dropBtn.setAttribute('aria-label',this.mode==='classic'?'Hard drop':rushLeft>0?'Rush recharging':'Rush drop');if(dropBtn.firstChild)dropBtn.firstChild.nodeValue=this.mode==='classic'?'HARD DROP':rushLeft>0?'RUSH '+Math.ceil(rushLeft/1000)+'s':'RUSH DROP';const dropHint=dropBtn.querySelector('.hint');if(dropHint)dropHint.textContent=this.mode==='classic'?'Space · Drop piece':rushLeft>0?'Cooldown · Keep building':'Space · Lock both boards';"
+    );
+
+    html=patch(html,'network prediction and handshake state',
+      "this.peer=null;this.conn=null;this.role=null;this.room='';this.connected=false;this.closing=false;this.signalingReady=false;this.searching=false;this.lastSnapshotAt=0;this.localReady=false;this.remoteReady=false;this.latency=0;this.pingTimer=0;this.reconnectTimer=0;this.signalTimer=0;this.connectTimer=0;this.joinRetryTimer=0;this.reconnectAttempts=0;this.joinAttempts=0;this.maxJoinAttempts=4;this.wasInMatch=false;this.wakeLock=null;",
+      "this.peer=null;this.conn=null;this.role=null;this.room='';this.connected=false;this.closing=false;this.signalingReady=false;this.searching=false;this.lastSnapshotAt=0;this.localReady=false;this.remoteReady=false;this.latency=0;this.pingTimer=0;this.reconnectTimer=0;this.signalTimer=0;this.connectTimer=0;this.joinRetryTimer=0;this.reconnectAttempts=0;this.joinAttempts=0;this.maxJoinAttempts=4;this.wasInMatch=false;this.wakeLock=null;this.inputSeq=0;this.guestAckSeq=0;this.pendingInputs=[];this.stateSeq=0;this.lastStateSeq=0;this.joinAnnounceTimer=0;this.startSyncTimer=0;this.startAcked=false;this.startToken='';"
+    );
+
+    html=patch(html,'clear handshake timers',
+      "clearInterval(this.pingTimer);clearTimeout(this.reconnectTimer);clearTimeout(this.signalTimer);clearTimeout(this.connectTimer);clearTimeout(this.joinRetryTimer);",
+      "clearInterval(this.pingTimer);clearInterval(this.joinAnnounceTimer);clearInterval(this.startSyncTimer);clearTimeout(this.reconnectTimer);clearTimeout(this.signalTimer);clearTimeout(this.connectTimer);clearTimeout(this.joinRetryTimer);"
+    );
+
+    html=patch(html,'cleanup prediction and handshake state',
+      "this.closing=false;this.badge('');this.toast('');",
+      "this.inputSeq=0;this.guestAckSeq=0;this.pendingInputs=[];this.stateSeq=0;this.lastStateSeq=0;this.joinAnnounceTimer=0;this.startSyncTimer=0;this.startAcked=false;this.startToken='';this.closing=false;this.badge('');this.toast('');"
+    );
+
+    html=patch(html,'host enters waiting game',
+      "this.cleanup();this.role='host';this.room=this.code();",
+      "this.cleanup();this.role='host';this.room=this.code();game.mode='online';showScreen('gameScreen');game.reset();game.phase='waiting';game.deadline=Infinity;game.countdownEnd=Infinity;game.message='WAITING FOR RIVAL';game.messageUntil=Infinity;game.updateUI();this.badge('HOST · '+this.room+' · CREATING ROOM');this.toast('ROOM '+this.room+' · WAITING FOR RIVAL');"
+    );
+
+    html=patch(html,'host waiting status',
+      "this.status(`Room ${this.room} is live. Keep this screen open while your rival joins.`);",
+      "this.status('Room '+this.room+' is live. Waiting for your rival to join.');this.badge('HOST · '+this.room+' · WAITING');this.toast('ROOM '+this.room+' · WAITING FOR RIVAL');"
+    );
+
+    html=patch(html,'automatic connection status',
+      "this.status(this.wasInMatch?'Connection restored — resuming together…':'Connected! Both players must confirm they are ready.');",
+      "this.status(this.wasInMatch?'Connection restored — resuming together…':'Connected! Synchronizing the match automatically.');"
+    );
+
+    html=patch(html,'guest waiting screen and repeated join notice',
+      "conn.on('data',data=>this.onData(data));",
+      "conn.on('data',data=>this.onData(data));if(this.role==='guest'&&!this.wasInMatch){game.mode='online';showScreen('gameScreen');game.reset();game.phase='waiting';game.deadline=Infinity;game.countdownEnd=Infinity;game.message='CONNECTED · WAITING FOR HOST';game.messageUntil=Infinity;game.updateUI();this.toast('CONNECTED · WAITING FOR MATCH START');const announce=()=>{if(this.connected&&this.role==='guest'&&game.phase==='waiting')this.send({type:'joined',at:Date.now()});};announce();clearInterval(this.joinAnnounceTimer);this.joinAnnounceTimer=setInterval(announce,700);}else if(this.role==='host'&&!this.wasInMatch)this.toast('RIVAL CONNECTED · CONFIRMING START…');"
+    );
+
+    html=patch(html,'reliable host start sender',
+      "startHostMatch(){\n      if(this.role!=='host'||!this.connected)return;\n      this.localReady=false;this.remoteReady=false;this.syncReadyUi();game.mode='online';showScreen('gameScreen');game.reset();this.toast('');\n      this.send({type:'start',state:this.snapshot()});this.broadcast(true);\n    }",
+      "sendStartState(){if(this.role!=='host'||!this.connected||game.mode!=='online'||!game.started)return false;return this.send({type:'start',token:this.startToken,state:this.snapshot()});}\n    startHostMatch(){\n      if(this.role!=='host'||!this.connected)return;\n      clearInterval(this.startSyncTimer);this.startAcked=false;this.startToken='start-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);this.localReady=false;this.remoteReady=false;this.syncReadyUi();game.mode='online';showScreen('gameScreen');game.reset();this.toast('RIVAL JOINED · STARTING IN 3…');\n      const sync=()=>{if(!this.connected||this.startAcked){clearInterval(this.startSyncTimer);this.startSyncTimer=0;return;}this.sendStartState();this.broadcast(true);};sync();this.startSyncTimer=setInterval(sync,550);\n    }"
+    );
+
+    html=patch(html,'reliable countdown handshake',
+      "if(data.type==='pong'){this.latency=Math.max(1,Math.round(performance.now()-Number(data.at||performance.now())));this.updateBadge();return;}",
+      "if(data.type==='pong'){this.latency=Math.max(1,Math.round(performance.now()-Number(data.at||performance.now())));this.updateBadge();return;}if(data.type==='joined'&&this.role==='host'){if(game.mode==='online'&&game.phase==='waiting'){this.status('Rival joined. Starting the synchronized countdown…');this.toast('RIVAL JOINED · STARTING COUNTDOWN…');this.startHostMatch();}else if(game.mode==='online'&&game.started)this.sendStartState();return;}if(data.type==='start-ack'&&this.role==='host'){if(!data.token||data.token===this.startToken){this.startAcked=true;clearInterval(this.startSyncTimer);this.startSyncTimer=0;this.status('Both phones synchronized. Match running.');this.toast('');}return;}if(data.type==='sync-request'&&this.role==='host'){this.sendStartState();this.broadcast(true);return;}"
+    );
+
+    html=patch(html,'remove manual ready step',
+      "syncReadyUi(){const button=$('onlineReadyBtn');if(!button)return;button.classList.toggle('active',this.connected&&activeScreen==='onlineScreen');button.classList.toggle('ready',this.localReady);button.textContent=this.localReady?(this.remoteReady?'Starting…':'Ready · Waiting for Rival'):\"I’m Ready\";}",
+      "syncReadyUi(){const button=$('onlineReadyBtn');if(!button)return;button.classList.remove('active','ready');button.hidden=true;button.textContent='Starts automatically';}"
+    );
+
+    html=patch(html,'guest acknowledges every start state',
+      "if(data.type==='start'){game.mode='online';showScreen('gameScreen');this.applySnapshot(data.state);this.toast('');}\n        else if(data.type==='resume'){game.mode='online';showScreen('gameScreen');this.applySnapshot(data.state);this.toast('Connection restored · restarting in 3…');this.wasInMatch=false;}\n        else if(data.type==='state')this.applySnapshot(data);",
+      "if(data.type==='start'){clearInterval(this.joinAnnounceTimer);this.joinAnnounceTimer=0;game.mode='online';showScreen('gameScreen');this.applySnapshot(data.state);game.updateUI();this.toast('');this.send({type:'start-ack',token:data.token||'',round:game.round,phase:game.phase});}\n        else if(data.type==='resume'){clearInterval(this.joinAnnounceTimer);this.joinAnnounceTimer=0;game.mode='online';showScreen('gameScreen');this.applySnapshot(data.state);game.updateUI();this.toast('Connection restored · restarting in 3…');this.wasInMatch=false;this.send({type:'start-ack',token:data.token||'',round:game.round,phase:game.phase});}\n        else if(data.type==='state'){this.applySnapshot(data);if(data.phase==='countdown'||data.phase==='active'){clearInterval(this.joinAnnounceTimer);this.joinAnnounceTimer=0;this.send({type:'start-ack',token:'',round:game.round,phase:game.phase});}}"
+    );
+
+    html=patch(html,'host acknowledges sequenced input',
+      "if(data.type==='input')this.applyOpponentAction(data.action);",
+      "if(data.type==='input')this.applyOpponentAction(data.action,data.seq,data.round);"
+    );
+
+    html=patch(html,'host applies sequenced input',
+      "applyOpponentAction(action){\n      if(game.mode!=='online'||!game.canAct())return;",
+      "applyOpponentAction(action,seq=0,round=0){\n      const inputSeq=Number(seq)||0;if(inputSeq&&inputSeq<=this.guestAckSeq)return;if(inputSeq)this.guestAckSeq=inputSeq;if(game.mode!=='online'||!game.canAct()||Number(round)!==game.round){this.broadcast(true);return;}"
+    );
+
+    html=patch(html,'local-first guest controls',
+      "sendInput(action){\n      if(this.role!=='guest'||!this.connected||game.phase!=='active')return;\n      const board=game.bot;\n      if(action==='left')board.move(-1,0);\n      else if(action==='right')board.move(1,0);\n      else if(action==='down')board.move(0,1);\n      else if(action==='ccw')board.rotate(false);\n      else if(action==='cw')board.rotate(true);\n      this.send({type:'input',action});\n    }",
+      "sendInput(action){\n      if(this.role!=='guest'||!this.connected||game.phase!=='active')return;\n      const board=game.bot,round=game.round;let applied=false;\n      if(action==='drop'){if(!game.canRush('bot')){game.showRushWait('bot');return;}game.markRush('bot');applied=true;}\n      else if(action==='left')applied=board.move(-1,0);\n      else if(action==='right')applied=board.move(1,0);\n      else if(action==='down'){applied=board.move(0,1);if(applied)board.score+=1;}\n      else if(action==='ccw')applied=board.rotate(false);\n      else if(action==='cw')applied=board.rotate(true);\n      if(!applied)return;const seq=++this.inputSeq;this.pendingInputs.push({seq,action,round});if(this.pendingInputs.length>80)this.pendingInputs.splice(0,this.pendingInputs.length-80);this.send({type:'input',action,seq,round});game.updateUI();\n    }"
+    );
+
+    html=patch(html,'snapshot sequence and cooldowns',
+      "return {type:'state',version:2,started:game.started,phase:game.phase,paused:game.paused,round:game.round,currentShape:game.currentShape,queue:game.queue.slice(),player:this.packBoard(game.player),bot:this.packBoard(game.bot),rushWins:game.rushWins,botRushes:game.botRushes,remaining:Number.isFinite(game.deadline)?Math.max(0,game.deadline-now):null,countdownRemaining:Math.max(0,game.countdownEnd-now),roundDuration:game.currentRoundDuration,gravityInterval:game.gravityInterval,gravityAcc:game.gravityAcc,message:game.message,messageFor:Math.max(0,game.messageUntil-now),nextIn:Math.max(0,game.autoNextAt-now),winner:game.winner};",
+      "return {type:'state',version:3,stateSeq:++this.stateSeq,guestAckSeq:this.guestAckSeq,started:game.started,phase:game.phase,paused:game.paused,round:game.round,currentShape:game.currentShape,queue:game.queue.slice(),player:this.packBoard(game.player),bot:this.packBoard(game.bot),rushWins:game.rushWins,botRushes:game.botRushes,playerRushCooldown:Math.max(0,game.playerRushReadyAt-now),botRushCooldown:Math.max(0,game.botRushReadyAt-now),remaining:Number.isFinite(game.deadline)?Math.max(0,game.deadline-now):null,countdownRemaining:Math.max(0,game.countdownEnd-now),roundDuration:game.currentRoundDuration,gravityInterval:game.gravityInterval,gravityAcc:game.gravityAcc,message:game.message,messageFor:Math.max(0,game.messageUntil-now),nextIn:Math.max(0,game.autoNextAt-now),winner:game.winner};"
+    );
+
+    html=patch(html,'reconcile guest prediction',
+      "if(!state||![1,2].includes(state.version))return;\n      const now=performance.now();game.mode='online';game.started=state.started;game.phase=state.phase;game.paused=state.paused;game.round=state.round;game.currentShape=state.currentShape;game.queue=state.queue.slice();\n      this.unpackBoard(game.player,state.player);this.unpackBoard(game.bot,state.bot);game.rushWins=state.rushWins;game.botRushes=state.botRushes;game.deadline=Number.isFinite(state.remaining)?now+state.remaining:Infinity;game.countdownEnd=now+(state.countdownRemaining||0);game.currentRoundDuration=state.roundDuration;game.gravityInterval=state.gravityInterval;game.gravityAcc=state.gravityAcc;game.message=state.message;game.messageUntil=now+state.messageFor;game.autoNextAt=now+state.nextIn;game.winner=state.winner;",
+      "if(!state||![1,2,3].includes(state.version))return;if(state.stateSeq&&state.stateSeq<=this.lastStateSeq)return;if(state.stateSeq)this.lastStateSeq=state.stateSeq;\n      const now=performance.now(),localBotRush=game.botRushReadyAt;this.pendingInputs=this.pendingInputs.filter(input=>input.seq>Number(state.guestAckSeq||0));game.mode='online';game.started=state.started;game.phase=state.phase;game.paused=state.paused;game.round=state.round;game.currentShape=state.currentShape;game.queue=state.queue.slice();\n      this.unpackBoard(game.player,state.player);this.unpackBoard(game.bot,state.bot);game.rushWins=state.rushWins;game.botRushes=state.botRushes;game.playerRushReadyAt=now+Number(state.playerRushCooldown||0);game.botRushReadyAt=now+Number(state.botRushCooldown||0);if(this.role==='guest')game.botRushReadyAt=Math.max(game.botRushReadyAt,localBotRush);game.deadline=Number.isFinite(state.remaining)?now+state.remaining:Infinity;game.countdownEnd=now+(state.countdownRemaining||0);game.currentRoundDuration=state.roundDuration;game.gravityInterval=state.gravityInterval;game.gravityAcc=state.gravityAcc;game.message=state.message;game.messageUntil=now+state.messageFor;game.autoNextAt=now+state.nextIn;game.winner=state.winner;if(this.role==='guest'&&state.phase==='active'){for(const input of this.pendingInputs){if(input.round!==state.round||input.action==='drop')continue;const board=game.bot;if(input.action==='left')board.move(-1,0);else if(input.action==='right')board.move(1,0);else if(input.action==='down'){if(board.move(0,1))board.score+=1;}else if(input.action==='ccw')board.rotate(false);else if(input.action==='cw')board.rotate(true);}}"
+    );
+
+    html=patch(html,'live rush cooldown display',
+      "const uiPct=Math.max(0,Math.min(1,pct));timerFill.style.width=`${uiPct*100}%`;timerText.textContent=untimed?'NO LIMIT':game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'—';speedText.textContent=`${game.getSpeedMultiplier(now).toFixed(2)}×`;",
+      "const uiPct=Math.max(0,Math.min(1,pct));timerFill.style.width=`${uiPct*100}%`;timerText.textContent=untimed?'NO LIMIT':game.phase==='active'?`${(remaining/1000).toFixed(1)}s`:'—';speedText.textContent=`${game.getSpeedMultiplier(now).toFixed(2)}×`;const localRushSide=guestView?'bot':'player',rushLeft=game.mode==='classic'?0:game.rushRemaining(localRushSide,now);dropBtn.disabled=game.mode!=='classic'&&rushLeft>0;dropBtn.classList.toggle('cooldown',dropBtn.disabled);if(dropBtn.firstChild)dropBtn.firstChild.nodeValue=game.mode==='classic'?'HARD DROP':rushLeft>0?'RUSH '+Math.ceil(rushLeft/1000)+'s':'RUSH DROP';const liveRushHint=dropBtn.querySelector('.hint');if(liveRushHint)liveRushHint.textContent=game.mode==='classic'?'Space · Drop piece':rushLeft>0?'Cooldown · Keep building':'Space · Lock both boards';"
+    );
+
+    html=html.replace('<title>Rush Duel — Neon Block Battle</title>','<title>Rush Duel — Reliable Online Start</title>');
+    document.open();document.write(html);document.close();
+  }catch(error){
+    document.getElementById('boot').innerHTML='<div><b>GAME COULD NOT LOAD</b><span>'+String(error&&error.message||error)+'</span></div>';
+  }
+})();
+</script>
+</body>
+</html>
