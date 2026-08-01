@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050509">
+<title>Rush Duel Online V11</title>
+<style>html,body{margin:0;min-height:100%;background:#03040a;color:#fff;font-family:monospace}.boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}.boot b{color:#66ebff;font-size:20px}.boot span{display:block;margin-top:10px;color:#aab9d1;line-height:1.5}</style>
+</head>
+<body><div class="boot" id="boot"><div><b>RUSH DUEL ONLINE V11</b><span>Loading one-second settled-piece force rule…</span></div></div>
+<script>
+(async()=>{
+  const BUILD='settled-force-v11-20260801-0050';
+  try{
+    const response=await fetch('play-v10.html?source='+encodeURIComponent(BUILD),{cache:'no-store'});
+    if(!response.ok)throw new Error('Could not load Online V10 foundation.');
+    let launcher=await response.text();
+    launcher=launcher.replaceAll('Rush Duel Online V10','Rush Duel Online V11');
+    launcher=launcher.replaceAll('RUSH DUEL ONLINE V10','RUSH DUEL ONLINE V11');
+    launcher=launcher.replace('Loading reliable synchronized match start…','Loading synchronized start and settled-piece force rule…');
+    launcher=launcher.replace('pubnub-start-sync-v10-20260801-0030',BUILD);
+
+    const anchor="    html=html.replace('<title>Rush Duel — Neon Block Battle</title>','<title>Rush Duel — Reliable Online Start</title>');";
+    if(!launcher.includes(anchor))throw new Error('Online V10 update point was not found.');
+
+    const extra=String.raw`
+    html=patch(html,'settled force constant',
+      "const BASE_GRAVITY=980, MIN_GRAVITY=120, BASE_ROUND_MS=8200, MIN_ROUND_MS=4200, LOCK_DELAY_MS=520, LOCK_RESET_LIMIT=15, COUNTDOWN_MS=3000, RUSH_COOLDOWN_MS=10000;",
+      "const BASE_GRAVITY=980, MIN_GRAVITY=120, BASE_ROUND_MS=8200, MIN_ROUND_MS=4200, LOCK_DELAY_MS=520, LOCK_RESET_LIMIT=15, COUNTDOWN_MS=3000, RUSH_COOLDOWN_MS=10000, SETTLE_FORCE_MS=1000;"
+    );
+
+    html=patch(html,'settled force state',
+      "this.mode='bot';this.classicScoreSaved=false;this.countdownEnd=0;this.groundedAt=0;this.lockResets=0;this.level=1;this.playerGlowUntil=0;this.botGlowUntil=0;this.playerRushReadyAt=0;this.botRushReadyAt=0;",
+      "this.mode='bot';this.classicScoreSaved=false;this.countdownEnd=0;this.groundedAt=0;this.lockResets=0;this.level=1;this.playerGlowUntil=0;this.botGlowUntil=0;this.playerRushReadyAt=0;this.botRushReadyAt=0;this.playerSettleAt=0;this.botSettleAt=0;this.playerSettleSignature='';this.botSettleSignature='';"
+    );
+
+    html=patch(html,'reset settled force each round',
+      "this.groundedAt=0;this.lockResets=0;\n      if(countdown){this.countdownEnd=now+COUNTDOWN_MS;",
+      "this.groundedAt=0;this.lockResets=0;this.playerSettleAt=0;this.botSettleAt=0;this.playerSettleSignature='';this.botSettleSignature='';\n      if(countdown){this.countdownEnd=now+COUNTDOWN_MS;"
+    );
+
+    html=patch(html,'settled force detector',
+      "canAct(){return this.started&&!this.paused&&this.phase==='active'&&!this.winner;}rushKey(side){return side==='player'?'playerRushReadyAt':'botRushReadyAt';}rushRemaining(side,now=performance.now()){return Math.max(0,this[this.rushKey(side)]-now);}canRush(side,now=performance.now()){return this.mode==='classic'||this.rushRemaining(side,now)<=0;}markRush(side,now=performance.now()){if(this.mode!=='classic')this[this.rushKey(side)]=now+RUSH_COOLDOWN_MS;}showRushWait(side){const left=this.rushRemaining(side);this.message='RUSH RECHARGING · '+Math.max(1,Math.ceil(left/1000))+'s';this.messageUntil=performance.now()+650;this.playTone('move');this.updateUI();}",
+      "canAct(){return this.started&&!this.paused&&this.phase==='active'&&!this.winner;}rushKey(side){return side==='player'?'playerRushReadyAt':'botRushReadyAt';}rushRemaining(side,now=performance.now()){return Math.max(0,this[this.rushKey(side)]-now);}canRush(side,now=performance.now()){return this.mode==='classic'||this.rushRemaining(side,now)<=0;}markRush(side,now=performance.now()){if(this.mode!=='classic')this[this.rushKey(side)]=now+RUSH_COOLDOWN_MS;}showRushWait(side){const left=this.rushRemaining(side);this.message='RUSH RECHARGING · '+Math.max(1,Math.ceil(left/1000))+'s';this.messageUntil=performance.now()+650;this.playTone('move');this.updateUI();}settleAtKey(side){return side==='player'?'playerSettleAt':'botSettleAt';}settleSignatureKey(side){return side==='player'?'playerSettleSignature':'botSettleSignature';}pieceSettleSignature(board){const a=board.active;return a?this.round+':'+a.x+':'+a.y+':'+a.rot+':'+a.m.flat().join(''):'';}updateSettledRush(now=performance.now()){if(this.mode==='classic'||!this.canAct()||(this.mode==='online'&&network.role!=='host'))return false;for(const side of ['player','bot']){const board=side==='player'?this.player:this.bot,atKey=this.settleAtKey(side),sigKey=this.settleSignatureKey(side),signature=this.pieceSettleSignature(board);if(!board.active){this[atKey]=0;this[sigKey]='';continue;}const grounded=!board.canPlace(board.active.m,board.active.x,board.active.y+1);if(!grounded){this[atKey]=0;this[sigKey]=signature;continue;}if(this[sigKey]!==signature){this[sigKey]=signature;this[atKey]=now;continue;}if(!this[atKey]){this[atKey]=now;continue;}if(now-this[atKey]>=SETTLE_FORCE_MS){this[atKey]=Infinity;this.commitRound(side==='player'?'settled-player':'settled-bot');return true;}}return false;}"
+    );
+
+    html=patch(html,'run settled force detector',
+      "if(this.mode==='classic'&&this.groundedAt&&now-this.groundedAt>=LOCK_DELAY_MS)this.lockClassic('gravity');\n        if(this.mode==='bot')this.botAI.update(now);\n        if(this.phase==='active'&&now>=this.deadline)this.commitRound('timer');",
+      "if(this.mode==='classic'&&this.groundedAt&&now-this.groundedAt>=LOCK_DELAY_MS)this.lockClassic('gravity');\n        if(this.mode!=='classic')this.updateSettledRush(now);\n        if(this.mode==='bot')this.botAI.update(now);\n        if(this.phase==='active'&&now>=this.deadline)this.commitRound('timer');"
+    );
+
+    html=patch(html,'settled force messages',
+      "} else if(source==='opponent'){\n        this.botRushes++;this.message='RIVAL FORCED THE RUSH DROP!';\n      }\n      else this.message='ROUND TIMER FORCED BOTH PIECES DOWN!';",
+      "} else if(source==='opponent'){\n        this.botRushes++;this.message='RIVAL FORCED THE RUSH DROP!';\n      } else if(source==='settled-player'){\n        this.message=this.mode==='online'?'YOUR PIECE SETTLED · RIVAL FORCED DOWN!':'YOUR PIECE SETTLED · BOT FORCED DOWN!';\n      } else if(source==='settled-bot'){\n        this.message=this.mode==='online'?'RIVAL PIECE SETTLED · BOTH PIECES LOCKED!':'BOT PIECE SETTLED · BOTH PIECES LOCKED!';\n      }\n      else this.message='ROUND TIMER FORCED BOTH PIECES DOWN!';"
+    );
+
+    html=html.replace('No timer and no bot rushes. Take as long as you need to plan each piece, then press Rush Drop when you are ready.','No round timer and no manual bot rushes. A piece resting untouched for one second forces both pieces to lock.');
+    html=html.replace('Take your time. You control every Rush Drop.','No clock. Resting pieces auto-lock after one second.');
+    html=html.replace("rush:'No Bot Rush'","rush:'No Manual Bot Rush'");
+`;
+
+    launcher=launcher.replace(anchor,extra+"\n    html=html.replace('<title>Rush Duel — Neon Block Battle</title>','<title>Rush Duel — Settled Force Online</title>');");
+    document.open();document.write(launcher);document.close();
+  }catch(error){
+    document.getElementById('boot').innerHTML='<div><b>GAME COULD NOT LOAD</b><span>'+String(error&&error.message||error)+'</span></div>';
+  }
+})();
+</script>
+</body>
+</html>
