@@ -55,6 +55,20 @@ button{cursor:pointer}
 #gameScreen .rush-hit{border-color:#ffe260;background:linear-gradient(180deg,#f25aab,#a52973 48%,#4b1747);color:#fffbe5;text-shadow:1px 2px #7a204f;box-shadow:inset 0 0 20px rgba(255,233,97,.16),0 4px 0 #250a23}
 #gameScreen .rush-hit .hint{color:#ffeaa2}.pause-hit{border-color:#65577f!important;background:linear-gradient(180deg,#352c52,#17162b)!important}.down-hit{border-color:#47816e!important;color:#8bffcf!important}
 .options-detail{align-self:center}
+.options-ui{gap:2.8cqw;padding:9.2% 8.2% 6.2%}
+.options-title{font-size:clamp(32px,9.6cqw,55px);letter-spacing:-.045em}
+.options-subtitle{margin:1.7cqw 0 0;color:#c6d7ec;font-size:clamp(10px,2.5cqw,14px);letter-spacing:.16em}
+.difficulty-card{min-height:22cqw;padding:3.2cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.difficulty-card .card-index{display:none}
+.difficulty-card strong{font-size:clamp(16px,4.4cqw,25px);letter-spacing:.07em}
+.difficulty-card small{margin-top:1.8cqw;color:#d1dbea;font-size:clamp(9px,2.25cqw,13px);letter-spacing:.08em}
+.options-detail{width:100%;padding:4.5cqw;text-align:center}
+.difficulty-visual{margin:0;font-size:clamp(21px,5.8cqw,32px)}
+.difficulty-description{max-width:92%;margin:2.2cqw auto 3.2cqw;font-size:clamp(10px,2.5cqw,14px);line-height:1.35}
+.difficulty-stats{grid-template-columns:repeat(2,1fr);gap:2cqw}
+.difficulty-stat{padding:2.8cqw 1.4cqw;border-color:#365678;background:rgba(4,11,25,.88)}
+.difficulty-stat b{margin:0;font-size:clamp(9px,2.2cqw,12.5px);line-height:1.2}
+.options-action{font-size:clamp(14px,3.8cqw,22px)}
 .hidden{display:none!important}
 .offscreen{position:absolute!important;left:-9999px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}
 /* keep result screen simple */
@@ -168,26 +182,22 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
     <div class="screen-art options-bg"></div>
     <div class="options-ui">
       <header class="options-header">
-        <div class="options-kicker">Player Select · Bot Battle</div>
         <h1 class="options-title">Game Options</h1>
-        <p class="options-subtitle">Choose how fiercely your rival fights back</p>
+        <p class="options-subtitle">Choose a rival</p>
       </header>
       <div class="difficulty-grid" role="group" aria-label="Choose bot difficulty">
-        <button class="difficulty-card active" data-difficulty-choice="easy" aria-pressed="true"><span class="card-index">01</span><strong>Easy</strong><small>No timer · No bot rush</small></button>
-        <button class="difficulty-card" data-difficulty-choice="medium" aria-pressed="false"><span class="card-index">02</span><strong>Medium</strong><small>Extra time · Calm rival</small></button>
-        <button class="difficulty-card" data-difficulty-choice="hard" aria-pressed="false"><span class="card-index">03</span><strong>Hard</strong><small>Smart plans · Often rushes</small></button>
-        <button class="difficulty-card" data-difficulty-choice="impossible" aria-pressed="false"><span class="card-index">04</span><strong>Impossible</strong><small>Perfect plans · Rush hunter</small></button>
+        <button class="difficulty-card active" data-difficulty-choice="easy" aria-pressed="true"><strong>Easy</strong><small>Relaxed</small></button>
+        <button class="difficulty-card" data-difficulty-choice="medium" aria-pressed="false"><strong>Medium</strong><small>Balanced</small></button>
+        <button class="difficulty-card" data-difficulty-choice="hard" aria-pressed="false"><strong>Hard</strong><small>Smart</small></button>
+        <button class="difficulty-card" data-difficulty-choice="impossible" aria-pressed="false"><strong>Impossible</strong><small>Relentless</small></button>
       </div>
       <section class="options-detail" aria-live="polite">
-        <span class="selected-label">Selected Rival</span>
         <strong class="difficulty-visual" id="difficultyVisual">Easy Bot</strong>
-        <p class="difficulty-description" id="difficultyDescription">No timer and no bot rushes. Take all the time you need to plan each piece.</p>
+        <p class="difficulty-description" id="difficultyDescription">Take your time. You control every Rush Drop.</p>
         <div class="difficulty-stats">
-          <div class="difficulty-stat"><span>Timer</span><b id="difficultyTimer">Unlimited</b></div>
-          <div class="difficulty-stat"><span>Bot Rush</span><b id="difficultyRush">Never</b></div>
-          <div class="difficulty-stat"><span>Strategy</span><b id="difficultyBrain">Learning</b></div>
+          <div class="difficulty-stat"><b id="difficultyTimer">Unlimited Time</b></div>
+          <div class="difficulty-stat"><b id="difficultyRush">No Bot Rush</b></div>
         </div>
-        <p class="options-rule">Same pieces · Clear lines to attack · Last board standing wins</p>
       </section>
       <div class="options-actions">
         <button class="options-action" id="backBtn">Back</button>
@@ -308,10 +318,10 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
     impossible:{label:'IMPOSSIBLE',reaction:420,step:130,drop:[750,1400],forceChance:.90,choice:1,error:0,timerBonus:0,copy:'The bot is smart, deliberate, and relentless. It still moves visibly, but it uses Rush Drop far more often than the easier bots.'}
   };
   const DIFFICULTY_PRESENTATION={
-    easy:{timer:'Unlimited',rush:'Never',brain:'Learning'},
-    medium:{timer:'+1 Second',rush:'Sometimes',brain:'Balanced'},
-    hard:{timer:'Standard',rush:'Often',brain:'Expert'},
-    impossible:{timer:'Standard',rush:'Relentless',brain:'Perfect'}
+    easy:{summary:'Take your time. You control every Rush Drop.',timer:'Unlimited Time',rush:'No Bot Rush'},
+    medium:{summary:'More planning time. The bot rushes sometimes.',timer:'+1 Second',rush:'Some Rushes'},
+    hard:{summary:'A smart rival that rushes often.',timer:'Standard Time',rush:'Frequent Rushes'},
+    impossible:{summary:'Perfect placements and relentless rushes.',timer:'Standard Time',rush:'Maximum Rush'}
   };
   const SOLO_SCORE_KEY='rush-duel-solo-scores-v1',SOLO_NAME_KEY='rush-duel-player-name-v1',TUTORIAL_KEY='rush-duel-tutorial-seen-v1';
   let peerLibraryPromise=null;
@@ -707,8 +717,8 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
     setDifficulty(v){
       this.difficulty=v;document.getElementById('difficultyCopy').textContent=DIFFICULTIES[v].copy;
       const option=document.querySelector(`#difficulty option[value="${v}"]`);if($('difficultyVisual'))$('difficultyVisual').textContent=`${DIFFICULTIES[v].label} BOT`;
-      if($('difficultyDescription'))$('difficultyDescription').textContent=DIFFICULTIES[v].copy;
-      const presentation=DIFFICULTY_PRESENTATION[v];if(presentation){$('difficultyTimer').textContent=presentation.timer;$('difficultyRush').textContent=presentation.rush;$('difficultyBrain').textContent=presentation.brain;}
+      const presentation=DIFFICULTY_PRESENTATION[v];if($('difficultyDescription'))$('difficultyDescription').textContent=presentation.summary;
+      if(presentation){$('difficultyTimer').textContent=presentation.timer;$('difficultyRush').textContent=presentation.rush;}
       document.querySelectorAll('[data-difficulty-choice]').forEach(button=>{const selected=button.dataset.difficultyChoice===v;button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));});
       if(this.started&&this.mode==='bot')this.reset();
     }
@@ -1227,6 +1237,7 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       check('title rules use matching artwork cards',document.querySelectorAll('.title-rule-update').length===2&&!!document.querySelector('.title-rule-update.attack')&&!!document.querySelector('.title-rule-update.win'),'title rule cards are missing');
       check('bot options omit display and sound controls',!$('optionSoundBtn')&&!$('opacity')&&!document.querySelector('#optionsScreen [aria-label*="sound" i],#optionsScreen [aria-label*="visibility" i]'),'removed options are still present');
       check('bot options use responsive coded controls',document.querySelectorAll('[data-difficulty-choice]').length===4&&[...document.querySelectorAll('.options-action')].every(button=>button.textContent.trim()),'options still rely on image hitboxes');
+      check('bot options keep copy concise',document.querySelectorAll('.difficulty-stat').length===2&&!document.querySelector('.selected-label,.options-rule')&&[...document.querySelectorAll('.difficulty-card small')].every(label=>label.textContent.trim().split(/\s+/).length===1),'options text is still too dense');
       check('portrait player board fills the available height',COMPACT_PLAYER_VIEW.cell*ROWS/620>=.93,'portrait board is too small');
       const survivalProbe=new RushDuel();survivalProbe.player.lines=999;survivalProbe.bot.lines=998;
       check('line totals never end a match',!survivalProbe.hasMatchEnded(),'a line target still ends matches');
