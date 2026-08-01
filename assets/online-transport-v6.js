@@ -30,7 +30,7 @@
   const makeError=(type,message)=>Object.assign(new Error(message),{type});
   const signalTopic=id=>`${TOPIC_PREFIX}${safeId(id)}`;
   const signalUrl=id=>`https://${SIGNAL_HOST}/${encodeURIComponent(signalTopic(id))}`;
-  const socketUrl=id=>`wss://${SIGNAL_HOST}/${encodeURIComponent(signalTopic(id))}/ws?since=now`;
+  const socketUrl=id=>`wss://${SIGNAL_HOST}/${encodeURIComponent(signalTopic(id))}/ws?since=${Math.max(0,Math.floor(Date.now()/1000)-1)}`;
 
   function mergeIceConfig(options={}){
     const supplied=Array.isArray(options?.config?.iceServers)?options.config.iceServers:[];
@@ -158,6 +158,7 @@
       this._reconnectTimer=0;
       this._signalQueue=[];
       this._connections=new Map();
+      this._orphanCandidates=new Map();
       this._seen=new Map();
       this._iceConfig=mergeIceConfig(options);
       setTimeout(()=>this._openSignalSocket(),0);
@@ -256,6 +257,9 @@
             connection._pc.ondatachannel=event=>connection._bindChannel(event.channel);
             this.emit('connection',connection);
           }
+          const orphaned=this._orphanCandidates.get(message.session)||[];
+          this._orphanCandidates.delete(message.session);
+          connection._pendingCandidates.push(...orphaned);
           await connection._pc.setRemoteDescription(message.description);
           await connection._flushCandidates();
           const answer=await connection._pc.createAnswer();
@@ -264,7 +268,13 @@
           return;
         }
         const connection=this._connections.get(message.session);
-        if(!connection)return;
+        if(!connection){
+          if(message.kind==='candidate'){
+            const queued=this._orphanCandidates.get(message.session)||[];queued.push(message.candidate);
+            this._orphanCandidates.set(message.session,queued.slice(-20));
+          }
+          return;
+        }
         if(message.kind==='answer'){
           await connection._pc.setRemoteDescription(message.description);
           await connection._flushCandidates();return;
@@ -316,7 +326,7 @@
       this.destroyed=true;this.open=false;this.disconnected=true;this._manualClose=true;
       clearTimeout(this._reconnectTimer);
       for(const connection of [...this._connections.values()])connection.close();
-      this._connections.clear();this._signalQueue.length=0;
+      this._connections.clear();this._orphanCandidates.clear();this._signalQueue.length=0;
       try{this._socket?.close();}catch{}this._socket=null;
       queueMicrotask(()=>this.emit('close'));
     }
