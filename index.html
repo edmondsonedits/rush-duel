@@ -22,19 +22,19 @@ button{cursor:pointer}
 .art-shell{position:relative;container-type:inline-size;width:min(calc(100dvh * 864 / 1536),100vw);height:min(100dvh,calc(100vw * 1536 / 864));max-width:100vw;max-height:100dvh;overflow:hidden}
 .screen-art{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center}
 .title-bg{background-image:url('assets/title.jpg')}
-.options-bg{background-image:url('assets/options.jpg')}
+.options-bg{background-image:url('assets/options-v2.jpg');background-size:cover}
 .game-bg{background-image:url('assets/game.jpg')}
 .hit-button,.hit-select,.hit-range{position:absolute;z-index:4;background:transparent;border:none;color:transparent;appearance:none;-webkit-appearance:none;outline:none;touch-action:none;user-select:none;-webkit-user-select:none}
 .hit-button:active{background:rgba(255,255,255,.06)}
 #titleScreen .press-hit{left:14%;top:82.8%;width:72%;height:10.4%;border-radius:18px}
 .title-rule-update{position:absolute;z-index:3;top:68.8%;width:35.2%;height:11.2%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:1.2% 2.7% 1%;background:linear-gradient(180deg,rgba(7,8,25,.98),rgba(7,8,23,.99));text-align:center;pointer-events:none}
 .title-rule-update.attack{left:10.6%;color:#e6a3ff;box-shadow:inset 0 10px 18px rgba(201,79,255,.035)}.title-rule-update.win{left:54.1%;color:#ffe36d;box-shadow:inset 0 10px 18px rgba(255,214,68,.035)}.title-rule-update b{display:block;width:68%;margin-bottom:4.8%;padding-bottom:3.8%;border-bottom:1px dashed currentColor;font-size:clamp(9px,2.75cqw,16px);letter-spacing:.12em;text-shadow:0 0 8px currentColor}.title-rule-update span{color:#eef4ff;font-size:clamp(6.5px,1.72cqw,10.5px);font-weight:800;line-height:1.38}
-#optionsScreen .difficulty-hit{left:14.3%;top:26.3%;width:71.5%;height:6.8%;font-size:24px;opacity:.01}
-#optionsScreen .back-hit{left:10.2%;top:87.2%;width:33.5%;height:6.8%;border-radius:14px}
-#optionsScreen .play-hit{left:45.4%;top:87.2%;width:43.2%;height:6.8%;border-radius:14px}
-.difficulty-visual{position:absolute;z-index:3;left:14.3%;top:26.6%;width:71.5%;height:6.2%;display:flex;align-items:center;padding:0 4%;border:1px solid #4aa9ca;border-radius:5px;background:#071326;color:#f5f8ff;font-size:clamp(9px,2.8cqw,16px);font-weight:900;letter-spacing:.03em;pointer-events:none}
-.difficulty-description{position:absolute;z-index:3;left:14.4%;top:33.8%;width:71.5%;min-height:8.5%;padding:1.2% 2.5%;background:#071225;color:#c6d4ec;font-size:clamp(6.5px,1.65cqw,10px);line-height:1.42;pointer-events:none}
-.options-clean-panel{position:absolute;z-index:3;left:9.5%;top:43.2%;width:81%;height:39.5%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4%;padding:5% 8%;overflow:hidden;border:2px solid #31547b;border-radius:12px;background:linear-gradient(180deg,rgba(6,17,37,.995),rgba(7,7,23,.995));color:#d8e7fa;text-align:center;box-shadow:0 0 0 3px rgba(2,6,16,.92),inset 0 0 28px rgba(75,221,255,.07),0 0 20px rgba(62,207,255,.08);pointer-events:none}.options-clean-panel::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(74,225,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(74,225,255,.035) 1px,transparent 1px);background-size:18px 18px}.options-clean-panel>*{position:relative}.options-clean-panel strong{color:#6eeeff;font-size:clamp(10px,3cqw,17px);letter-spacing:.14em;text-shadow:0 0 10px rgba(88,232,255,.45)}.options-clean-panel span{font-size:clamp(7px,1.9cqw,11px);font-weight:800;line-height:1.5}.options-clean-panel em{color:#ffe36d;font-size:clamp(6.5px,1.65cqw,10px);font-style:normal;letter-spacing:.08em;text-transform:uppercase}
+#optionsScreen .art-shell::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,3,14,.08),rgba(1,3,13,.28) 22%,rgba(1,3,13,.44) 78%,rgba(0,2,10,.12));pointer-events:none}
+.options-ui{position:absolute;z-index:2;inset:0;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:2.1cqw;padding:7.8% 8.2% 6.2%;color:#f6fbff}
+.options-header{text-align:center;text-transform:uppercase}.options-kicker{color:#6deeff;font-size:clamp(7px,1.9cqw,11px);font-weight:1000;letter-spacing:.28em;text-shadow:0 0 10px rgba(77,231,255,.55)}.options-title{margin:.7cqw 0 0;font-size:clamp(27px,8.7cqw,50px);font-style:italic;font-weight:1000;line-height:.95;letter-spacing:-.055em;background:linear-gradient(180deg,#f7ffff 5%,#72ecff 40%,#fa69bf 80%,#ffe069);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(2px 3px #4c1459) drop-shadow(0 0 8px rgba(83,225,255,.35))}.options-subtitle{margin:1.2cqw 0 0;color:#a9bad4;font-size:clamp(7px,1.75cqw,10px);font-weight:800;letter-spacing:.12em}
+.difficulty-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2cqw}.difficulty-card{--accent:#63eaff;position:relative;min-height:19.5cqw;padding:3.4cqw 3cqw 2.7cqw;border:1px solid color-mix(in srgb,var(--accent) 72%,#263450);border-radius:2.6cqw;background:linear-gradient(145deg,rgba(14,28,55,.96),rgba(4,8,20,.97));color:#e8f6ff;text-align:left;text-transform:uppercase;box-shadow:inset 0 0 15px color-mix(in srgb,var(--accent) 9%,transparent),0 3px 0 rgba(0,0,0,.7);transition:transform .08s,filter .14s,border-color .14s}.difficulty-card::after{content:"";position:absolute;inset:1.1cqw;border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);border-radius:1.8cqw;pointer-events:none}.difficulty-card[data-difficulty-choice="medium"]{--accent:#66f0a8}.difficulty-card[data-difficulty-choice="hard"]{--accent:#ffe066}.difficulty-card[data-difficulty-choice="impossible"]{--accent:#ff64b9}.difficulty-card:hover{filter:brightness(1.15)}.difficulty-card:active{transform:translateY(2px)}.difficulty-card.active{border-color:var(--accent);background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,#101c35),rgba(5,8,20,.98));box-shadow:inset 0 0 22px color-mix(in srgb,var(--accent) 16%,transparent),0 0 13px color-mix(in srgb,var(--accent) 28%,transparent),0 3px 0 #01030a}.difficulty-card .card-index{position:absolute;right:2.5cqw;top:2.1cqw;color:var(--accent);font-size:clamp(7px,1.75cqw,10px);font-weight:1000}.difficulty-card strong{display:block;color:var(--accent);font-size:clamp(12px,3.5cqw,20px);letter-spacing:.08em}.difficulty-card small{display:block;margin-top:1.4cqw;color:#aebbd0;font-size:clamp(6.5px,1.55cqw,9px);font-weight:900;line-height:1.25;letter-spacing:.03em}
+.options-detail{position:relative;align-self:stretch;min-height:0;padding:3.5cqw 4cqw;border:1px solid #3f6384;border-radius:2.8cqw;background:linear-gradient(180deg,rgba(6,15,34,.95),rgba(3,7,18,.97));box-shadow:inset 0 0 25px rgba(75,224,255,.055),0 0 14px rgba(0,0,0,.35);overflow:hidden}.options-detail::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(81,218,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(81,218,255,.035) 1px,transparent 1px);background-size:4cqw 4cqw;pointer-events:none}.options-detail>*{position:relative}.selected-label{color:#ff86ca;font-size:clamp(6.5px,1.55cqw,9px);font-weight:1000;letter-spacing:.2em;text-transform:uppercase}.difficulty-visual{display:block;margin-top:.7cqw;color:#fff;font-size:clamp(15px,4.2cqw,24px);font-weight:1000;letter-spacing:.055em;text-transform:uppercase}.difficulty-description{margin:1.5cqw 0 2.5cqw;color:#c7d3e7;font-size:clamp(7px,1.75cqw,10px);font-weight:800;line-height:1.42}.difficulty-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4cqw}.difficulty-stat{padding:1.7cqw 1cqw;border:1px solid #253b5c;border-radius:1.5cqw;background:rgba(3,8,20,.8);text-align:center}.difficulty-stat span{display:block;color:#7f91af;font-size:clamp(5.5px,1.3cqw,8px);font-weight:900;letter-spacing:.08em;text-transform:uppercase}.difficulty-stat b{display:block;margin-top:.7cqw;color:#6cecff;font-size:clamp(6.5px,1.55cqw,9px);text-transform:uppercase}.options-rule{margin:2.3cqw 0 0;padding-top:2cqw;border-top:1px solid rgba(255,224,102,.25);color:#ffe36d;font-size:clamp(6px,1.45cqw,8.5px);font-weight:900;line-height:1.35;text-align:center;text-transform:uppercase;letter-spacing:.045em}
+.options-actions{display:grid;grid-template-columns:.75fr 1.25fr;gap:2cqw}.options-action{min-height:13cqw;border:2px solid #5ce8ff;border-radius:2.6cqw;background:linear-gradient(180deg,#153d65,#08182e);color:#f5fdff;font-size:clamp(12px,3.4cqw,20px);font-weight:1000;letter-spacing:.08em;text-transform:uppercase;box-shadow:inset 0 0 15px rgba(81,230,255,.12),0 3px 0 #01040a}.options-action.primary{border-color:#ffe36d;background:linear-gradient(180deg,#ad6d2d,#6d2b4d 52%,#28143b);color:#fff8cd;text-shadow:1px 2px #62244b;box-shadow:inset 0 0 18px rgba(255,227,86,.15),0 3px 0 #130514}.options-action:hover{filter:brightness(1.16)}.options-action:active{transform:translateY(2px);box-shadow:none}
 #gameScreen{padding:0;background:#03050b;isolation:isolate}
 .game-art-backdrop{position:absolute;z-index:0;inset:-2%;background-size:cover;background-position:center 42%;opacity:.13;filter:blur(1.5px) saturate(.8);transform:scale(1.035);pointer-events:none}
 #gameScreen::before{content:"";position:absolute;z-index:1;inset:0;background:radial-gradient(circle at 48% 15%,rgba(68,218,255,.16),transparent 34%),radial-gradient(circle at 80% 80%,rgba(255,71,174,.14),transparent 35%),linear-gradient(180deg,rgba(2,4,11,.82),rgba(2,4,10,.96));pointer-events:none}
@@ -165,17 +165,40 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
 <section class="screen" id="optionsScreen" aria-label="Rush Duel options">
   <div class="art-shell">
     <div class="screen-art options-bg"></div>
-    <div class="difficulty-visual" id="difficultyVisual">Easy — Cannot rush you</div>
-    <div class="difficulty-description" id="difficultyDescription">Build at your own pace. Easy cannot trigger a rush drop.</div>
-    <div class="options-clean-panel"><strong>CHOOSE YOUR CHALLENGE</strong><span>Select a bot difficulty above. Every level moves at a readable pace while smarter rivals make stronger placements.</span><em>Then press Play Duel</em></div>
-    <select class="hit-select difficulty-hit" id="difficulty" aria-label="Bot difficulty">
+    <div class="options-ui">
+      <header class="options-header">
+        <div class="options-kicker">Player Select · Bot Battle</div>
+        <h1 class="options-title">Game Options</h1>
+        <p class="options-subtitle">Choose how fiercely your rival fights back</p>
+      </header>
+      <div class="difficulty-grid" role="group" aria-label="Choose bot difficulty">
+        <button class="difficulty-card active" data-difficulty-choice="easy" aria-pressed="true"><span class="card-index">01</span><strong>Easy</strong><small>No timer · No bot rush</small></button>
+        <button class="difficulty-card" data-difficulty-choice="medium" aria-pressed="false"><span class="card-index">02</span><strong>Medium</strong><small>Extra time · Calm rival</small></button>
+        <button class="difficulty-card" data-difficulty-choice="hard" aria-pressed="false"><span class="card-index">03</span><strong>Hard</strong><small>Smart plans · Often rushes</small></button>
+        <button class="difficulty-card" data-difficulty-choice="impossible" aria-pressed="false"><span class="card-index">04</span><strong>Impossible</strong><small>Perfect plans · Rush hunter</small></button>
+      </div>
+      <section class="options-detail" aria-live="polite">
+        <span class="selected-label">Selected Rival</span>
+        <strong class="difficulty-visual" id="difficultyVisual">Easy Bot</strong>
+        <p class="difficulty-description" id="difficultyDescription">No timer and no bot rushes. Take all the time you need to plan each piece.</p>
+        <div class="difficulty-stats">
+          <div class="difficulty-stat"><span>Timer</span><b id="difficultyTimer">Unlimited</b></div>
+          <div class="difficulty-stat"><span>Bot Rush</span><b id="difficultyRush">Never</b></div>
+          <div class="difficulty-stat"><span>Strategy</span><b id="difficultyBrain">Learning</b></div>
+        </div>
+        <p class="options-rule">Same pieces · Clear lines to attack · Last board standing wins</p>
+      </section>
+      <div class="options-actions">
+        <button class="options-action" id="backBtn">Back</button>
+        <button class="options-action primary" id="playBtn">Play Duel</button>
+      </div>
+    </div>
+    <select class="offscreen" id="difficulty" aria-label="Bot difficulty" tabindex="-1">
       <option value="easy" selected>Easy — Cannot rush you</option>
       <option value="medium">Medium — Occasionally rushes</option>
       <option value="hard">Hard — Rushes often</option>
       <option value="impossible">Impossible — Rushes quickly</option>
     </select>
-    <button class="hit-button back-hit" id="backBtn" aria-label="Back"></button>
-    <button class="hit-button play-hit" id="playBtn" aria-label="Play Duel"></button>
     <div class="offscreen"><div id="difficultyCopy"></div></div>
   </div>
 </section>
@@ -282,6 +305,12 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
     medium:{label:'MEDIUM',reaction:700,step:220,drop:[1900,2750],forceChance:.28,choice:4,error:.14,timerBonus:1000,copy:'The automatic round rush gives you one extra second. The bot moves deliberately and only occasionally uses Rush Drop.'},
     hard:{label:'HARD',reaction:560,step:170,drop:[1700,2700],forceChance:.52,choice:1,error:.015,timerBonus:0,copy:'The bot moves at a readable pace but evaluates the board very carefully and chooses consistently strong placements.'},
     impossible:{label:'IMPOSSIBLE',reaction:420,step:130,drop:[750,1400],forceChance:.90,choice:1,error:0,timerBonus:0,copy:'The bot is smart, deliberate, and relentless. It still moves visibly, but it uses Rush Drop far more often than the easier bots.'}
+  };
+  const DIFFICULTY_PRESENTATION={
+    easy:{timer:'Unlimited',rush:'Never',brain:'Learning'},
+    medium:{timer:'+1 Second',rush:'Sometimes',brain:'Balanced'},
+    hard:{timer:'Standard',rush:'Often',brain:'Expert'},
+    impossible:{timer:'Standard',rush:'Relentless',brain:'Perfect'}
   };
   const SOLO_SCORE_KEY='rush-duel-solo-scores-v1',SOLO_NAME_KEY='rush-duel-player-name-v1',TUTORIAL_KEY='rush-duel-tutorial-seen-v1';
   let peerLibraryPromise=null;
@@ -676,8 +705,10 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
     togglePause(){if(!this.started||this.winner)return;this.paused=!this.paused;if(!this.paused){const now=performance.now();const left=Math.max(0,this.deadline-this.lastTime);this.deadline=now+left;this.botAI.nextAction=now+120;}this.updateUI();}
     setDifficulty(v){
       this.difficulty=v;document.getElementById('difficultyCopy').textContent=DIFFICULTIES[v].copy;
-      const option=document.querySelector(`#difficulty option[value="${v}"]`);if($('difficultyVisual'))$('difficultyVisual').textContent=option?.textContent||DIFFICULTIES[v].label;
+      const option=document.querySelector(`#difficulty option[value="${v}"]`);if($('difficultyVisual'))$('difficultyVisual').textContent=`${DIFFICULTIES[v].label} BOT`;
       if($('difficultyDescription'))$('difficultyDescription').textContent=DIFFICULTIES[v].copy;
+      const presentation=DIFFICULTY_PRESENTATION[v];if(presentation){$('difficultyTimer').textContent=presentation.timer;$('difficultyRush').textContent=presentation.rush;$('difficultyBrain').textContent=presentation.brain;}
+      document.querySelectorAll('[data-difficulty-choice]').forEach(button=>{const selected=button.dataset.difficultyChoice===v;button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));});
       if(this.started&&this.mode==='bot')this.reset();
     }
     playTone(name){
@@ -1161,6 +1192,7 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
   soundBtn.addEventListener('click',toggleSound);
   $('fullBtn').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch{}});
   $('difficulty').addEventListener('change',e=>game.setDifficulty(e.target.value));
+  document.querySelectorAll('[data-difficulty-choice]').forEach(button=>button.addEventListener('click',()=>{const value=button.dataset.difficultyChoice;$('difficulty').value=value;game.setDifficulty(value);game.playTone('move');}));
   $('saveScoreBtn').addEventListener('click',saveCurrentSoloScore);$('scoreName').addEventListener('keydown',e=>{if(e.key==='Enter')saveCurrentSoloScore();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){releaseAllInputs();if(activeScreen==='gameScreen'&&game.started&&!game.paused&&!game.winner&&!(game.mode==='online'&&network.role==='guest')){game.togglePause();if(game.mode==='online'&&network.role==='host')network.broadcast(true);}}});
 
@@ -1193,6 +1225,7 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       check('gameplay controls are visible code UI',[...document.querySelectorAll('#gameScreen [data-control]')].every(el=>el.textContent.trim().length>0)&&!!document.querySelector('#gameScreen .battle-hud'),'gameplay still depends on invisible image hitboxes');
       check('title rules use matching artwork cards',document.querySelectorAll('.title-rule-update').length===2&&!!document.querySelector('.title-rule-update.attack')&&!!document.querySelector('.title-rule-update.win'),'title rule cards are missing');
       check('bot options omit display and sound controls',!$('optionSoundBtn')&&!$('opacity')&&!document.querySelector('#optionsScreen [aria-label*="sound" i],#optionsScreen [aria-label*="visibility" i]'),'removed options are still present');
+      check('bot options use responsive coded controls',document.querySelectorAll('[data-difficulty-choice]').length===4&&[...document.querySelectorAll('.options-action')].every(button=>button.textContent.trim()),'options still rely on image hitboxes');
       check('portrait player board fills the available height',COMPACT_PLAYER_VIEW.cell*ROWS/620>=.93,'portrait board is too small');
       const survivalProbe=new RushDuel();survivalProbe.player.lines=999;survivalProbe.bot.lines=998;
       check('line totals never end a match',!survivalProbe.hasMatchEnded(),'a line target still ends matches');
@@ -1221,7 +1254,7 @@ body[data-game-mode="classic"] .hud-side.rival,body[data-game-mode="classic"] .r
       const packedProbe=new Board('packed');packedProbe.bestCombo=4;packedProbe.tetrises=2;const packed=network.packBoard(packedProbe);check('online snapshots preserve progression stats',packed.bestCombo===4&&packed.tetrises===2&&network.snapshot().version===2,'snapshot stats or protocol version missing');
       check('online play has ready and reconnect feedback',!!$('onlineReadyBtn')&&typeof network.attemptReconnect==='function'&&typeof network.requestRematch==='function','online reliability controls missing');
       check('first-run tutorial has all four essentials',TUTORIAL_STEPS.length===4&&!!$('tutorialOverlay')&&!!$('tutorialNextBtn'),'tutorial is incomplete');
-      const artBackgrounds=[['.title-bg','title.jpg'],['.options-bg','options.jpg'],['.game-bg','game.jpg']];
+      const artBackgrounds=[['.title-bg','title.jpg'],['.options-bg','options-v2.jpg'],['.game-bg','game.jpg']];
       check('large artwork is cached as external assets',artBackgrounds.every(([selector,name])=>{const image=getComputedStyle(document.querySelector(selector)).backgroundImage;return image.includes(`assets/${name}`)&&!image.includes('data:image');}),'embedded artwork still delays startup');
     }catch(error){check('self-test runner',false,error?.message||String(error));}
     return {pass:tests.every(test=>test.pass),tests};
