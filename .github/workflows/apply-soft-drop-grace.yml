@@ -1,5 +1,6 @@
 name: Apply soft-drop spawn grace
 
+# One-time workflow for the soft-drop carry-over fix.
 on:
   pull_request:
     branches: [main]
