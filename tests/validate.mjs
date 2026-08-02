@@ -13,13 +13,19 @@ for(const test of core.tests)check(`core: ${test.name}`,test.pass,test.detail);
 
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const app=['app-v13.js','app-v13-part1.js','app-v13-part2.js','app-v13-part3.js'].map(file=>fs.readFileSync(path.join(root,'assets',file),'utf8')).join('\n');
+const mobileCss=fs.readFileSync(path.join(root,'assets','mobile-fit-v13.css'),'utf8');
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
 check('unique HTML ids',ids.length===new Set(ids).size);
 const refs=[...app.matchAll(/\$\('([^']+)'\)/g)].map(match=>match[1]);
 const missing=[...new Set(refs)].filter(id=>!ids.includes(id));
 check('app element references',missing.length===0,missing.join(', '));
 check('runtime patch chain removed',!html.includes('play-v12.html')&&!html.includes('document.write('));
-for(const file of ['assets/game-v13.css','assets/core-v13.js','assets/core-rules-v13.js','assets/core-game-v13.js','assets/network-v13.js','assets/app-v13.js','assets/app-v13-part1.js','assets/app-v13-part2.js','assets/app-v13-part3.js','assets/bot-worker-v13.js'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
+for(const file of ['assets/game-v13.css','assets/mobile-fit-v13.css','assets/core-v13.js','assets/core-rules-v13.js','assets/core-game-v13.js','assets/network-v13.js','assets/app-v13.js','assets/app-v13-part1.js','assets/app-v13-part2.js','assets/app-v13-part3.js','assets/bot-worker-v13.js'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
+check('mobile fitting stylesheet linked after base styles',html.indexOf('assets/mobile-fit-v13.css')>html.indexOf('assets/game-v13.css'));
+check('dynamic viewport resizing enabled',html.includes('interactive-widget=resizes-content')&&mobileCss.includes('100dvh'));
+check('mobile screens prevent scrolling',mobileCss.includes('overflow:hidden')&&!mobileCss.includes('overflow:auto'));
+check('title duplicate overlays hidden',mobileCss.includes('.title-rules,.build-label{display:none}'));
+check('mobile game uses remaining-height arena',mobileCss.includes('grid-template-rows:auto minmax(0,1fr) auto')&&mobileCss.includes('.arena canvas{display:block;width:auto;height:100%'));
 
 const host=new RushGame();host.setMode('online');host.reset(0);host.beginActive(3000);
 const guest=new RushGame();guest.setMode('online');guest.applySnapshot(host.snapshot(3000,{stateSeq:1,ackSeq:0}),3000);
