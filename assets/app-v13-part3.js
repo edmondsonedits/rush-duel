@@ -1,8 +1,9 @@
 const held={key:{left:false,right:false,down:false,horizontal:null},touch:{left:false,right:false,down:false,horizontal:null}},repeat={key:{left:0,right:0,down:0},touch:{left:0,right:0,down:0}},activePointers=new Map();
 const DAS=115,ARR=32,SOFT=22;
+const softDropButton=document.querySelector('[data-action="down"]'),softDropHint=softDropButton?.querySelector('small');
 function applyAction(action,{predicted=false}={}){
   if(!game.started||activeScreen!=='game')return false;if(game.mode==='online'&&action==='pause')return false;if(game.mode==='online'&&network.role==='guest'&&!predicted)return network.sendInput(action);
-  let changed=false;if(action==='left')changed=game.move(game.player,-1,0);else if(action==='right')changed=game.move(game.player,1,0);else if(action==='down')changed=game.move(game.player,0,1,true);else if(action==='ccw')changed=game.rotate(game.player,false);else if(action==='cw')changed=game.rotate(game.player,true);else if(action==='drop'){navigator.vibrate?.(8);changed=game.commit('player');}else if(action==='pause')changed=game.togglePause();
+  let changed=false;if(action==='left')changed=game.move(game.player,-1,0);else if(action==='right')changed=game.move(game.player,1,0);else if(action==='down')changed=game.move(game.player,0,1,true,performance.now());else if(action==='ccw')changed=game.rotate(game.player,false);else if(action==='cw')changed=game.rotate(game.player,true);else if(action==='drop'){navigator.vibrate?.(8);changed=game.commit('player');}else if(action==='pause')changed=game.togglePause();
   if(changed){if(['left','right'].includes(action))playTone('move');else if(action==='down')playTone('soft');else if(['ccw','cw'].includes(action))playTone('rotate');if(game.mode==='online'&&network.role==='host')network.broadcast(true);}return changed;
 }
 function processHeld(now){for(const source of ['key','touch']){const horizontal=held[source].horizontal;if(horizontal&&held[source][horizontal]&&now>=repeat[source][horizontal]){applyAction(horizontal);repeat[source][horizontal]=now+ARR;}if(held[source].down&&now>=repeat[source].down){applyAction('down');repeat[source].down=now+SOFT;}}}
@@ -16,9 +17,12 @@ addEventListener('keydown',event=>{const key=event.key;if(['ArrowLeft','ArrowRig
 addEventListener('keyup',event=>{if(event.key==='ArrowLeft'){held.key.left=false;if(held.key.horizontal==='left')held.key.horizontal=held.key.right?'right':null;}if(event.key==='ArrowRight'){held.key.right=false;if(held.key.horizontal==='right')held.key.horizontal=held.key.left?'left':null;}if(event.key==='ArrowDown')held.key.down=false;});addEventListener('blur',releaseInputs);
 canvas.addEventListener('pointerdown',event=>{gesture={x:event.clientX,y:event.clientY};canvas.setPointerCapture?.(event.pointerId);});canvas.addEventListener('pointerup',event=>{if(!gesture)return;const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y,ax=Math.abs(dx),ay=Math.abs(dy);if(ax<13&&ay<13)applyAction('cw');else if(ax>ay){const count=Math.min(4,Math.max(1,Math.round(ax/35)));for(let i=0;i<count;i++)applyAction(dx>0?'right':'left');}else if(dy<-28)applyAction('drop');else if(dy>22){const count=Math.min(5,Math.max(1,Math.round(dy/28)));for(let i=0;i<count;i++)applyAction('down');}gesture=null;});
 
+function updateSoftDropUi(now){
+  if(!softDropButton||!softDropHint)return;const localBoard=game.mode==='online'&&network.role==='guest'?game.rival:game.player,remaining=game.softDropRemaining(localBoard,now),waiting=game.phase==='active'&&remaining>0;softDropButton.style.opacity=waiting?'.58':'';softDropButton.style.filter=waiting?'grayscale(.35) brightness(.8)':'';softDropButton.setAttribute('aria-disabled',waiting?'true':'false');softDropHint.textContent=waiting?`${Math.max(.1,remaining/1000).toFixed(1)}s`:'Soft';
+}
 function frame(now){
   const dt=Math.min(40,now-lastFrame);lastFrame=now;if(activeScreen==='game'){
-    processHeld(now);const guest=game.mode==='online'&&network.role==='guest';if(!guest){game.update(now,dt,{allowSettled:true});botAgent.update(now);}if(game.mode==='online'&&network.role==='host')network.broadcast();updateEffects(dt);render(now);
+    updateSoftDropUi(now);processHeld(now);const guest=game.mode==='online'&&network.role==='guest';if(!guest){game.update(now,dt,{allowSettled:true});botAgent.update(now);}if(game.mode==='online'&&network.role==='host')network.broadcast();updateEffects(dt);render(now);
   }requestAnimationFrame(frame);
 }
 
@@ -36,6 +40,7 @@ function runAppTests(){
     check('worker planner available',typeof Worker==='function');
     check('online transport loaded',NetworkDuel.available(),'window.Peer missing');
     check('responsive board size',29*ROWS/620>=.93);
+    check('soft-drop spawn grace is exposed',typeof game.softDropRemaining==='function'&&typeof game.canSoftDrop==='function');
     check('difficulty ordering',DIFFICULTIES.easy.forceChance<DIFFICULTIES.medium.forceChance&&DIFFICULTIES.medium.forceChance<DIFFICULTIES.hard.forceChance&&DIFFICULTIES.hard.forceChance<DIFFICULTIES.impossible.forceChance);
     const ids=[...document.querySelectorAll('[id]')].map(element=>element.id),duplicates=ids.filter((id,index)=>ids.indexOf(id)!==index);check('unique interface ids',duplicates.length===0,duplicates.join(','));
   }catch(error){check('app test runner',false,error?.message||String(error));}

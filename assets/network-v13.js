@@ -78,14 +78,14 @@ export class NetworkDuel{
   }
   sendStart(type='start'){return this.send({type,protocol:PROTOCOL,token:this.startToken,state:this.game.snapshot(performance.now(),{stateSeq:++this.stateSeq,ackSeq:this.guestAckSeq})});}
   sendInput(action){
-    if(this.role!=='guest'||!this.connected||!this.game?.canAct())return false;const seq=++this.inputSeq;this.pendingInputs.push({seq,round:this.game.round,action});this.applyPredictedInput(action);this.send({type:'input',protocol:PROTOCOL,seq,round:this.game.round,action});return true;
+    if(this.role!=='guest'||!this.connected||!this.game?.canAct())return false;const predicted=this.applyPredictedInput(action);if(action==='down'&&!predicted)return false;const seq=++this.inputSeq;this.pendingInputs.push({seq,round:this.game.round,action});this.send({type:'input',protocol:PROTOCOL,seq,round:this.game.round,action});return true;
   }
   applyPredictedInput(action){
-    const board=this.game.rival;if(action==='left')board.move(-1,0);else if(action==='right')board.move(1,0);else if(action==='down'){if(board.move(0,1))board.score++;}else if(action==='ccw')board.rotate(false);else if(action==='cw')board.rotate(true);
+    const board=this.game.rival;if(action==='left')return board.move(-1,0);if(action==='right')return board.move(1,0);if(action==='down')return this.game.move(board,0,1,true,performance.now());if(action==='ccw')return board.rotate(false);if(action==='cw')return board.rotate(true);return false;
   }
   applyHostInput(data){
     const seq=Number(data.seq)||0;if(seq&&seq<=this.guestAckSeq)return;if(data.round&&data.round!==this.game.round){this.guestAckSeq=Math.max(this.guestAckSeq,seq);return;}
-    const board=this.game.rival,action=data.action;if(action==='left')board.move(-1,0);else if(action==='right')board.move(1,0);else if(action==='down'){if(board.move(0,1))board.score++;}else if(action==='ccw')board.rotate(false);else if(action==='cw')board.rotate(true);else if(action==='drop')this.game.commit('rival');this.guestAckSeq=Math.max(this.guestAckSeq,seq);this.broadcast(true);
+    const board=this.game.rival,action=data.action;if(action==='left')board.move(-1,0);else if(action==='right')board.move(1,0);else if(action==='down')this.game.move(board,0,1,true,performance.now());else if(action==='ccw')board.rotate(false);else if(action==='cw')board.rotate(true);else if(action==='drop')this.game.commit('rival');this.guestAckSeq=Math.max(this.guestAckSeq,seq);this.broadcast(true);
   }
   onData(data){
     if(!data||typeof data!=='object'||(data.protocol&&data.protocol!==PROTOCOL))return;
