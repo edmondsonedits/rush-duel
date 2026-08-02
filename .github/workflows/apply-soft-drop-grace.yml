@@ -1,0 +1,35 @@
+name: Apply soft-drop spawn grace
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/apply-soft-drop-grace.mjs
+      - .github/workflows/apply-soft-drop-grace.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply gameplay patch
+        run: node tools/apply-soft-drop-grace.mjs
+      - name: Validate production build
+        run: node tests/validate.mjs
+      - name: Commit completed update
+        run: |
+          rm tools/apply-soft-drop-grace.mjs
+          rm .github/workflows/apply-soft-drop-grace.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/core-game-v13.js assets/network-v13.js assets/app-v13-part3.js tools/apply-soft-drop-grace.mjs .github/workflows/apply-soft-drop-grace.yml
+          git commit -m "Add one-second soft-drop grace after piece spawn"
+          git push
