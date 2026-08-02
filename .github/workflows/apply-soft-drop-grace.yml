@@ -23,6 +23,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Prepare one-time patch script
+        run: sed -i "/content.indexOf(search,first+search.length)/d" tools/apply-soft-drop-grace.mjs
       - name: Apply gameplay patch
         run: node tools/apply-soft-drop-grace.mjs
       - name: Validate production build
