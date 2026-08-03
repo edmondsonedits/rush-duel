@@ -1,0 +1,41 @@
+name: Import exact title artwork
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/import-title-art.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-title-art:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download exact title artwork
+        shell: bash
+        run: |
+          mkdir -p assets
+          curl --fail --location --retry 3 \
+            'https://media.canva.com/v2/document-image/hash:1139933574/height:596/id:DAHRQNgresA/type:B/width:335?brand=BAG6sMkk7oE&csig=AAAAAAAAAAAAAAAAAAAAAB9xupYedtv3SYuyr6-fMSDxwxT_0LkN2v7KPVJRgoa8&disableexport=T&exp=1785781553&fallback=https%3A%2F%2Fs3.amazonaws.com%2Fdocument-export-us1.canva.com%2FgresA%2FDAHRQNgresA%2F1%2Fthumbnail%2F0001.png%3FX-Amz-Algorithm%3DAWS4-HMAC-SHA256%26X-Amz-Credential%3DAKIAQYCGKMUHXB3PK6CC%252F20260802%252Fus-east-1%252Fs3%252Faws4_request%26X-Amz-Date%3D20260802T233704Z%26X-Amz-Expires%3D67729%26X-Amz-Signature%3D14baf857c041a6f4ca4b6beaa3702fd60b1b849001394bf363a54a1763cb43f4%26X-Amz-SignedHeaders%3Dhost%26response-expires%3DMon%252C%252003%2520Aug%25202026%252018%253A25%253A53%2520GMT&osig=AAAAAAAAAAAAAAAAAAAAAHgRuzsvcfBlHw8kGD944RcIFYiAHM5QdMvwS7osgrU_&page=1&signed=brand%2Cdisableexport%2Cfallback%2Cpage%2Cversion&signer=document-rpc&version=1' \
+            --output assets/title-screen-exact.png
+          test -s assets/title-screen-exact.png
+          file assets/title-screen-exact.png
+
+      - name: Commit public repository asset
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/title-screen-exact.png
+          git commit -m 'Add exact Tetris Duel title artwork' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
