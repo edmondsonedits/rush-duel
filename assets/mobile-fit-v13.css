@@ -1,16 +1,32 @@
-/* Mobile viewport fitting layer for Rush Duel V13.
+/* Mobile viewport fitting layer for Tetris Duel V14.
    Loaded after game-v13.css so phone-specific fixes stay isolated. */
 html,body,#app,.app-shell{width:100%;height:100%;min-height:0;overflow:hidden}
 @supports (height:100dvh){html,body,#app,.app-shell,.screen{height:100dvh;max-height:100dvh}}
 body{position:fixed;inset:0;overscroll-behavior:none}
 .screen{min-width:0;min-height:0;overflow:hidden}
 
-/* The title artwork already contains rules and a Press Start button. */
-.title-overlay{justify-content:flex-end;padding:0 8.5% 5.1%}
+/* Animated title artwork and arcade-screen effects. */
+.title-screen{isolation:isolate;padding:0;background:radial-gradient(circle at 50% 16%,rgba(50,220,255,.11),transparent 42%),radial-gradient(circle at 50% 92%,rgba(255,55,184,.12),transparent 38%),#01020a}
+.title-art{z-index:0;background-image:url('title-v14.svg');background-position:center;background-size:contain;background-repeat:no-repeat;transform:translateZ(0) scale(1.003);transform-origin:center;will-change:transform,filter;animation:titleBreathe 8s ease-in-out infinite alternate}
+.title-art::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.98) 0 1px,rgba(92,236,255,.7) 1.5px,transparent 3px) 8% 12%/113px 137px,radial-gradient(circle,rgba(255,255,255,.96) 0 1px,rgba(255,104,189,.65) 1.5px,transparent 3px) 75% 8%/181px 211px,radial-gradient(circle,rgba(255,236,130,.95) 0 1px,rgba(255,104,189,.4) 1.5px,transparent 3px) 24% 64%/157px 173px,radial-gradient(circle,rgba(109,235,255,.95) 0 1px,rgba(92,236,255,.35) 1.5px,transparent 3px) 92% 54%/139px 191px;mix-blend-mode:screen;opacity:.22;filter:drop-shadow(0 0 4px rgba(88,232,255,.8));animation:starDrift 19s linear infinite,starPulse 2.9s ease-in-out infinite alternate}
+.title-art::after{content:"";position:absolute;inset:-18% -65%;pointer-events:none;background:linear-gradient(112deg,transparent 39%,rgba(255,255,255,.02) 44%,rgba(91,235,255,.24) 48%,rgba(255,255,255,.32) 50%,rgba(255,80,191,.17) 52%,transparent 58%);mix-blend-mode:screen;transform:translateX(-54%);opacity:0;animation:lightSweep 7.5s ease-in-out infinite}
+.title-screen::before{content:"";position:absolute;z-index:2;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 4px),radial-gradient(ellipse at center,transparent 54%,rgba(0,0,0,.4) 100%);opacity:.62;animation:scanDrift 10s linear infinite}
+.title-screen::after{content:"";position:absolute;z-index:3;left:10%;top:8%;width:4px;height:4px;border-radius:50%;pointer-events:none;background:#fff;box-shadow:68vw 4vh 0 rgba(255,255,255,.9),16vw 13vh 0 1px rgba(92,236,255,.95),74vw 19vh 0 rgba(255,104,189,.9),7vw 27vh 0 rgba(255,255,255,.85),80vw 34vh 0 1px rgba(255,228,105,.9),24vw 43vh 0 rgba(92,236,255,.9),67vw 50vh 0 rgba(255,255,255,.9),10vw 61vh 0 1px rgba(255,104,189,.9),77vw 69vh 0 rgba(92,236,255,.9),30vw 76vh 0 rgba(255,255,255,.8),61vw 82vh 0 1px rgba(255,228,105,.85);filter:drop-shadow(0 0 5px currentColor);opacity:.2;animation:sparkleCluster 3.2s steps(2,end) infinite}
+
+/* The artwork already contains rules and a Press Start button. */
+.title-overlay{z-index:4;justify-content:flex-end;padding:0 8.5% 5.1%}
 .title-rules,.build-label{display:none}
-.start-button{width:100%;height:9.2%;min-height:0;padding:0;border:0;border-radius:12px;background:transparent;color:transparent;text-shadow:none;box-shadow:none;animation:none}
-.start-button:active{transform:none;background:rgba(255,255,255,.055);box-shadow:inset 0 0 22px rgba(255,227,109,.18)}
+.start-button{width:100%;height:9.2%;min-height:0;padding:0;border:0;border-radius:12px;background:transparent;color:transparent;text-shadow:none;box-shadow:none;animation:startHotspot 1.7s ease-in-out infinite}
+.start-button:active{transform:none;background:rgba(255,255,255,.055);box-shadow:inset 0 0 22px rgba(255,227,109,.18),0 0 28px rgba(255,61,184,.22)}
 .start-button:focus-visible{outline:3px solid var(--gold);outline-offset:-4px}
+
+@keyframes titleBreathe{0%{transform:translateZ(0) scale(1.003);filter:saturate(1) brightness(1)}100%{transform:translateZ(0) scale(1.012);filter:saturate(1.08) brightness(1.04)}}
+@keyframes starDrift{from{background-position:8% 12%,75% 8%,24% 64%,92% 54%}to{background-position:8% calc(12% + 42px),75% calc(8% + 30px),24% calc(64% + 52px),92% calc(54% + 36px)}}
+@keyframes starPulse{0%,20%{opacity:.12}55%{opacity:.34}100%{opacity:.2}}
+@keyframes lightSweep{0%,56%{transform:translateX(-54%);opacity:0}61%{opacity:.2}74%{opacity:.62}88%{opacity:.12}100%{transform:translateX(54%);opacity:0}}
+@keyframes scanDrift{from{background-position:0 0,center}to{background-position:0 12px,center}}
+@keyframes sparkleCluster{0%,18%,100%{opacity:.15;transform:scale(.65) rotate(0)}22%,25%{opacity:.95;transform:scale(1.65) rotate(45deg)}32%,54%{opacity:.22;transform:scale(.8) rotate(90deg)}59%,63%{opacity:.8;transform:scale(1.35) rotate(135deg)}70%,92%{opacity:.2;transform:scale(.72) rotate(180deg)}}
+@keyframes startHotspot{0%,100%{background:rgba(255,50,176,0);box-shadow:0 0 0 rgba(255,70,185,0)}50%{background:rgba(255,60,180,.035);box-shadow:inset 0 0 24px rgba(255,220,255,.08),0 0 25px rgba(255,50,184,.14)}}
 
 .menu-card{max-height:calc(100dvh - max(12px,env(safe-area-inset-top)) - max(12px,env(safe-area-inset-bottom)));overflow:hidden}
 .game-layout{width:100%;height:100dvh;max-height:100dvh;min-height:0;overflow:hidden;grid-template-rows:auto minmax(0,1fr) auto}
@@ -102,4 +118,8 @@ body{position:fixed;inset:0;overscroll-behavior:none}
   .arena{grid-column:1;grid-row:2}
   .controls{grid-column:2;grid-row:2;align-self:stretch}
   .controls button{min-height:31px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .title-art,.title-art::before,.title-art::after,.title-screen::before,.title-screen::after,.start-button{animation:none!important}
 }
