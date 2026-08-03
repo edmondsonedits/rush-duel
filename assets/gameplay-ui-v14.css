@@ -1,0 +1,20 @@
+/* Gameplay touch-target improvements for Tetris Duel V14.
+   Loaded after the existing mobile fitting layer so these controls remain
+   easier to press without changing the board or menu layouts. */
+@media (max-width:520px){
+  .controls{gap:5px;padding:5px;border-radius:11px}
+  .control-row{gap:5px}
+  .controls button{min-height:50px;padding:5px 3px;border-width:1px;border-radius:10px;font-size:26px;box-shadow:0 2px 0 #01050b,inset 0 0 11px rgba(85,228,255,.07)}
+  .controls button small{margin-top:3px;font-size:6px}
+  .controls .rush{font-size:15px}
+  .control-row.movement button{min-height:46px}
+}
+
+@media (max-height:700px) and (max-width:820px){
+  .controls button{min-height:44px}
+  .control-row.movement button{min-height:40px}
+}
+
+@media (orientation:landscape) and (max-height:520px){
+  .controls button{min-height:36px}
+}
