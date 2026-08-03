@@ -1,0 +1,25 @@
+/* Tetris Duel V19 title presentation.
+   The title artwork remains a single untouched background layer. Everything that moves
+   is isolated above it and cannot intercept the Press Start control. */
+.title-screen{isolation:isolate;overflow:hidden;background:#010107}
+.title-art{z-index:0;inset:0;background-image:url('title-v14.svg');background-position:center;background-repeat:no-repeat;background-size:contain;transform:none!important;filter:none!important;animation:none!important;will-change:auto!important}
+.title-effects{position:absolute;z-index:2;inset:0;overflow:hidden;pointer-events:none;contain:strict}
+.title-effects>span{position:absolute;display:block;pointer-events:none}
+.title-scanlines{inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 4px),radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.38) 100%);opacity:.52;animation:titleScanDrift 12s linear infinite}
+.title-light-sweep{top:-18%;bottom:-18%;left:-70%;width:58%;transform:skewX(-14deg);background:linear-gradient(90deg,transparent,rgba(84,235,255,.04) 24%,rgba(255,255,255,.26) 49%,rgba(255,74,191,.12) 62%,transparent);mix-blend-mode:screen;filter:blur(3px);opacity:0;animation:titleLightSweep 8.6s ease-in-out infinite}
+.title-horizon-glow{left:12%;right:12%;top:28%;height:27%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(255,68,193,.16),rgba(45,212,255,.055) 45%,transparent 72%);mix-blend-mode:screen;filter:blur(12px);opacity:.25;animation:titleHorizonPulse 4.8s ease-in-out infinite alternate}
+.title-button-glow{left:13%;right:13%;bottom:5.8%;height:10%;border-radius:22px;background:radial-gradient(ellipse at center,rgba(255,255,255,.11),rgba(255,44,179,.15) 42%,transparent 72%);mix-blend-mode:screen;filter:blur(9px);animation:titleButtonGlow 1.8s ease-in-out infinite alternate}
+.title-sparkles{inset:0;background:radial-gradient(circle,rgba(255,255,255,1) 0 1px,rgba(71,231,255,.75) 1.5px,transparent 3.2px) 7% 8%/131px 173px,radial-gradient(circle,rgba(255,255,255,.98) 0 1px,rgba(255,75,192,.72) 1.5px,transparent 3.4px) 83% 11%/181px 227px,radial-gradient(circle,rgba(255,244,154,.96) 0 1px,rgba(255,88,199,.55) 1.5px,transparent 3.2px) 31% 58%/167px 199px,radial-gradient(circle,rgba(116,238,255,.98) 0 1px,rgba(62,225,255,.5) 1.5px,transparent 3.3px) 93% 49%/151px 211px;mix-blend-mode:screen;filter:drop-shadow(0 0 4px rgba(83,229,255,.8));opacity:.18;animation:titleStarsDrift 24s linear infinite,titleStarsPulse 3.2s steps(2,end) infinite}
+.title-orbs{inset:-12%;background:radial-gradient(circle at 18% 31%,rgba(65,231,255,.2) 0 2px,transparent 7px),radial-gradient(circle at 76% 22%,rgba(255,72,194,.22) 0 2px,transparent 8px),radial-gradient(circle at 11% 68%,rgba(255,225,92,.14) 0 2px,transparent 7px),radial-gradient(circle at 87% 72%,rgba(85,229,255,.17) 0 2px,transparent 8px);mix-blend-mode:screen;filter:blur(.4px);opacity:.48;animation:titleOrbFloat 11s ease-in-out infinite alternate}
+.title-overlay{z-index:4;pointer-events:none}
+.start-button{pointer-events:auto;position:relative;z-index:5}
+.start-button::after{content:"";position:absolute;inset:-12%;border-radius:18px;background:transparent;box-shadow:0 0 0 rgba(255,72,190,0);animation:titleHotspot 1.8s ease-in-out infinite;pointer-events:none}
+@keyframes titleScanDrift{to{background-position:0 12px,center}}
+@keyframes titleLightSweep{0%,64%{left:-70%;opacity:0}70%{opacity:.45}84%{left:118%;opacity:.22}100%{left:118%;opacity:0}}
+@keyframes titleHorizonPulse{0%{opacity:.16;transform:scale(.96)}100%{opacity:.38;transform:scale(1.035)}}
+@keyframes titleButtonGlow{0%{opacity:.25;transform:scale(.97)}100%{opacity:.72;transform:scale(1.04)}}
+@keyframes titleStarsDrift{to{background-position:calc(7% + 18px) calc(8% + 28px),calc(83% - 20px) calc(11% + 18px),calc(31% + 13px) calc(58% - 22px),calc(93% - 16px) calc(49% - 16px)}}
+@keyframes titleStarsPulse{0%,45%{opacity:.12}50%,100%{opacity:.28}}
+@keyframes titleOrbFloat{0%{transform:translate3d(-1.2%,-.7%,0) scale(.98)}100%{transform:translate3d(1.2%,1%,0) scale(1.03)}}
+@keyframes titleHotspot{0%{box-shadow:0 0 5px rgba(255,72,190,.04)}100%{box-shadow:0 0 28px rgba(255,72,190,.23)}}
+@media (prefers-reduced-motion:reduce){.title-effects>span,.start-button::after{animation:none!important}.title-light-sweep,.title-orbs{display:none}.title-sparkles{opacity:.12}.title-button-glow{opacity:.3}}
