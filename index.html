@@ -9,15 +9,24 @@
   <meta property="og:description" content="Build clean, time the rush, and be the last board standing.">
   <meta property="og:type" content="website">
   <link rel="preload" href="assets/title-v14.svg" as="image" fetchpriority="high">
-  <link rel="stylesheet" href="assets/game-v13.css?v=18">
-  <link rel="stylesheet" href="assets/mobile-fit-v13.css?v=18">
-  <link rel="stylesheet" href="assets/gameplay-ui-v16.css?v=18">
+  <link rel="stylesheet" href="assets/game-v13.css?v=19">
+  <link rel="stylesheet" href="assets/mobile-fit-v13.css?v=19">
+  <link rel="stylesheet" href="assets/gameplay-ui-v16.css?v=19">
+  <link rel="stylesheet" href="assets/title-overlay-v19.css?v=19">
   <title>Tetris Duel — Polished Edition</title>
 </head>
 <body data-screen="title" data-mode="menu">
   <div id="app" class="app-shell">
     <section class="screen active title-screen" data-screen-panel="title" aria-label="Tetris Duel title screen">
       <div class="title-art" aria-hidden="true"></div>
+      <div class="title-effects" aria-hidden="true">
+        <span class="title-horizon-glow"></span>
+        <span class="title-orbs"></span>
+        <span class="title-sparkles"></span>
+        <span class="title-light-sweep"></span>
+        <span class="title-button-glow"></span>
+        <span class="title-scanlines"></span>
+      </div>
       <div class="title-overlay">
         <div class="title-rules">
           <article><b>ATTACK</b><span>Clear lines to turn your opponent's side to stone.</span></article>
@@ -25,7 +34,7 @@
           <article><b>WIN</b><span>Make your opponent's blocks reach the top.</span></article>
         </div>
         <button class="start-button" id="startButton">Press Start</button>
-        <div class="build-label">POLISHED BUILD V18</div>
+        <div class="build-label">POLISHED BUILD V19</div>
       </div>
     </section>
 
@@ -142,6 +151,6 @@
 
   <pre id="selfTestOutput" hidden></pre>
   <script src="assets/pubnub-peer-transport-v6.js"></script>
-  <script type="module" src="assets/app-v13.js?v=18"></script>
+  <script type="module" src="assets/app-v13.js?v=19"></script>
 </body>
 </html>
