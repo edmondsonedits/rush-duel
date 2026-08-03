@@ -6,6 +6,8 @@ on:
       - '.github/workflows/replace-title-hq-v23.yml'
   issues:
     types: [opened]
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
