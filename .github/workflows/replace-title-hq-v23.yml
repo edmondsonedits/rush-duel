@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '.github/workflows/replace-title-hq-v23.yml'
+  issues:
+    types: [opened]
   workflow_dispatch:
 
 permissions:
@@ -11,6 +13,7 @@ permissions:
 
 jobs:
   install-title:
+    if: github.event_name != 'issues' || github.event.issue.title == 'Run high-resolution title installer'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
