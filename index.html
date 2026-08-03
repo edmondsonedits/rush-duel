@@ -9,9 +9,9 @@
   <meta property="og:description" content="Build clean, time the rush, and be the last board standing.">
   <meta property="og:type" content="website">
   <link rel="preload" href="assets/title-v14.svg" as="image" fetchpriority="high">
-  <link rel="stylesheet" href="assets/game-v13.css?v=15">
-  <link rel="stylesheet" href="assets/mobile-fit-v13.css?v=15">
-  <link rel="stylesheet" href="assets/gameplay-ui-v14.css?v=15">
+  <link rel="stylesheet" href="assets/game-v13.css?v=16">
+  <link rel="stylesheet" href="assets/mobile-fit-v13.css?v=16">
+  <link rel="stylesheet" href="assets/gameplay-ui-v16.css?v=16">
   <title>Tetris Duel — Polished Edition</title>
 </head>
 <body data-screen="title" data-mode="menu">
@@ -25,7 +25,7 @@
           <article><b>WIN</b><span>Make your opponent's blocks reach the top.</span></article>
         </div>
         <button class="start-button" id="startButton">Press Start</button>
-        <div class="build-label">POLISHED BUILD V15</div>
+        <div class="build-label">POLISHED BUILD V16</div>
       </div>
     </section>
 
@@ -93,6 +93,13 @@
         </header>
         <section class="arena">
           <canvas id="gameCanvas" width="420" height="620" aria-label="Tetris Duel gameplay"></canvas>
+          <aside class="mobile-game-tools" aria-label="Game options">
+            <div class="mobile-tool-row">
+              <button id="mobileSoundButton" type="button" aria-label="Mute game sound" aria-pressed="false"><span class="mobile-tool-icon" aria-hidden="true">🔊</span><span class="mobile-tool-label">Sound</span></button>
+              <button id="mobileExitButton" type="button" aria-label="Back to game modes"><span class="mobile-tool-icon" aria-hidden="true">←</span><span class="mobile-tool-label">Back</span></button>
+            </div>
+            <div class="mobile-level-card" aria-label="Current level"><span>LEVEL</span><strong id="mobileLevel">1</strong></div>
+          </aside>
           <div class="connection-pill" id="connectionPill" role="status"></div>
           <div class="toast" id="gameToast" role="status" aria-live="polite"></div>
           <div class="countdown" id="countdown"><strong>3</strong></div>
@@ -135,6 +142,6 @@
 
   <pre id="selfTestOutput" hidden></pre>
   <script src="assets/pubnub-peer-transport-v6.js"></script>
-  <script type="module" src="assets/app-v13.js?v=15"></script>
+  <script type="module" src="assets/app-v13.js?v=16"></script>
 </body>
 </html>
