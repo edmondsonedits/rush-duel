@@ -4,34 +4,34 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-content">
   <meta name="theme-color" content="#050509">
-  <meta name="description" content="Rush Duel is a fast neon block battle for solo play, expert bots, and synchronized online duels.">
-  <meta property="og:title" content="Rush Duel — Neon Block Battle">
+  <meta name="description" content="Tetris Duel is a fast neon block battle for solo play, expert bots, and synchronized online duels.">
+  <meta property="og:title" content="Tetris Duel — Neon Block Battle">
   <meta property="og:description" content="Build clean, time the rush, and be the last board standing.">
   <meta property="og:type" content="website">
-  <link rel="preload" href="assets/title.jpg" as="image" fetchpriority="high">
+  <link rel="preload" href="assets/title-v14.svg" as="image" fetchpriority="high">
   <link rel="stylesheet" href="assets/game-v13.css">
-  <link rel="stylesheet" href="assets/mobile-fit-v13.css">
-  <title>Rush Duel — Polished Edition</title>
+  <link rel="stylesheet" href="assets/mobile-fit-v13.css?v=14">
+  <title>Tetris Duel — Polished Edition</title>
 </head>
 <body data-screen="title" data-mode="menu">
   <div id="app" class="app-shell">
-    <section class="screen active title-screen" data-screen-panel="title" aria-label="Rush Duel title screen">
+    <section class="screen active title-screen" data-screen-panel="title" aria-label="Tetris Duel title screen">
       <div class="title-art" aria-hidden="true"></div>
       <div class="title-overlay">
         <div class="title-rules">
-          <article><b>ATTACK</b><span>Clear lines to send garbage.</span></article>
+          <article><b>ATTACK</b><span>Clear lines to turn your opponent's side to stone.</span></article>
           <article><b>RUSH</b><span>Force both active pieces to lock.</span></article>
-          <article><b>WIN</b><span>Be the last board standing.</span></article>
+          <article><b>WIN</b><span>Make your opponent's blocks reach the top.</span></article>
         </div>
         <button class="start-button" id="startButton">Press Start</button>
-        <div class="build-label">POLISHED BUILD V13</div>
+        <div class="build-label">POLISHED BUILD V14</div>
       </div>
     </section>
 
     <section class="screen menu-screen" data-screen-panel="mode" aria-label="Choose a game mode">
       <main class="menu-card">
         <p class="kicker">Choose your battle</p>
-        <h1 class="brand">RUSH <span>DUEL</span></h1>
+        <h1 class="brand">TETRIS <span>DUEL</span></h1>
         <div class="mode-grid">
           <button class="mode-button gold" id="classicButton"><strong>Solo Play</strong><small>Classic single-board play with responsive controls and local high scores.</small></button>
           <button class="mode-button" id="botButton"><strong>Solo vs Bot</strong><small>Four distinct rivals, from relaxed practice to deep-search competition.</small></button>
@@ -81,7 +81,7 @@
       </main>
     </section>
 
-    <section class="screen game-screen" data-screen-panel="game" aria-label="Rush Duel game">
+    <section class="screen game-screen" data-screen-panel="game" aria-label="Tetris Duel game">
       <div class="game-art" aria-hidden="true"></div>
       <main class="game-layout">
         <header class="hud">
@@ -91,7 +91,7 @@
           <section class="hud-tools"><button id="soundButton" aria-label="Toggle sound">♪</button><button id="exitButton">Exit</button></section>
         </header>
         <section class="arena">
-          <canvas id="gameCanvas" width="420" height="620" aria-label="Rush Duel gameplay"></canvas>
+          <canvas id="gameCanvas" width="420" height="620" aria-label="Tetris Duel gameplay"></canvas>
           <div class="connection-pill" id="connectionPill" role="status"></div>
           <div class="toast" id="gameToast" role="status" aria-live="polite"></div>
           <div class="countdown" id="countdown"><strong>3</strong></div>
