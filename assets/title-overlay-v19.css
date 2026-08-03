@@ -1,4 +1,5 @@
-/* Tetris Duel V21 title presentation.
+@import url('mode-menu-v22.css?v=22');
+/* Tetris Duel V22 title presentation.
    The exact artwork is a normal public repository image. The older SVG remains underneath
    as a safe loading fallback. All motion is isolated above both artwork layers. */
 .title-screen{isolation:isolate;overflow:hidden;background:#010107}
