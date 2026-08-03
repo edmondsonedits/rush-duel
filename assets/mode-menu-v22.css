@@ -1,0 +1,210 @@
+/* Tetris Duel V22 — full-height mobile mode-selection screen.
+   This layer only changes the first menu after Press Start. Other menus and gameplay
+   retain their existing layouts. */
+
+@media (max-width:520px) and (orientation:portrait){
+  [data-screen-panel="mode"]{
+    place-items:stretch;
+    padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
+  }
+
+  [data-screen-panel="mode"] .menu-card{
+    width:100%;
+    height:100%;
+    min-height:0;
+    max-width:none;
+    max-height:none;
+    overflow:hidden;
+    padding:clamp(15px,4.2vw,22px);
+    gap:clamp(10px,1.7dvh,17px);
+    grid-template-rows:auto auto minmax(0,1fr) auto auto;
+    align-content:stretch;
+    border-width:3px;
+    border-radius:20px;
+    background:
+      linear-gradient(180deg,rgba(14,29,61,.99),rgba(5,9,22,.995) 54%,rgba(3,5,14,.995)),
+      #050916;
+    box-shadow:
+      0 0 0 4px #060b17,
+      0 0 38px rgba(72,225,255,.26),
+      0 0 74px rgba(255,65,181,.08),
+      inset 0 0 42px rgba(66,203,255,.07);
+  }
+
+  [data-screen-panel="mode"] .menu-card::before{
+    inset:8px;
+    border-color:rgba(255,104,189,.42);
+    border-radius:13px;
+    box-shadow:inset 0 0 18px rgba(255,81,186,.04);
+  }
+
+  [data-screen-panel="mode"] .kicker{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    min-height:20px;
+    font-size:clamp(10px,3vw,13px);
+    letter-spacing:.2em;
+    text-shadow:0 0 10px rgba(92,236,255,.55);
+  }
+
+  [data-screen-panel="mode"] .kicker::before,
+  [data-screen-panel="mode"] .kicker::after{
+    content:"";
+    width:clamp(36px,13vw,70px);
+    height:2px;
+    background:linear-gradient(90deg,transparent,var(--cyan));
+    box-shadow:0 0 8px rgba(92,236,255,.65);
+  }
+
+  [data-screen-panel="mode"] .kicker::after{
+    transform:scaleX(-1);
+  }
+
+  [data-screen-panel="mode"] .brand{
+    align-self:center;
+    font-size:clamp(48px,15vw,68px);
+    line-height:.74;
+    letter-spacing:-.07em;
+    filter:drop-shadow(0 0 12px rgba(92,236,255,.12));
+  }
+
+  [data-screen-panel="mode"] .brand span{
+    margin-top:clamp(11px,1.8dvh,18px);
+    font-size:.43em;
+    letter-spacing:.2em;
+    text-shadow:2px 2px #ef4da0,0 0 12px rgba(255,227,109,.3);
+  }
+
+  [data-screen-panel="mode"] .mode-grid{
+    min-height:0;
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:repeat(3,minmax(0,1fr));
+    gap:clamp(10px,1.45dvh,15px);
+  }
+
+  [data-screen-panel="mode"] .mode-button,
+  [data-screen-panel="mode"] .mode-button.gold,
+  [data-screen-panel="mode"] .mode-button.pink{
+    grid-column:1;
+    position:relative;
+    isolation:isolate;
+    width:100%;
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+    padding:clamp(12px,2dvh,20px) clamp(14px,4vw,22px);
+    border-width:3px;
+    border-radius:16px;
+    box-shadow:
+      0 5px 0 rgba(0,0,0,.78),
+      0 0 18px rgba(92,236,255,.1),
+      inset 0 1px 0 rgba(255,255,255,.16),
+      inset 0 0 24px rgba(92,236,255,.08);
+  }
+
+  [data-screen-panel="mode"] .mode-button.gold{
+    background:linear-gradient(180deg,#79631d 0%,#4c3a0d 52%,#211704 100%);
+    box-shadow:0 5px 0 rgba(0,0,0,.78),0 0 22px rgba(255,227,109,.13),inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 26px rgba(255,227,109,.08);
+  }
+
+  [data-screen-panel="mode"] .mode-button:not(.gold):not(.pink){
+    background:linear-gradient(180deg,#19557f 0%,#123653 52%,#071524 100%);
+  }
+
+  [data-screen-panel="mode"] .mode-button.pink{
+    background:linear-gradient(180deg,#7b286d 0%,#531945 52%,#250b22 100%);
+    box-shadow:0 5px 0 rgba(0,0,0,.78),0 0 22px rgba(255,104,189,.13),inset 0 1px 0 rgba(255,255,255,.17),inset 0 0 26px rgba(255,104,189,.09);
+  }
+
+  [data-screen-panel="mode"] .mode-button::before{
+    content:"";
+    position:absolute;
+    z-index:-1;
+    inset:0;
+    background:
+      linear-gradient(115deg,transparent 0 34%,rgba(255,255,255,.08) 45%,transparent 57%),
+      repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 4px);
+    pointer-events:none;
+  }
+
+  [data-screen-panel="mode"] .mode-button strong{
+    display:block;
+    font-size:clamp(20px,6.1vw,27px);
+    line-height:1.08;
+    letter-spacing:.08em;
+    text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 10px rgba(255,255,255,.08);
+  }
+
+  [data-screen-panel="mode"] .mode-button small{
+    max-width:520px;
+    margin:clamp(7px,1.2dvh,12px) auto 0;
+    font-size:clamp(10px,3vw,13px);
+    line-height:1.35;
+    color:#e3edf9;
+    text-shadow:0 1px 0 rgba(0,0,0,.8);
+  }
+
+  [data-screen-panel="mode"] .score-panel{
+    min-height:clamp(70px,10dvh,92px);
+    max-height:none;
+    overflow:hidden;
+    display:grid;
+    align-content:center;
+    padding:clamp(11px,1.8dvh,16px) clamp(14px,4vw,20px);
+    border-width:2px;
+    border-radius:13px;
+    font-size:clamp(10px,2.8vw,12px);
+    background:linear-gradient(180deg,rgba(31,24,5,.84),rgba(12,9,3,.92));
+    box-shadow:inset 0 0 18px rgba(255,227,109,.045),0 0 12px rgba(255,227,109,.03);
+  }
+
+  [data-screen-panel="mode"] .score-panel>b{
+    font-size:clamp(11px,3vw,13px);
+    letter-spacing:.14em;
+  }
+
+  [data-screen-panel="mode"] .score-panel ol{
+    margin-top:8px;
+    gap:3px;
+    font-size:clamp(10px,2.8vw,12px);
+  }
+
+  [data-screen-panel="mode"] .menu-actions{
+    min-height:clamp(46px,6.5dvh,58px);
+    align-items:center;
+    gap:clamp(20px,8vw,46px);
+  }
+
+  [data-screen-panel="mode"] .menu-actions button{
+    min-height:44px;
+    padding:8px 10px;
+    font-size:clamp(11px,3.2vw,14px);
+    font-weight:900;
+    letter-spacing:.09em;
+    color:#d1def0;
+    text-shadow:0 0 10px rgba(92,236,255,.16);
+  }
+}
+
+/* Preserve the full-screen composition on shorter phones without causing scrolling. */
+@media (max-width:520px) and (orientation:portrait) and (max-height:700px){
+  [data-screen-panel="mode"] .menu-card{
+    padding:12px 13px;
+    gap:8px;
+  }
+  [data-screen-panel="mode"] .brand{font-size:43px}
+  [data-screen-panel="mode"] .brand span{margin-top:9px}
+  [data-screen-panel="mode"] .mode-grid{gap:8px}
+  [data-screen-panel="mode"] .mode-button,
+  [data-screen-panel="mode"] .mode-button.gold,
+  [data-screen-panel="mode"] .mode-button.pink{padding:9px 12px}
+  [data-screen-panel="mode"] .mode-button strong{font-size:18px}
+  [data-screen-panel="mode"] .mode-button small{margin-top:5px;font-size:9px;line-height:1.25}
+  [data-screen-panel="mode"] .score-panel{min-height:58px;padding:8px 12px}
+  [data-screen-panel="mode"] .score-panel ol{margin-top:4px}
+  [data-screen-panel="mode"] .menu-actions{min-height:38px}
+  [data-screen-panel="mode"] .menu-actions button{min-height:36px;font-size:10px}
+}
