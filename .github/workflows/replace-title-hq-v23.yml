@@ -39,8 +39,9 @@ jobs:
           actual_bytes=$(wc -c < "$candidate" | tr -d ' ')
           actual_sha=$(sha256sum "$candidate" | cut -d' ' -f1)
           part_count=$(find assets/title-hq-parts -maxdepth 1 -name '*.txt' | wc -l | tr -d ' ')
-          printf 'decode_status=%s\npart_count=%s\nactual_bytes=%s\nexpected_bytes=%s\nactual_sha256=%s\nexpected_sha256=%s\n' \
-            "$decode_status" "$part_count" "$actual_bytes" "$expected_bytes" "$actual_sha" "$expected_sha" > "$diagnostic"
+          part_names=$(find assets/title-hq-parts -maxdepth 1 -name '*.txt' -printf '%f\n' | sort | paste -sd ',' -)
+          printf 'decode_status=%s\npart_count=%s\npart_names=%s\nactual_bytes=%s\nexpected_bytes=%s\nactual_sha256=%s\nexpected_sha256=%s\n' \
+            "$decode_status" "$part_count" "$part_names" "$actual_bytes" "$expected_bytes" "$actual_sha" "$expected_sha" > "$diagnostic"
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
