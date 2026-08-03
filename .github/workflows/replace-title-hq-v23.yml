@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: tetris-title-v23-installer
+  cancel-in-progress: true
+
 jobs:
   install-title:
     if: github.event_name != 'issues' || github.event.issue.title == 'Run high-resolution title installer'
@@ -18,19 +22,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Rebuild and verify the high-resolution title artwork
+      - name: Rebuild, verify, and publish the high-resolution artwork
         shell: bash
         run: |
-          set -euo pipefail
-          cat assets/title-hq-parts/*.txt | tr -d '\n\r ' | base64 --decode > assets/title-screen-hq.webp
-          test "$(wc -c < assets/title-screen-hq.webp)" -eq 131112
-          echo "5ee1e5a89ac506392f43aae02fc331997dea1f78e76be4300fe023998e2eff3f  assets/title-screen-hq.webp" | sha256sum -c -
-          printf 'width=864\nheight=1536\nformat=webp\nbytes=131112\nsha256=5ee1e5a89ac506392f43aae02fc331997dea1f78e76be4300fe023998e2eff3f\n' > assets/title-screen-hq.meta.txt
+          set -u
+          expected_bytes='131112'
+          expected_sha='5ee1e5a89ac506392f43aae02fc331997dea1f78e76be4300fe023998e2eff3f'
+          candidate='assets/title-screen-hq.webp'
+          diagnostic='assets/title-hq-rebuild-diagnostic.txt'
 
-      - name: Activate the high-resolution title and bust caches
-        shell: bash
-        run: |
-          python3 - <<'PY'
+          set +e
+          cat assets/title-hq-parts/*.txt | tr -d '\n\r ' | base64 --decode > "$candidate"
+          decode_status=$?
+          set -e
+
+          actual_bytes=$(wc -c < "$candidate" | tr -d ' ')
+          actual_sha=$(sha256sum "$candidate" | cut -d' ' -f1)
+          part_count=$(find assets/title-hq-parts -maxdepth 1 -name '*.txt' | wc -l | tr -d ' ')
+          printf 'decode_status=%s\npart_count=%s\nactual_bytes=%s\nexpected_bytes=%s\nactual_sha256=%s\nexpected_sha256=%s\n' \
+            "$decode_status" "$part_count" "$actual_bytes" "$expected_bytes" "$actual_sha" "$expected_sha" > "$diagnostic"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          if [ "$decode_status" -eq 0 ] && [ "$part_count" -eq 15 ] && [ "$actual_bytes" = "$expected_bytes" ] && [ "$actual_sha" = "$expected_sha" ]; then
+            printf 'width=864\nheight=1536\nformat=webp\nbytes=%s\nsha256=%s\n' "$expected_bytes" "$expected_sha" > assets/title-screen-hq.meta.txt
+            python3 - <<'PY'
           from pathlib import Path
 
           path = Path('index.html')
@@ -40,18 +57,18 @@ jobs:
           html = html.replace('POLISHED BUILD V22', 'POLISHED BUILD V23')
           path.write_text(html)
           PY
-          rm -rf assets/title-hq-parts
-          rm -f assets/title-installer-diagnostic.txt assets/title-screen-exact.png assets/title-screen-exact.meta.txt
+            rm -rf assets/title-hq-parts
+            rm -f assets/title-installer-diagnostic.txt assets/title-screen-exact.png assets/title-screen-exact.meta.txt "$diagnostic"
+            message='Replace title screen with high-resolution artwork V23'
+          else
+            rm -f "$candidate"
+            message='Record V23 title reconstruction diagnostics'
+          fi
 
-      - name: Commit the live V23 patch
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
           else
-            git commit -m 'Replace title screen with high-resolution artwork V23'
+            git commit -m "$message"
             git push
           fi
