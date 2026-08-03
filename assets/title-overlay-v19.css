@@ -1,8 +1,9 @@
-/* Tetris Duel V19 title presentation.
-   The title artwork remains a single untouched background layer. Everything that moves
-   is isolated above it and cannot intercept the Press Start control. */
+/* Tetris Duel V20 title presentation.
+   The exact selected title artwork is rendered as a locked Canva embed. Every animated
+   effect remains isolated above it and cannot intercept the Press Start control. */
 .title-screen{isolation:isolate;overflow:hidden;background:#010107}
-.title-art{z-index:0;inset:0;background-image:url('title-v14.svg');background-position:center;background-repeat:no-repeat;background-size:contain;transform:none!important;filter:none!important;animation:none!important;will-change:auto!important}
+.title-art{display:none!important}
+.title-exact-art{position:absolute;z-index:0;inset:0;width:100%;height:100%;border:0;background:#010107;pointer-events:none;transform:none;filter:none}
 .title-effects{position:absolute;z-index:2;inset:0;overflow:hidden;pointer-events:none;contain:strict}
 .title-effects>span{position:absolute;display:block;pointer-events:none}
 .title-scanlines{inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 4px),radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.38) 100%);opacity:.52;animation:titleScanDrift 12s linear infinite}
