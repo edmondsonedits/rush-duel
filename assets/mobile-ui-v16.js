@@ -1,13 +1,11 @@
-/* Tetris Duel V17 mobile gameplay patch.
+/* Tetris Duel V18 mobile gameplay patch.
    This file loads after the main application scripts and refines the compact
    phone renderer without changing desktop gameplay. */
-(function installMobileGameplayV17(){
+(function installMobileGameplayV18(){
   const originalGetView=getView;
   const originalDrawRail=drawRail;
   const originalUpdateHud=updateHud;
 
-  /* Keep all twenty rows visible above the large controls while preserving a
-     generous right rail for previews and match information. */
   getView=function(){
     if(!compactView)return originalGetView();
     return {
@@ -29,9 +27,28 @@
     ctx.restore();
   }
 
-  /* The compact rail now treats the immediate next piece as the primary
-     decision, with pieces two and three smaller beneath it. Larger information
-     cards fill the remaining rail instead of leaving unused dead space. */
+  /* Center pieces by their occupied blocks instead of the full 4×4 matrix.
+     This keeps I, O, S, Z, J, L and T pieces visually aligned. */
+  function centeredMiniPiece(index,centerX,centerY,scale=10,alpha=1){
+    if(index===undefined)return;
+    const shape=SHAPES[index],cells=[];
+    for(let py=0;py<4;py++)for(let px=0;px<4;px++)if(shape.m[py][px])cells.push({px,py});
+    if(!cells.length)return;
+    const minX=Math.min(...cells.map(cell=>cell.px));
+    const maxX=Math.max(...cells.map(cell=>cell.px));
+    const minY=Math.min(...cells.map(cell=>cell.py));
+    const maxY=Math.max(...cells.map(cell=>cell.py));
+    const pieceCenterX=(minX+maxX)/2;
+    const pieceCenterY=(minY+maxY)/2;
+    cells.forEach(cell=>drawBlock(
+      centerX+(cell.px-pieceCenterX)*scale-scale/2,
+      centerY+(cell.py-pieceCenterY)*scale-scale/2,
+      shape.color,
+      scale,
+      alpha
+    ));
+  }
+
   drawRail=function(view,local,rival,guest,now,pct,timerDisplay){
     if(!view.compact)return originalDrawRail(view,local,rival,guest,now,pct,timerDisplay);
 
@@ -39,10 +56,10 @@
     if(game.mode==='classic'){
       railPanel(309,108,108,154,'rgba(255,227,109,.34)');
       text('NEXT',x,116,13,'#ffe36d','center');
-      miniPiece(game.queue[0],x,164,14,1);
-      text('THEN',x,211,9,'#91a0bb','center');
-      miniPiece(game.queue[1],347,239,8,.92);
-      miniPiece(game.queue[2],395,239,8,.92);
+      centeredMiniPiece(game.queue[0],x,164,14,1);
+      text('THEN',x,210,9,'#91a0bb','center');
+      centeredMiniPiece(game.queue[1],x-24,240,8,.92);
+      centeredMiniPiece(game.queue[2],x+24,240,8,.92);
 
       railPanel(309,270,108,279,'rgba(85,231,255,.28)');
       text('SCORE',x,282,12,'#9aa8c2','center');
@@ -67,10 +84,10 @@
 
     text(game.mode==='bot'?'BOT BOARD':'RIVAL',x,100,9,'#ff82bf','center');
     text('NEXT',x,274,13,'#ffe36d','center');
-    miniPiece(game.queue[0],x,320,15,1);
+    centeredMiniPiece(game.queue[0],x,320,15,1);
     text('THEN',x,365,9,'#91a0bb','center');
-    miniPiece(game.queue[1],347,393,8.5,.92);
-    miniPiece(game.queue[2],395,393,8.5,.92);
+    centeredMiniPiece(game.queue[1],x-24,394,8.5,.92);
+    centeredMiniPiece(game.queue[2],x+24,394,8.5,.92);
 
     const barY=426,barX=312,barW=104;
     ctx.fillStyle='#111827';
