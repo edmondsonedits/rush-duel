@@ -1,0 +1,74 @@
+name: Finalize high-resolution Tetris Duel title V23
+
+on:
+  push:
+    paths:
+      - '.github/workflows/install-title-hq-v23-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tetris-title-v23-final
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild the verified 864x1536 artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          b64='/tmp/title-screen-hq.b64'
+          output='assets/title-screen-hq.webp'
+          : > "$b64"
+
+          for n in $(seq -w 0 13); do
+            part="assets/title-hq-parts/${n}.txt"
+            test -f "$part"
+            test "$(wc -c < "$part")" -ge 12000
+            head -c 12000 "$part" >> "$b64"
+          done
+
+          test -f assets/title-hq-parts/14.txt
+          test "$(wc -c < assets/title-hq-parts/14.txt)" -ge 6816
+          head -c 6816 assets/title-hq-parts/14.txt >> "$b64"
+
+          test "$(wc -c < "$b64")" -eq 174816
+          base64 --decode "$b64" > "$output"
+          test "$(wc -c < "$output")" -eq 131110
+          echo 'e5a0af68b7093eeb76c729c7074c3c7d34fa4461a2a9558691a90310cbaac758  assets/title-screen-hq.webp' | sha256sum -c -
+          printf 'width=864\nheight=1536\nformat=webp\nbytes=131110\nsha256=e5a0af68b7093eeb76c729c7074c3c7d34fa4461a2a9558691a90310cbaac758\n' > assets/title-screen-hq.meta.txt
+
+      - name: Switch the live title screen to V23
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text()
+          html = html.replace('assets/title-screen-exact.png', 'assets/title-screen-hq.webp')
+          html = html.replace('?v=22', '?v=23')
+          html = html.replace('POLISHED BUILD V22', 'POLISHED BUILD V23')
+          path.write_text(html)
+          PY
+
+          rm -rf assets/title-hq-parts
+          rm -f assets/title-hq-rebuild-diagnostic.txt assets/title-installer-diagnostic.txt
+          rm -f assets/title-screen-exact.png assets/title-screen-exact.meta.txt
+          rm -f .github/workflows/replace-title-hq-v23.yml
+          rm -f .github/workflows/install-title-hq-v23-final.yml
+
+      - name: Commit and publish V23
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Replace title screen with high-resolution artwork V23'
+          git push
