@@ -8,17 +8,18 @@
   <meta property="og:title" content="Tetris Duel — Neon Block Battle">
   <meta property="og:description" content="Build clean, time the rush, and be the last board standing.">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="assets/game-v13.css?v=20">
-  <link rel="stylesheet" href="assets/mobile-fit-v13.css?v=20">
-  <link rel="stylesheet" href="assets/gameplay-ui-v16.css?v=20">
-  <link rel="stylesheet" href="assets/title-overlay-v19.css?v=20">
+  <link rel="preload" href="assets/title-screen-exact.png?v=21" as="image" fetchpriority="high">
+  <link rel="stylesheet" href="assets/game-v13.css?v=21">
+  <link rel="stylesheet" href="assets/mobile-fit-v13.css?v=21">
+  <link rel="stylesheet" href="assets/gameplay-ui-v16.css?v=21">
+  <link rel="stylesheet" href="assets/title-overlay-v19.css?v=21">
   <title>Tetris Duel — Polished Edition</title>
 </head>
 <body data-screen="title" data-mode="menu">
   <div id="app" class="app-shell">
     <section class="screen active title-screen" data-screen-panel="title" aria-label="Tetris Duel title screen">
       <div class="title-art" aria-hidden="true"></div>
-      <iframe class="title-exact-art" title="" aria-hidden="true" tabindex="-1" loading="eager" src="https://www.canva.com/design/DAHRQNgresA/view?embed"></iframe>
+      <img class="title-exact-art" src="assets/title-screen-exact.png?v=21" alt="" aria-hidden="true" draggable="false" onerror="this.hidden=true">
       <div class="title-effects" aria-hidden="true">
         <span class="title-horizon-glow"></span>
         <span class="title-orbs"></span>
@@ -34,7 +35,7 @@
           <article><b>WIN</b><span>Make your opponent's blocks reach the top.</span></article>
         </div>
         <button class="start-button" id="startButton">Press Start</button>
-        <div class="build-label">POLISHED BUILD V20</div>
+        <div class="build-label">POLISHED BUILD V21</div>
       </div>
     </section>
 
@@ -151,6 +152,6 @@
 
   <pre id="selfTestOutput" hidden></pre>
   <script src="assets/pubnub-peer-transport-v6.js"></script>
-  <script type="module" src="assets/app-v13.js?v=20"></script>
+  <script type="module" src="assets/app-v13.js?v=21"></script>
 </body>
 </html>
