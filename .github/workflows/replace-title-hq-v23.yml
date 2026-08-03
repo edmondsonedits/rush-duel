@@ -4,11 +4,9 @@ on:
   push:
     paths:
       - '.github/workflows/replace-title-hq-v23.yml'
+  workflow_dispatch:
   issues:
     types: [opened]
-  schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,108 +18,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download, inspect, and select the original high-resolution artwork
+      - name: Rebuild and verify the high-resolution title artwork
         shell: bash
-        env:
-          CANVA_UNSIGNED: "https://media.canva.com/v2/image-resize/format:JPG/height:1536/quality:100/uri:ifs%3A%2F%2FM%2F607aa9a1-83f1-49b1-b6e8-3e770183ae2a/watermark:F/width:864"
-          CANVA_SIGNED_Q100: "https://media.canva.com/v2/image-resize/format:JPG/height:1536/quality:100/uri:ifs%3A%2F%2FM%2F607aa9a1-83f1-49b1-b6e8-3e770183ae2a/watermark:F/width:864?csig=AAAAAAAAAAAAAAAAAAAAAC9xdVukQJBEF1TpM6Y0X46LnYyhCDjxQ2spd5uFcEmn&exp=1785801962&osig=AAAAAAAAAAAAAAAAAAAAAK423TOUm2J23iPovOxRf_9adQCD9GOeq_sa0aIGu_si&signer=media-rpc&x-canva-quality=thumbnail"
-          CANVA_SIGNED_Q75: "https://media.canva.com/v2/image-resize/format:JPG/height:1536/quality:75/uri:ifs%3A%2F%2FM%2F607aa9a1-83f1-49b1-b6e8-3e770183ae2a/watermark:F/width:864?csig=AAAAAAAAAAAAAAAAAAAAAC9xdVukQJBEF1TpM6Y0X46LnYyhCDjxQ2spd5uFcEmn&exp=1785801962&osig=AAAAAAAAAAAAAAAAAAAAAK423TOUm2J23iPovOxRf_9adQCD9GOeq_sa0aIGu_si&signer=media-rpc&x-canva-quality=thumbnail"
-          CANVA_EXPORT: "https://s3.amazonaws.com/document-export-us1.canva.com/gresA/DAHRQNgresA/1/thumbnail/0001.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQYCGKMUHXB3PK6CC%2F20260802%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260802T233704Z&X-Amz-Expires=74545&X-Amz-Signature=7e35c8f27124bd98b423a304e91c44b8666aef4a4fde5c6cccb0b744b581c776&X-Amz-SignedHeaders=host&response-expires=Mon%2C%2003%20Aug%202026%2020%3A19%3A29%20GMT"
         run: |
-          set -u
-          mkdir -p assets /tmp/title-candidates
-          diagnostic=assets/title-installer-diagnostic.txt
-          printf 'run=%s\nevent=%s\n' "$(date -u +%FT%TZ)" "$GITHUB_EVENT_NAME" > "$diagnostic"
+          set -euo pipefail
+          cat assets/title-hq-parts/*.txt | tr -d '\n\r ' | base64 --decode > assets/title-screen-hq.webp
+          test "$(wc -c < assets/title-screen-hq.webp)" -eq 131112
+          echo "5ee1e5a89ac506392f43aae02fc331997dea1f78e76be4300fe023998e2eff3f  assets/title-screen-hq.webp" | sha256sum -c -
+          printf 'width=864\nheight=1536\nformat=webp\nbytes=131112\nsha256=5ee1e5a89ac506392f43aae02fc331997dea1f78e76be4300fe023998e2eff3f\n' > assets/title-screen-hq.meta.txt
 
-          cat > /tmp/read_dimensions.py <<'PY'
-          import struct, sys
-          p=sys.argv[1]
-          data=open(p,'rb').read()
-          w=h=0
-          if data.startswith(b'\x89PNG\r\n\x1a\n') and len(data)>=24:
-              w,h=struct.unpack('>II',data[16:24])
-          elif data[:2]==b'\xff\xd8':
-              i=2
-              while i+9 < len(data):
-                  if data[i] != 0xff:
-                      i += 1; continue
-                  while i < len(data) and data[i] == 0xff: i += 1
-                  if i >= len(data): break
-                  marker=data[i]; i += 1
-                  if marker in (0xd8,0xd9): continue
-                  if i+2 > len(data): break
-                  size=struct.unpack('>H',data[i:i+2])[0]
-                  if size < 2 or i+size > len(data): break
-                  if marker in (0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf):
-                      h,w=struct.unpack('>HH',data[i+3:i+7]); break
-                  i += size
-          print(f'{w} {h}')
-          PY
-
-          selected=''
-          for name in unsigned signed100 signed75 export; do
-            case "$name" in
-              unsigned) url="$CANVA_UNSIGNED" ;;
-              signed100) url="$CANVA_SIGNED_Q100" ;;
-              signed75) url="$CANVA_SIGNED_Q75" ;;
-              export) url="$CANVA_EXPORT" ;;
-            esac
-            out="/tmp/title-candidates/${name}.img"
-            code=$(curl -L --retry 1 --connect-timeout 15 --max-time 90 -sS -o "$out" -w '%{http_code}' "$url" || true)
-            if [ -f "$out" ]; then
-              read w h < <(python3 /tmp/read_dimensions.py "$out")
-              bytes=$(wc -c < "$out")
-            else
-              w=0; h=0; bytes=0
-            fi
-            printf '%s_http=%s\n%s_width=%s\n%s_height=%s\n%s_bytes=%s\n' "$name" "$code" "$name" "$w" "$name" "$h" "$name" "$bytes" >> "$diagnostic"
-            if [ -z "$selected" ] && [ "$w" -ge 800 ] && [ "$h" -ge 1400 ] && [ "$bytes" -ge 150000 ]; then
-              selected="$out"
-              printf 'selected=%s\n' "$name" >> "$diagnostic"
-            fi
-          done
-
-          if [ -n "$selected" ]; then
-            cp "$selected" assets/title-screen-exact.jpg
-            read width height < <(python3 /tmp/read_dimensions.py assets/title-screen-exact.jpg)
-            sha=$(sha256sum assets/title-screen-exact.jpg | cut -d' ' -f1)
-            printf 'width=%s\nheight=%s\nsha256=%s\n' "$width" "$height" "$sha" > assets/title-screen-exact.meta.txt
-            echo 'TITLE_FOUND=1' >> "$GITHUB_ENV"
-          else
-            echo 'selected=none' >> "$diagnostic"
-            echo 'TITLE_FOUND=0' >> "$GITHUB_ENV"
-          fi
-
-      - name: Point the title screen at the new asset and bust caches
-        if: env.TITLE_FOUND == '1'
+      - name: Activate the high-resolution title and bust caches
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text()
-          s=s.replace('<link rel="preload" href="assets/title-screen-exact.png?v=22" as="image" fetchpriority="high">\n','<link rel="preload" href="assets/title-screen-exact.jpg?v=23" as="image" fetchpriority="high">\n')
-          s=s.replace('assets/title-screen-exact.png?v=22','assets/title-screen-exact.jpg?v=23')
-          s=s.replace('?v=22','?v=23')
-          s=s.replace('POLISHED BUILD V22','POLISHED BUILD V23')
-          p.write_text(s)
-          PY
 
-      - name: Commit title patch or diagnostic result
+          path = Path('index.html')
+          html = path.read_text()
+          html = html.replace('assets/title-screen-exact.png?v=22', 'assets/title-screen-hq.webp?v=23')
+          html = html.replace('?v=22', '?v=23')
+          html = html.replace('POLISHED BUILD V22', 'POLISHED BUILD V23')
+          path.write_text(html)
+          PY
+          rm -rf assets/title-hq-parts
+          rm -f assets/title-installer-diagnostic.txt assets/title-screen-exact.png assets/title-screen-exact.meta.txt
+
+      - name: Commit the live V23 patch
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/title-installer-diagnostic.txt
-          if [ "${TITLE_FOUND:-0}" = '1' ]; then
-            git add assets/title-screen-exact.jpg assets/title-screen-exact.meta.txt index.html
-            message='Replace title screen with high-resolution artwork V23'
-          else
-            message='Record high-resolution title installer diagnostics'
-          fi
+          git add -A
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
           else
-            git commit -m "$message"
+            git commit -m 'Replace title screen with high-resolution artwork V23'
             git push
           fi
