@@ -208,7 +208,7 @@ function replanFromCurrentQueue(){
 }
 
 function isLikelyCustomQueue(array){
-  return activeBoard&&activeBoard.name==='CUSTOM'&&array.length>=4&&array.length<=5&&isShapeArray(array);
+  return document.body.dataset.screen==='custom-play'&&activeBoard&&activeBoard.name==='CUSTOM'&&array!==forecast&&array.length>=4&&array.length<=5&&isShapeArray(array);
 }
 
 Array.prototype.shift=function(...args){
@@ -219,7 +219,7 @@ Array.prototype.shift=function(...args){
 };
 
 Array.prototype.push=function(...items){
-  const candidate=(this[QUEUE_MARK]||isLikelyCustomQueue(this))&&this.length===4&&items.length===1&&isShape(items[0]);
+  const candidate=(this[QUEUE_MARK]||isLikelyCustomQueue(this))&&this!==forecast&&this.length===4&&items.length===1&&isShape(items[0]);
   if(candidate){
     queueRef=this;this[QUEUE_MARK]=true;
     if(pendingActivation&&activeBoard&&bottomTwoRowsOnly(activeBoard.grid)){
@@ -228,7 +228,8 @@ Array.prototype.push=function(...items){
       pendingActivation=false;
     }
     if(forecast.length){
-      items[0]=forecast.shift();
+      items[0]=forecast[0];
+      forecast=forecast.slice(1);
       if(lastPlan){lastPlan={...lastPlan,pieces:forecast.slice()};setUi(true,lastPlan);}
     }
   }
