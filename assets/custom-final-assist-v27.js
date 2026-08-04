@@ -2,183 +2,257 @@
 'use strict';
 
 const Rush=window.__RUSH_MODULES||{};
-const Board=Rush.Board,SHAPES=Rush.SHAPES||[],COLS=Rush.COLS||10,ROWS=Rush.ROWS||20;
-if(!Board||!SHAPES.length)return;
+const Board=Rush.Board,SHAPES=Rush.SHAPES||[],ROTATIONS=Rush.ROTATIONS||[],simulatePlacement=Rush.simulatePlacement,boardFeatures=Rush.boardFeatures;
+const COLS=Rush.COLS||10,ROWS=Rush.ROWS||20;
+if(!Board||SHAPES.length!==7||!ROTATIONS.length||typeof simulatePlacement!=='function')return;
 
-const GOLD='#ffe36d';
-const states=new WeakMap();
-let activeBoard=null;
-const originalSpawn=Board.prototype.spawn;
+const NATIVE_PUSH=Array.prototype.push;
+const NATIVE_SHIFT=Array.prototype.shift;
 const originalLock=Board.prototype.lock;
-const originalRotate=Board.prototype.rotate;
+const QUEUE_MARK=Symbol('customForecastQueue');
+const MAX_FIXED_BEAM=52;
+const MAX_SUFFIX_BEAM=115;
+const MAX_SUFFIX_DEPTH=8;
+const SEARCH_BUDGET_MS=105;
 
-function copyMatrix(matrix){return matrix.map(row=>row.slice());}
-function bottomOnlyMask(board){
-  if(!board?.grid?.length)return 0;
-  for(let y=0;y<ROWS-1;y++)if(board.grid[y].some(Boolean))return 0;
-  let mask=0;
-  for(let x=0;x<COLS;x++)if(board.grid[ROWS-1][x])mask|=1<<x;
-  return mask;
-}
-function createFinishSteps(mask){
-  const missing=[];
-  for(let x=0;x<COLS;x++)if(!(mask&(1<<x)))missing.push(x);
-  const steps=[];
-  for(let index=0;index<missing.length;){
-    const first=missing[index],columns=[];
-    while(index<missing.length&&columns.length<4&&missing[index]-first<=3){columns.push(missing[index]);index++;}
-    const matrix=Array.from({length:4},()=>Array(4).fill(0));
-    columns.forEach(column=>matrix[0][column-first]=1);
-    steps.push({matrix,targetX:first,columns,name:columns.length===4?'I':'SMART'});
+let activeBoard=null;
+let queueRef=null;
+let lastShiftedShape=null;
+let pendingActivation=false;
+let forecast=[];
+let forecastExact=false;
+let forecastStarted=false;
+let lastPlan=null;
+
+const isShape=value=>Number.isInteger(value)&&value>=0&&value<SHAPES.length;
+const isShapeArray=array=>Array.isArray(array)&&array.every(isShape);
+const cloneGrid=grid=>grid.map(row=>row.slice());
+const gridKey=grid=>grid.map(row=>row.map(cell=>cell?'1':'0').join('')).join('');
+const countBlocks=grid=>grid.reduce((total,row)=>total+row.reduce((sum,cell)=>sum+(cell?1:0),0),0);
+const boardEmpty=grid=>!grid.some(row=>row.some(Boolean));
+
+function bottomTwoRowsOnly(grid){
+  if(!Array.isArray(grid)||grid.length!==ROWS)return false;
+  let blocks=0;
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x]){
+    blocks++;
+    if(y<ROWS-2)return false;
   }
-  return steps;
+  return blocks>0;
 }
+
+function placementScore(candidate){
+  if(boardEmpty(candidate.grid))return 1_000_000;
+  const blocks=countBlocks(candidate.grid);
+  const features=typeof boardFeatures==='function'?boardFeatures(candidate.grid):{holes:0,holeDepth:0,blocksAboveHoles:0,aggregateHeight:0,maxHeight:0,bumpiness:0,rowTransitions:0,columnTransitions:0,cumulativeWells:0};
+  let score=0;
+  score+=candidate.lines*260;
+  score+=candidate.erodedPieceCells*16;
+  score-=blocks*16;
+  score-=features.holes*120;
+  score-=features.holeDepth*14;
+  score-=features.blocksAboveHoles*26;
+  score-=features.aggregateHeight*3.2;
+  score-=features.maxHeight*11;
+  score-=features.bumpiness*4.2;
+  score-=features.rowTransitions*1.8;
+  score-=features.columnTransitions*2.2;
+  score-=features.cumulativeWells*2.6;
+  if(candidate.topped)score-=1_000_000;
+  return score;
+}
+
+function placementsFor(grid,shapeIndex){
+  const unique=new Map();
+  for(const rotation of ROTATIONS[shapeIndex]||[]){
+    for(let x=-3;x<COLS;x++){
+      const candidate=simulatePlacement(grid,shapeIndex,rotation,x);
+      if(!candidate||candidate.topped)continue;
+      const key=gridKey(candidate.grid);
+      const scored={grid:candidate.grid,shape:shapeIndex,x:candidate.x,y:candidate.y,rot:candidate.rot,lines:candidate.lines,score:placementScore(candidate)};
+      const previous=unique.get(key);
+      if(!previous||scored.score>previous.score)unique.set(key,scored);
+    }
+  }
+  return [...unique.values()].sort((a,b)=>b.score-a.score);
+}
+
+function trimStates(states,limit){
+  const unique=new Map();
+  for(const state of states){
+    const key=gridKey(state.grid);
+    const previous=unique.get(key);
+    if(!previous||state.score>previous.score)unique.set(key,state);
+  }
+  return [...unique.values()].sort((a,b)=>b.score-a.score).slice(0,limit);
+}
+
+function expandFixed(startStates,fixedQueue,startedAt){
+  let states=startStates;
+  for(let index=0;index<fixedQueue.length;index++){
+    const shape=fixedQueue[index],expanded=[];
+    for(const state of states){
+      for(const placement of placementsFor(state.grid,shape)){
+        const next={grid:placement.grid,score:state.score+placement.score,added:state.added.slice(),path:state.path.concat([{shape,...placement}])};
+        if(boardEmpty(next.grid))return {solved:next,states:[next],consumed:index+1};
+        expanded.push(next);
+      }
+      if(performance.now()-startedAt>SEARCH_BUDGET_MS)break;
+    }
+    if(!expanded.length)return {solved:null,states:[],consumed:index+1};
+    states=trimStates(expanded,MAX_FIXED_BEAM);
+    if(performance.now()-startedAt>SEARCH_BUDGET_MS)break;
+  }
+  return {solved:null,states,consumed:fixedQueue.length};
+}
+
+function planForecast(grid,fixedQueue){
+  const startedAt=performance.now();
+  const cleanQueue=fixedQueue.filter(isShape).slice(0,5);
+  const initial={grid:cloneGrid(grid),score:0,added:[],path:[]};
+  const fixed=expandFixed([initial],cleanQueue,startedAt);
+  if(fixed.solved)return {pieces:[],exact:true,path:fixed.solved.path,fixed:cleanQueue,elapsed:performance.now()-startedAt};
+
+  let states=fixed.states.length?fixed.states:[initial];
+  let best=states[0]||initial;
+  for(let depth=1;depth<=MAX_SUFFIX_DEPTH;depth++){
+    const expanded=[];
+    for(const state of states){
+      for(let shape=0;shape<SHAPES.length;shape++){
+        const options=placementsFor(state.grid,shape).slice(0,12);
+        for(const placement of options){
+          const next={grid:placement.grid,score:state.score+placement.score,added:state.added.concat(shape),path:state.path.concat([{shape,...placement}])};
+          if(boardEmpty(next.grid))return {pieces:next.added,exact:true,path:next.path,fixed:cleanQueue,elapsed:performance.now()-startedAt};
+          expanded.push(next);
+          if(!best||next.score>best.score)best=next;
+        }
+        if(performance.now()-startedAt>SEARCH_BUDGET_MS)break;
+      }
+      if(performance.now()-startedAt>SEARCH_BUDGET_MS)break;
+    }
+    if(!expanded.length||performance.now()-startedAt>SEARCH_BUDGET_MS)break;
+    states=trimStates(expanded,MAX_SUFFIX_BEAM);
+    if(states[0]&&(!best||states[0].score>best.score))best=states[0];
+  }
+
+  let fallback=best?.added?.slice()||[];
+  if(!fallback.length){
+    let bestShape=0,bestScore=-Infinity;
+    for(let shape=0;shape<SHAPES.length;shape++){
+      const option=placementsFor(grid,shape)[0];
+      if(option&&option.score>bestScore){bestScore=option.score;bestShape=shape;}
+    }
+    fallback=[bestShape];
+  }
+  while(fallback.length<4)fallback.push(fallback[fallback.length-1]);
+  return {pieces:fallback.slice(0,MAX_SUFFIX_DEPTH),exact:false,path:best?.path||[],fixed:cleanQueue,elapsed:performance.now()-startedAt};
+}
+
 function ensureUi(){
   const rail=document.querySelector('#customPlayScreen .custom-play-rail');
-  if(!rail||document.getElementById('customAssistStatus'))return;
-  const status=document.createElement('div');
-  status.id='customAssistStatus';
-  status.className='custom-assist-status hidden';
-  status.innerHTML='<b>FINAL ASSIST</b><span>Winning blocks loaded</span>';
-  const objective=rail.querySelector('.custom-objective');
-  objective?.insertAdjacentElement('afterend',status);
-  const style=document.createElement('style');
-  style.id='custom-final-assist-v27-style';
-  style.textContent=`
-.custom-assist-status{
-  padding:8px 5px;
-  border:1px solid rgba(255,227,109,.62);
-  border-radius:9px;
-  background:linear-gradient(180deg,rgba(91,70,13,.42),rgba(25,18,3,.72));
-  text-align:center;
-  box-shadow:inset 0 0 16px rgba(255,227,109,.05),0 0 12px rgba(255,227,109,.06);
-}
-.custom-assist-status.hidden{display:none!important;}
-.custom-assist-status b{display:block;color:#ffe36d;font-size:9px;letter-spacing:.12em;}
-.custom-assist-status span{display:block;margin-top:4px;color:#fff3b2;font-size:7px;line-height:1.25;}
-.custom-next-panel.assist-active{border-color:rgba(255,227,109,.62)!important;box-shadow:inset 0 0 18px rgba(255,227,109,.06)!important;}
+  if(!rail)return;
+  let status=document.getElementById('customAssistStatus');
+  if(!status){
+    status=document.createElement('div');
+    status.id='customAssistStatus';
+    status.className='custom-assist-status hidden';
+    rail.querySelector('.custom-objective')?.insertAdjacentElement('afterend',status);
+  }
+  if(!document.getElementById('custom-final-assist-v29-style')){
+    const style=document.createElement('style');
+    style.id='custom-final-assist-v29-style';
+    style.textContent=`
+.custom-assist-status{padding:6px 3px;border:1px solid rgba(255,227,109,.55);border-radius:7px;background:linear-gradient(180deg,rgba(91,70,13,.34),rgba(25,18,3,.64));text-align:center;box-shadow:inset 0 0 14px rgba(255,227,109,.04)}
+.custom-assist-status.hidden{display:none!important}.custom-assist-status b{display:block;color:#ffe36d;font-size:7px;letter-spacing:.1em}.custom-assist-status span{display:block;margin-top:3px;color:#fff3b2;font-size:6px;line-height:1.2}.custom-next-panel.forecast-active{border-color:rgba(255,227,109,.55)!important;box-shadow:inset 0 0 16px rgba(255,227,109,.05)!important}
 `;
-  document.head.appendChild(style);
-}
-function setAssistUi(state){
-  ensureUi();
-  const status=document.getElementById('customAssistStatus');
-  const nextPanel=document.querySelector('#customPlayScreen .custom-next-panel');
-  const nextLabel=nextPanel?.querySelector(':scope > span');
-  if(state?.steps?.length){
-    status?.classList.remove('hidden');
-    const remaining=Math.max(0,state.steps.length-state.index);
-    if(status)status.innerHTML=`<b>FINAL ASSIST</b><span>${remaining} smart block${remaining===1?'':'s'} remaining</span>`;
-    nextPanel?.classList.add('assist-active');
-    if(nextLabel)nextLabel.textContent='ASSIST QUEUE';
-    const objective=document.querySelector('#customPlayScreen .custom-objective b');
-    if(objective)objective.textContent='FOLLOW THE GOLD TARGET';
-  }else{
-    status?.classList.add('hidden');
-    nextPanel?.classList.remove('assist-active');
-    if(nextLabel)nextLabel.textContent='NEXT';
-    const objective=document.querySelector('#customPlayScreen .custom-objective b');
-    if(objective)objective.textContent='EMPTY THE BOARD';
+    document.head.appendChild(style);
   }
 }
-function activateAssist(board,mask){
-  const steps=createFinishSteps(mask);
-  if(!steps.length)return null;
-  const state={steps,index:0,current:null,mask};
-  states.set(board,state);
-  activeBoard=board;
-  setAssistUi(state);
-  try{navigator.vibrate?.([30,35,30]);}catch{}
-  return state;
-}
-function spawnSmartPiece(board,state){
-  const step=state.steps[state.index];
-  if(!step)return false;
-  const matrix=copyMatrix(step.matrix);
-  board.active={shapeIndex:0,name:'FINAL ASSIST',color:GOLD,m:matrix,rot:0,x:step.targetX,y:0,assist:true};
-  board.toppedOut=false;
-  state.current=step;
-  activeBoard=board;
-  setAssistUi(state);
-  return board.canPlace(matrix,step.targetX,0);
+
+function setUi(active,plan=null){
+  ensureUi();
+  const status=document.getElementById('customAssistStatus');
+  const panel=document.querySelector('#customPlayScreen .custom-next-panel');
+  const label=panel?.querySelector(':scope > span');
+  if(active&&plan){
+    status?.classList.remove('hidden');
+    const count=plan.pieces.length;
+    if(status)status.innerHTML=`<b>FINAL FORECAST</b><span>${plan.exact?'Solvable':'Helpful'} normal pieces entering queue · ${count}</span>`;
+    panel?.classList.add('forecast-active');
+    if(label)label.textContent='NEXT';
+  }else{
+    status?.classList.add('hidden');
+    panel?.classList.remove('forecast-active');
+    if(label)label.textContent='NEXT';
+  }
 }
 
-Board.prototype.spawn=function(shapeIndex){
-  if(this.name!=='CUSTOM')return originalSpawn.call(this,shapeIndex);
-  activeBoard=this;
-  let state=states.get(this);
-  const mask=bottomOnlyMask(this);
-  if(!state&&mask&&mask!==((1<<COLS)-1))state=activateAssist(this,mask);
-  if(state&&state.index<state.steps.length)return spawnSmartPiece(this,state);
-  if(!mask)setAssistUi(null);
-  return originalSpawn.call(this,shapeIndex);
+function applyPlan(plan){
+  lastPlan=plan;
+  forecast=plan.pieces.slice();
+  forecastExact=plan.exact;
+  forecastStarted=true;
+  setUi(true,plan);
+  try{navigator.vibrate?.(24);}catch{}
+}
+
+function replanFromCurrentQueue(){
+  if(!activeBoard||!bottomTwoRowsOnly(activeBoard.grid)){
+    forecast=[];forecastStarted=false;lastPlan=null;setUi(false);return;
+  }
+  if(!queueRef||!isShapeArray(queueRef)){
+    pendingActivation=true;return;
+  }
+  pendingActivation=false;
+  applyPlan(planForecast(activeBoard.grid,queueRef.slice(0,5)));
+}
+
+function isLikelyCustomQueue(array){
+  return activeBoard&&activeBoard.name==='CUSTOM'&&array.length>=4&&array.length<=5&&isShapeArray(array);
+}
+
+Array.prototype.shift=function(...args){
+  if(isLikelyCustomQueue(this)&&this.length===5){
+    queueRef=this;this[QUEUE_MARK]=true;lastShiftedShape=this[0];
+  }
+  return NATIVE_SHIFT.apply(this,args);
 };
 
-Board.prototype.rotate=function(cw=true){
-  if(this.name==='CUSTOM'&&this.active?.assist)return false;
-  return originalRotate.call(this,cw);
+Array.prototype.push=function(...items){
+  const candidate=(this[QUEUE_MARK]||isLikelyCustomQueue(this))&&this.length===4&&items.length===1&&isShape(items[0]);
+  if(candidate){
+    queueRef=this;this[QUEUE_MARK]=true;
+    if(pendingActivation&&activeBoard&&bottomTwoRowsOnly(activeBoard.grid)){
+      const fixed=[lastShiftedShape,...this].filter(isShape).slice(0,5);
+      applyPlan(planForecast(activeBoard.grid,fixed));
+      pendingActivation=false;
+    }
+    if(forecast.length){
+      items[0]=forecast.shift();
+      if(lastPlan){lastPlan={...lastPlan,pieces:forecast.slice()};setUi(true,lastPlan);}
+    }
+  }
+  return NATIVE_PUSH.apply(this,items);
 };
 
 Board.prototype.lock=function(){
-  if(this.name!=='CUSTOM'||!this.active?.assist)return originalLock.call(this);
-  const state=states.get(this),step=state?.current;
-  if(step){
-    this.active.m=copyMatrix(step.matrix);
-    this.active.x=step.targetX;
-    this.active.y=0;
-    this.active.rot=0;
-  }
   const result=originalLock.call(this);
-  if(state){
-    state.index++;
-    state.current=null;
-    if(!this.grid.some(row=>row.some(Boolean))||state.index>=state.steps.length){states.delete(this);setAssistUi(null);}
-    else setAssistUi(state);
+  if(this.name!=='CUSTOM')return result;
+  activeBoard=this;
+  if(bottomTwoRowsOnly(this.grid))replanFromCurrentQueue();
+  else{
+    pendingActivation=false;forecast=[];forecastStarted=false;forecastExact=false;lastPlan=null;setUi(false);
   }
   return result;
 };
 
-function drawCell(ctx,x,y,size,color,alpha=1){
-  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.fillRect(x+1,y+1,size-2,size-2);
-  ctx.fillStyle='rgba(255,255,255,.42)';ctx.fillRect(x+3,y+3,size-6,Math.max(2,size*.14));
-  ctx.fillStyle='rgba(0,0,0,.26)';ctx.fillRect(x+3,y+size-Math.max(3,size*.16)-2,size-6,Math.max(3,size*.16));
-  ctx.strokeStyle='rgba(255,255,255,.34)';ctx.strokeRect(x+1.5,y+1.5,size-3,size-3);ctx.restore();
-}
-function drawMini(ctx,step,cx,cy,cell){
-  const cells=[];
-  for(let y=0;y<4;y++)for(let x=0;x<4;x++)if(step.matrix[y][x])cells.push([x,y]);
-  if(!cells.length)return;
-  const minX=Math.min(...cells.map(cell=>cell[0])),maxX=Math.max(...cells.map(cell=>cell[0]));
-  const minY=Math.min(...cells.map(cell=>cell[1])),maxY=Math.max(...cells.map(cell=>cell[1]));
-  const ox=cx-((maxX-minX+1)*cell)/2-minX*cell,oy=cy-((maxY-minY+1)*cell)/2-minY*cell;
-  cells.forEach(([x,y])=>drawCell(ctx,ox+x*cell,oy+y*cell,cell,GOLD));
-}
-function drawAssistOverlay(){
-  const board=activeBoard,state=board&&states.get(board);
-  if(document.body.dataset.screen==='custom-play'&&board&&state&&state.index<state.steps.length){
-    const canvas=document.getElementById('customPlayCanvas'),step=state.current||state.steps[state.index];
-    if(canvas&&step){
-      const ctx=canvas.getContext('2d'),cell=canvas.width/COLS;
-      ctx.save();ctx.fillStyle='rgba(255,227,109,.12)';ctx.strokeStyle='rgba(255,227,109,.98)';ctx.lineWidth=3;ctx.setLineDash([7,5]);
-      for(let y=0;y<4;y++)for(let x=0;x<4;x++)if(step.matrix[y][x]){
-        const gx=step.targetX+x,gy=ROWS-1+y;
-        if(gx>=0&&gx<COLS&&gy<ROWS){ctx.fillRect(gx*cell+2,gy*cell+2,cell-4,cell-4);ctx.strokeRect(gx*cell+3,gy*cell+3,cell-6,cell-6);}
-      }
-      ctx.restore();
-    }
-    const next=document.getElementById('customNextCanvas');
-    if(next){
-      const ctx=next.getContext('2d');ctx.clearRect(0,0,next.width,next.height);
-      state.steps.slice(state.index,state.index+3).forEach((item,index)=>drawMini(ctx,item,next.width/2,34+index*61,index===0?14:11));
-    }
-  }
-  requestAnimationFrame(drawAssistOverlay);
-}
-
 ensureUi();
-requestAnimationFrame(drawAssistOverlay);
 window.__rushDuelFinalAssist={
-  active:()=>Boolean(activeBoard&&states.get(activeBoard)),
-  remaining:()=>{const state=activeBoard&&states.get(activeBoard);return state?state.steps.length-state.index:0;}
+  plan:(grid,queue)=>planForecast(grid,queue),
+  active:()=>forecastStarted,
+  exact:()=>forecastExact,
+  pending:()=>forecast.slice(),
+  queue:()=>queueRef?.slice?.()||[],
+  bottomTwoRowsOnly
 };
 })();
