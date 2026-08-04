@@ -1,0 +1,54 @@
+name: Activate Custom Mode V24
+
+on:
+  push:
+    paths:
+      - '.github/workflows/activate-custom-mode-v24.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: activate-custom-mode-v24
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Custom Mode assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s assets/custom-mode-v23.js
+          test -s assets/custom-mode-v23.css
+          grep -q "custom-mode-v23.js?v=23" assets/app-v13.js
+          node --check assets/custom-mode-v23.js
+
+      - name: Bust the live page cache
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text()
+          html = html.replace('assets/app-v13.js?v=22', 'assets/app-v13.js?v=24')
+          html = html.replace('assets/app-v13.js?v=23', 'assets/app-v13.js?v=24')
+          html = html.replace('POLISHED BUILD V22', 'POLISHED BUILD V24')
+          html = html.replace('POLISHED BUILD V23', 'POLISHED BUILD V24')
+          path.write_text(html)
+          PY
+          rm -f .github/workflows/activate-custom-mode-v24.yml
+
+      - name: Publish Custom Mode
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Publish Custom Mode V24'
+          git push
