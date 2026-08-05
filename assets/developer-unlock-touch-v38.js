@@ -2,19 +2,19 @@
 'use strict';
 
 const DEV_FLAG='rush-duel-developer-mode-v38';
+const SESSION_AUTH='rush-duel-developer-auth-v46';
 const PASSWORD='QWERTY';
 const HOTSPOT_ID='developerTitleTapHotspotV40';
-const STYLE_ID='developer-title-unlock-v40-style';
+const STYLE_ID='developer-title-unlock-v46-style';
 const REQUIRED_TAPS=10;
 const RESET_AFTER_MS=5000;
 
-// Remove the previous five-tap Build-number listener by replacing that element
-// with an identical clone. The version label remains visible but is no longer an
-// unlock control.
+// Remove the obsolete Build-number listener. Developer Mode can only begin by
+// tapping the main Tetris logo ten times and then entering the password.
 const oldBuildLabel=document.querySelector('.title-screen .build-label');
-if(oldBuildLabel&&!oldBuildLabel.dataset.v40Clean){
+if(oldBuildLabel&&!oldBuildLabel.dataset.v46Clean){
   const cleanBuildLabel=oldBuildLabel.cloneNode(true);
-  cleanBuildLabel.dataset.v40Clean='1';
+  cleanBuildLabel.dataset.v46Clean='1';
   cleanBuildLabel.style.pointerEvents='none';
   oldBuildLabel.replaceWith(cleanBuildLabel);
 }
@@ -54,9 +54,12 @@ function enableDeveloperMode(){
   const entered=prompt('Developer password');
   if(entered===null)return;
   if(entered.trim().toUpperCase()!==PASSWORD){
+    localStorage.removeItem(DEV_FLAG);
+    sessionStorage.removeItem(SESSION_AUTH);
     navigator.vibrate?.(35);
     return;
   }
+  sessionStorage.setItem(SESSION_AUTH,'1');
   localStorage.setItem(DEV_FLAG,'1');
   location.reload();
 }
@@ -89,8 +92,7 @@ if(titleScreen&&!document.getElementById(HOTSPOT_ID)){
   });
 }
 
-// Disable the older keyboard-only QWERTY shortcut. Developer Mode now begins
-// exclusively from ten taps directly over the Tetris logo.
+// Disable the older keyboard-only password shortcut.
 addEventListener('keydown',event=>{
   if(!['title','mode'].includes(document.body.dataset.screen||''))return;
   if(event.key.length===1)event.stopImmediatePropagation();
