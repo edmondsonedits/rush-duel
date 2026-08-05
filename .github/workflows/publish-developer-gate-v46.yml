@@ -1,0 +1,59 @@
+name: Publish secure Developer Mode gate V46
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-developer-gate-v46.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: developer-gate-v46
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate access gate and touch fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/developer-access-guard-v46.js
+          node --check assets/developer-unlock-touch-v38.js
+          node --check assets/developer-all-challenges-v43.js
+          node --check assets/app-v13.js
+          grep -q "rush-duel-developer-auth-v46" assets/developer-access-guard-v46.js
+          grep -q "sessionStorage.setItem(SESSION_AUTH,'1')" assets/developer-unlock-touch-v38.js
+          grep -q "childList:true,subtree:true" assets/developer-all-challenges-v43.js
+          if grep -q "attributeFilter:\['class','disabled'\]" assets/developer-all-challenges-v43.js; then
+            echo 'Recursive attribute observer still present' >&2
+            exit 1
+          fi
+          grep -q "developer-access-guard-v46.js?v=46" assets/app-v13.js
+
+      - name: Publish Build V46
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          path=Path('index.html')
+          text=path.read_text()
+          text=re.sub(r'POLISHED BUILD V\d+','POLISHED BUILD V46',text)
+          text=re.sub(r'assets/app-v13\.js\?v=\d+','assets/app-v13.js?v=46',text)
+          path.write_text(text)
+          PY
+          grep -q 'POLISHED BUILD V46' index.html
+          grep -q 'assets/app-v13.js?v=46' index.html
+          rm -f .github/workflows/publish-developer-gate-v46.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Secure Developer Mode and restore menu touch input V46'
+          git push
