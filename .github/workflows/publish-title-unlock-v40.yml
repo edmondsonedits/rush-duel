@@ -1,0 +1,44 @@
+name: Publish ten-tap Tetris title unlock V40
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-title-unlock-v40.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and publish V40
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/developer-unlock-touch-v38.js
+          grep -q 'REQUIRED_TAPS=10' assets/developer-unlock-touch-v38.js
+          grep -q 'developerTitleTapHotspotV40' assets/developer-unlock-touch-v38.js
+          grep -q 'developer-unlock-touch-v38.js?v=40' assets/app-v13.js
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('index.html')
+          text=path.read_text()
+          text=text.replace('POLISHED BUILD V39','POLISHED BUILD V40')
+          text=text.replace('assets/app-v13.js?v=39','assets/app-v13.js?v=40')
+          path.write_text(text)
+          PY
+          grep -q 'POLISHED BUILD V40' index.html
+          grep -q 'assets/app-v13.js?v=40' index.html
+      - name: Commit V40
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/publish-title-unlock-v40.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Require ten taps on the Tetris title for Developer Mode V40'
+          git push
