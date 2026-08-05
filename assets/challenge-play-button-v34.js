@@ -1,17 +1,22 @@
 (()=>{
 'use strict';
 
-const STYLE_ID='challenge-play-button-v35-style';
+const STYLE_ID='challenge-play-button-v36-style';
 
-function installStyles(){
-  document.getElementById('challenge-play-button-v34-style')?.remove();
-  if(document.getElementById(STYLE_ID))return;
-  const style=document.createElement('style');
-  style.id=STYLE_ID;
-  style.textContent=`
-/* Preserve the original V33 challenge-card layout. Only surface the existing play button. */
+// V36 intentionally contains no MutationObserver. The previous observer rewrote
+// button text after every DOM mutation, which could keep the browser's main thread
+// busy and prevent touch events from reaching the main mode-selection buttons.
+document.getElementById('challenge-play-button-v34-style')?.remove();
+document.getElementById('challenge-play-button-v35-style')?.remove();
+
+if(document.getElementById(STYLE_ID))return;
+const style=document.createElement('style');
+style.id=STYLE_ID;
+style.textContent=`
+/* Keep the original V33 challenge-card layout and reveal its existing button. */
 .challenge-level-card{position:relative!important;}
 .challenge-level-play{visibility:visible!important;opacity:1!important;z-index:8!important;}
+
 @media(max-width:380px){
   .challenge-level-card:not(.locked){padding-bottom:48px!important;}
   .challenge-level-card:not(.locked) .challenge-level-play{
@@ -35,6 +40,8 @@ function installStyles(){
     letter-spacing:.06em!important;
     text-transform:uppercase!important;
     white-space:nowrap!important;
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
   }
   .challenge-level-card.completed .challenge-level-play{
     border-color:#75ffc0!important;
@@ -44,19 +51,5 @@ function installStyles(){
   .challenge-level-card:not(.locked) .challenge-level-stats{padding-bottom:34px;}
 }
 `;
-  document.head.appendChild(style);
-}
-
-function updateLabels(){
-  document.querySelectorAll('.challenge-level-card').forEach(card=>{
-    const button=card.querySelector('.challenge-level-play');
-    if(!button)return;
-    if(card.classList.contains('completed'))button.textContent='↻ Replay Challenge';
-    else if(!card.classList.contains('locked')&&!button.disabled)button.textContent='▶ Play Challenge';
-  });
-}
-
-installStyles();
-updateLabels();
-new MutationObserver(updateLabels).observe(document.documentElement,{childList:true,subtree:true});
+document.head.appendChild(style);
 })();
