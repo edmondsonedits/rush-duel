@@ -123,9 +123,11 @@ function ensurePlayButtons(){
       button.disabled=card.classList.contains('locked');
       card.appendChild(button);
     }
-    button.dataset.levelId=levelId;
-    button.innerHTML=labelFor(card,button);
-    button.setAttribute('aria-label',button.disabled?'Challenge locked':`${button.textContent.trim()}: ${card.querySelector('h2')?.textContent||'Challenge'}`);
+    if(button.dataset.levelId!==levelId)button.dataset.levelId=levelId;
+    const label=labelFor(card,button);
+    if(button.textContent.trim()!==label)button.textContent=label;
+    const aria=button.disabled?'Challenge locked':`${label}: ${card.querySelector('h2')?.textContent||'Challenge'}`;
+    if(button.getAttribute('aria-label')!==aria)button.setAttribute('aria-label',aria);
   });
 }
 
