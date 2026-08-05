@@ -1,0 +1,93 @@
+name: Publish reordered Challenge campaign V45
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-challenge-reorder-v45.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: challenge-reorder-v45
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate reordered campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/challenge-pack-v45.js
+          node --check assets/challenge-launch-pack-v45.js
+          node --check assets/developer-editor-pack-v45.js
+          node --check assets/developer-challenge-export-v45.js
+          node --check assets/challenge-order-ui-v45.js
+          node --check assets/app-v13.js
+
+          node <<'NODE'
+          global.window={};
+          const memory=new Map();
+          global.localStorage={
+            getItem:key=>memory.has(key)?memory.get(key):null,
+            setItem:(key,value)=>memory.set(key,String(value))
+          };
+          require('./assets/challenge-pack-v45.js');
+          const pack=window.__TETRIS_DUEL_CHALLENGE_PACK;
+          const names=['Crown','Rocket','Ghost','Heart','Cat Face','Flame','Smiley','Saturn','Turtles','Lightning Bolt'];
+          const blocks=[48,33,55,52,55,57,66,66,44,39];
+          const seeds=[4,3,5,2,7,8,1,10,9,6].map(n=>`challenge-campaign-${n}-2026`);
+          if(!pack||pack.version!=='45'||pack.levels.length!==10)throw new Error('Invalid V45 challenge pack.');
+          pack.levels.forEach((level,index)=>{
+            if(level.number!==index+1)throw new Error(`Level number mismatch at ${index+1}.`);
+            if(level.name!==names[index])throw new Error(`Expected ${names[index]} at ${index+1}, got ${level.name}.`);
+            if(level.blocks!==blocks[index])throw new Error(`${level.name} block count changed.`);
+            if(level.seed!==seeds[index])throw new Error(`${level.name} piece seed changed.`);
+            if(level.grid.length!==20||level.grid.some(row=>row.length!==10))throw new Error(`${level.name} is not 10x20.`);
+          });
+          console.log('Validated reordered campaign:',names.join(' > '));
+          NODE
+
+          grep -q "challenge-pack-v45.js?v=45" assets/app-v13.js
+          grep -q "challenge-launch-pack-v45.js?v=45" assets/app-v13.js
+          grep -q "developer-editor-pack-v45.js?v=45" assets/app-v13.js
+          grep -q "developer-challenge-export-v45.js?v=45" assets/app-v13.js
+          ! grep -q "challenge-pack-v44.js" assets/app-v13.js
+          ! grep -q "challenge-color-launch-v38.js" assets/app-v13.js
+          ! grep -q "developer-editor-bridge-v38.js" assets/app-v13.js
+
+      - name: Publish Build V45
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          ui=Path('assets/challenge-pack-ui-v42.js')
+          text=ui.read_text()
+          text=text.replace("canvas.dataset.publishedPack='42';","canvas.dataset.publishedPack=String(pack.version||45);")
+          ui.write_text(text)
+
+          index=Path('index.html')
+          text=index.read_text()
+          text=text.replace('POLISHED BUILD V44','POLISHED BUILD V45')
+          text=text.replace('assets/app-v13.js?v=44','assets/app-v13.js?v=45')
+          index.write_text(text)
+          PY
+
+          node --check assets/challenge-pack-ui-v42.js
+          grep -q "publishedPack=String(pack.version||45)" assets/challenge-pack-ui-v42.js
+          grep -q 'POLISHED BUILD V45' index.html
+          grep -q 'assets/app-v13.js?v=45' index.html
+
+          rm -f .github/workflows/publish-challenge-reorder-v45.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Publish reordered Challenge Mode campaign V45'
+          git push
