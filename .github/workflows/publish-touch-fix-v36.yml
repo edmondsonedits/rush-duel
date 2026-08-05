@@ -1,0 +1,49 @@
+name: Publish mode touch fix V36
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-touch-fix-v36.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: touch-fix-v36
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify and publish touch fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/challenge-play-button-v34.js
+          grep -q 'contains no MutationObserver' assets/challenge-play-button-v34.js
+          grep -q 'challenge-play-button-v34.js?v=36' assets/app-v13.js
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text()
+          text = text.replace('POLISHED BUILD V35', 'POLISHED BUILD V36')
+          text = text.replace('assets/app-v13.js?v=35', 'assets/app-v13.js?v=36')
+          path.write_text(text)
+          PY
+          grep -q 'POLISHED BUILD V36' index.html
+          grep -q 'assets/app-v13.js?v=36' index.html
+
+      - name: Commit V36
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/publish-touch-fix-v36.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Fix unresponsive mode touch input V36'
+          git push
