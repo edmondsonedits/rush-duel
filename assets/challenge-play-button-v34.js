@@ -1,137 +1,62 @@
 (()=>{
 'use strict';
 
-const STYLE_ID='challenge-play-button-v34-style';
+const STYLE_ID='challenge-play-button-v35-style';
 
 function installStyles(){
+  document.getElementById('challenge-play-button-v34-style')?.remove();
   if(document.getElementById(STYLE_ID))return;
   const style=document.createElement('style');
   style.id=STYLE_ID;
   style.textContent=`
-.challenge-level-play{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  visibility:visible!important;
-  opacity:1!important;
-  position:relative!important;
-  z-index:8!important;
-  gap:5px;
-  white-space:nowrap;
-}
-.challenge-level-play:not(:disabled){
-  box-shadow:0 3px 0 #020812,0 0 13px rgba(89,223,255,.15),inset 0 1px 0 rgba(255,255,255,.2)!important;
-}
-.challenge-level-play:not(:disabled):active{
-  transform:translateY(2px);
-  box-shadow:0 1px 0 #020812!important;
-}
-@media(max-width:520px) and (orientation:portrait){
-  .challenge-level-grid{
-    grid-template-columns:1fr!important;
-    gap:8px!important;
-  }
-  .challenge-level-card{
-    display:grid!important;
-    grid-template-columns:clamp(88px,29vw,116px) minmax(0,1fr)!important;
-    grid-template-rows:auto minmax(28px,1fr) 38px!important;
-    grid-template-areas:
-      "preview heading"
-      "preview details"
-      "preview play"!important;
-    min-height:142px!important;
-    height:auto!important;
-    padding:8px!important;
-    gap:6px 9px!important;
-    overflow:hidden!important;
-  }
-  .challenge-level-top{
-    grid-area:heading!important;
-    grid-column:auto!important;
-    min-width:0;
-  }
-  .challenge-preview-wrap{
-    grid-area:preview!important;
-    grid-column:auto!important;
-    grid-row:auto!important;
-    width:100%!important;
-    height:100%!important;
-    min-height:124px!important;
-  }
-  .challenge-preview-wrap canvas{
+/* Preserve the original V33 challenge-card layout. Only surface the existing play button. */
+.challenge-level-card{position:relative!important;}
+.challenge-level-play{visibility:visible!important;opacity:1!important;z-index:8!important;}
+@media(max-width:380px){
+  .challenge-level-card:not(.locked){padding-bottom:48px!important;}
+  .challenge-level-card:not(.locked) .challenge-level-play{
+    position:absolute!important;
+    left:104px!important;
+    right:9px!important;
+    bottom:9px!important;
     width:auto!important;
-    height:min(122px,100%)!important;
-    max-width:100%!important;
-  }
-  .challenge-level-details{
-    grid-area:details!important;
-    grid-column:auto!important;
-    min-width:0;
-    align-content:center;
-  }
-  .challenge-level-details p{display:none!important;}
-  .challenge-level-play{
-    grid-area:play!important;
-    grid-column:auto!important;
-    grid-row:auto!important;
-    width:100%!important;
     min-height:36px!important;
-    padding:4px 9px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:5px 9px!important;
+    border:2px solid #67e7ff!important;
     border-radius:9px!important;
-    font-size:10px!important;
-    letter-spacing:.07em!important;
+    color:#fff!important;
+    background:linear-gradient(180deg,#237eb6,#0b3e68)!important;
+    box-shadow:0 3px 0 #020812,0 0 12px rgba(89,223,255,.14)!important;
+    font-size:9px!important;
+    font-weight:1000!important;
+    letter-spacing:.06em!important;
+    text-transform:uppercase!important;
+    white-space:nowrap!important;
   }
-  .challenge-level-play:not(:disabled){
-    border-color:#72ebff!important;
-    background:linear-gradient(180deg,#2380ba,#0b426e)!important;
-  }
-  .challenge-level-card.completed .challenge-level-play:not(:disabled){
+  .challenge-level-card.completed .challenge-level-play{
     border-color:#75ffc0!important;
     background:linear-gradient(180deg,#219b6d,#0b563d)!important;
   }
-  .challenge-level-play:disabled{
-    border-color:#3d4e62!important;
-    color:#718195!important;
-    background:#101827!important;
-  }
+  .challenge-level-card.locked .challenge-level-play{display:none!important;}
+  .challenge-level-card:not(.locked) .challenge-level-stats{padding-bottom:34px;}
 }
 `;
   document.head.appendChild(style);
 }
 
-function labelFor(card,button){
-  if(button.disabled||card.classList.contains('locked')){
-    const number=Number(card.querySelector('.challenge-level-number')?.textContent)||1;
-    return `🔒 Beat Level ${Math.max(1,number-1)}`;
-  }
-  return card.classList.contains('completed')?'↻ Replay Challenge':'▶ Play Challenge';
-}
-
-function ensurePlayButtons(){
-  const grid=document.getElementById('challengeLevelGrid');
-  if(!grid)return;
-  grid.querySelectorAll('.challenge-level-card').forEach(card=>{
-    const preview=card.querySelector('[data-challenge-preview]');
-    const levelId=preview?.dataset.challengePreview;
-    if(!levelId)return;
-    let button=card.querySelector('.challenge-level-play');
-    if(!button){
-      button=document.createElement('button');
-      button.type='button';
-      button.className='challenge-level-play';
-      button.dataset.levelId=levelId;
-      button.disabled=card.classList.contains('locked');
-      card.appendChild(button);
-    }
-    if(button.dataset.levelId!==levelId)button.dataset.levelId=levelId;
-    const label=labelFor(card,button);
-    if(button.textContent.trim()!==label)button.textContent=label;
-    const aria=button.disabled?'Challenge locked':`${label}: ${card.querySelector('h2')?.textContent||'Challenge'}`;
-    if(button.getAttribute('aria-label')!==aria)button.setAttribute('aria-label',aria);
+function updateLabels(){
+  document.querySelectorAll('.challenge-level-card').forEach(card=>{
+    const button=card.querySelector('.challenge-level-play');
+    if(!button)return;
+    if(card.classList.contains('completed'))button.textContent='↻ Replay Challenge';
+    else if(!card.classList.contains('locked')&&!button.disabled)button.textContent='▶ Play Challenge';
   });
 }
 
 installStyles();
-ensurePlayButtons();
-new MutationObserver(ensurePlayButtons).observe(document.documentElement,{childList:true,subtree:true});
+updateLabels();
+new MutationObserver(updateLabels).observe(document.documentElement,{childList:true,subtree:true});
 })();
