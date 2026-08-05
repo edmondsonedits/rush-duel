@@ -1,0 +1,76 @@
+name: Publish all-level Developer Mode access V43
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-developer-all-challenges-v43.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: developer-all-challenges-v43
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable all Challenge levels for developers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          launcher=Path('assets/challenge-color-launch-v38.js')
+          text=launcher.read_text()
+          if "const DEV_FLAG='rush-duel-developer-mode-v38';" not in text:
+              anchor="const DEV_OVERRIDE_KEY='rush-duel-developer-challenges-v38';"
+              if anchor not in text:
+                  raise SystemExit('Could not locate launcher constants')
+              text=text.replace(anchor,anchor+"\nconst DEV_FLAG='rush-duel-developer-mode-v38';",1)
+
+          old="function isUnlocked(item){const progress=loadProgress();return item.number===1||progress.completed.includes(LEVELS[item.number-2].id);}"
+          new="function isUnlocked(item){if(localStorage.getItem(DEV_FLAG)==='1')return true;const progress=loadProgress();return item.number===1||progress.completed.includes(LEVELS[item.number-2].id);}"
+          if old in text:
+              text=text.replace(old,new,1)
+          elif new not in text:
+              raise SystemExit('Could not locate launcher unlock check')
+          launcher.write_text(text)
+
+          loader=Path('assets/app-v13.js')
+          text=loader.read_text()
+          text=text.replace("'./challenge-color-launch-v38.js?v=42'","'./challenge-color-launch-v38.js?v=43'")
+          if "'./developer-all-challenges-v43.js?v=43'" not in text:
+              text=text.replace("'./global-analytics-v41.js?v=41']","'./global-analytics-v41.js?v=41','./developer-all-challenges-v43.js?v=43']")
+          loader.write_text(text)
+
+          index=Path('index.html')
+          text=index.read_text()
+          text=text.replace('POLISHED BUILD V42','POLISHED BUILD V43')
+          text=text.replace('assets/app-v13.js?v=42','assets/app-v13.js?v=43')
+          index.write_text(text)
+          PY
+
+          node --check assets/challenge-color-launch-v38.js
+          node --check assets/developer-all-challenges-v43.js
+          node --check assets/app-v13.js
+          grep -q "localStorage.getItem(DEV_FLAG)==='1'" assets/challenge-color-launch-v38.js
+          grep -q "developer-all-challenges-v43.js?v=43" assets/app-v13.js
+          grep -q "POLISHED BUILD V43" index.html
+          grep -q "assets/app-v13.js?v=43" index.html
+
+      - name: Commit Build V43
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/publish-developer-all-challenges-v43.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Unlock all Challenge levels for Developer Mode V43'
+          git push
