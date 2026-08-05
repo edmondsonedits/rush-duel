@@ -1,0 +1,122 @@
+name: Publish coloured challenges and Developer Mode V38
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-developer-mode-v38.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: developer-mode-v38
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch challenge colours and editor bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          custom_path=Path('assets/custom-mode-v23.js')
+          custom=custom_path.read_text()
+
+          save_anchor="  if(!saveChallenges(next)){editorToast('This browser could not save the challenge.');return;}\n  editorId=challenge.id;editorChanged=false;clearDraft();tone('start');"
+          save_replacement="  if(!saveChallenges(next)){editorToast('This browser could not save the challenge.');return;}\n  window.dispatchEvent(new CustomEvent('rush-duel-custom-saved',{detail:{challenge:normalizeChallenge(challenge),playAfter:!!playAfter}}));\n  editorId=challenge.id;editorChanged=false;clearDraft();tone('start');"
+          if "rush-duel-custom-saved" not in custom:
+              if save_anchor not in custom:
+                  raise SystemExit('Could not find Custom Mode save anchor')
+              custom=custom.replace(save_anchor,save_replacement,1)
+
+          api_anchor="window.__rushDuelCustom={\n  open:()=>{renderHub();navigate('custom-hub');},\n  loadChallenges,"
+          api_replacement="window.__rushDuelCustom={\n  open:()=>{renderHub();navigate('custom-hub');},\n  openEditor:challenge=>openEditor(challenge),\n  startChallenge:challenge=>startChallenge(challenge),\n  loadChallenges,"
+          if "openEditor:challenge=>openEditor(challenge)" not in custom:
+              if api_anchor not in custom:
+                  raise SystemExit('Could not find Custom Mode API anchor')
+              custom=custom.replace(api_anchor,api_replacement,1)
+          custom_path.write_text(custom)
+
+          launch_path=Path('assets/challenge-launch-v37.js')
+          launch=launch_path.read_text()
+          constants_anchor="const ROWS=20;\nconst COLS=10;"
+          constants_replacement="const ROWS=20;\nconst COLS=10;\nconst DEV_OVERRIDE_KEY='rush-duel-developer-challenges-v38';\nconst TYPE_COLORS={I:'#54e8ff',J:'#587cff',L:'#ff9d32',O:'#ffe25b',S:'#66ed87',T:'#bd72ff',Z:'#ff5c72'};"
+          if "DEV_OVERRIDE_KEY='rush-duel-developer-challenges-v38'" not in launch:
+              if constants_anchor not in launch:
+                  raise SystemExit('Could not find Challenge launch constants')
+              launch=launch.replace(constants_anchor,constants_replacement,1)
+
+          old_cell="    grid[start+rowIndex][column]=cell==='.'?null:cell;"
+          new_cell="    grid[start+rowIndex][column]=cell==='.'?null:(TYPE_COLORS[cell]||cell);"
+          if old_cell in launch:
+              launch=launch.replace(old_cell,new_cell,1)
+
+          old_find="function findLevel(id){return LEVELS.find(item=>item.id===id)||null;}"
+          new_find="""function findLevel(id){
+  const original=LEVELS.find(item=>item.id===id)||null;
+  if(!original)return null;
+  const overrides=readJson(localStorage,DEV_OVERRIDE_KEY,[]);
+  const saved=Array.isArray(overrides)?overrides.find(item=>Number(item?.number)===original.number):null;
+  if(!saved)return {...original,grid:original.grid.map(row=>row.slice())};
+  const grid=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>{
+    const value=saved.grid?.[y]?.[x];
+    return typeof value==='string'&&value?(TYPE_COLORS[value]||value):null;
+  }));
+  return {
+    ...original,
+    name:String(saved.name||original.name).slice(0,28),
+    seed:String(saved.seed||original.seed),
+    grid
+  };
+}"""
+          if old_find in launch:
+              launch=launch.replace(old_find,new_find,1)
+          elif "const overrides=readJson(localStorage,DEV_OVERRIDE_KEY,[])" not in launch:
+              raise SystemExit('Could not find Challenge findLevel function')
+          launch_path.write_text(launch)
+
+          loader_path=Path('assets/app-v13.js')
+          loader=loader_path.read_text()
+          loader=loader.replace("'./custom-mode-v23.js?v=25'","'./custom-mode-v23.js?v=38'")
+          loader=loader.replace("'./challenge-launch-v37.js?v=37'","'./challenge-launch-v37.js?v=38'")
+          loader=loader.replace("'./challenge-mode-v33.js?v=37'","'./challenge-mode-v33.js?v=38'")
+          if "'./developer-mode-v38.js?v=38'" not in loader:
+              loader=loader.replace("'./challenge-play-button-v34.js?v=36']","'./challenge-play-button-v34.js?v=36','./developer-mode-v38.js?v=38']")
+          loader_path.write_text(loader)
+
+          index_path=Path('index.html')
+          index=index_path.read_text()
+          import re
+          index=re.sub(r'POLISHED BUILD V\d+','POLISHED BUILD V38',index)
+          index=re.sub(r'assets/app-v13\.js\?v=\d+','assets/app-v13.js?v=38',index)
+          index_path.write_text(index)
+          PY
+
+          node --check assets/custom-mode-v23.js
+          node --check assets/challenge-launch-v37.js
+          node --check assets/developer-mode-v38.js
+          grep -q "rush-duel-custom-saved" assets/custom-mode-v23.js
+          grep -q "openEditor:challenge=>openEditor(challenge)" assets/custom-mode-v23.js
+          grep -q "TYPE_COLORS\[cell\]" assets/challenge-launch-v37.js
+          grep -q "DEV_OVERRIDE_KEY" assets/challenge-launch-v37.js
+          grep -q "developer-mode-v38.js?v=38" assets/app-v13.js
+          grep -q "POLISHED BUILD V38" index.html
+          grep -q "assets/app-v13.js?v=38" index.html
+
+      - name: Commit V38
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/publish-developer-mode-v38.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Add coloured Challenge boards and private Developer Mode V38'
+          git push
