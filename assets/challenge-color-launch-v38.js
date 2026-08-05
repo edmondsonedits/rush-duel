@@ -4,6 +4,7 @@
 const CUSTOM_STORAGE_KEY='rush-duel-custom-challenges-v23';
 const PROGRESS_KEY='rush-duel-challenge-campaign-v33';
 const DEV_OVERRIDE_KEY='rush-duel-developer-challenges-v38';
+const DEV_FLAG='rush-duel-developer-mode-v38';
 const ACTIVE_KEY='rush-duel-challenge-launch-v37';
 const CAMPAIGN_PREFIX='campaign-v33-';
 const ROWS=20;
@@ -83,7 +84,7 @@ function challengeObject(item){
 function stageLevel(item){cleanupCampaignEntries();return writeCustomChallenges([challengeObject(item),...readCustomChallenges()]);}
 function loadProgress(){const raw=readJson(localStorage,PROGRESS_KEY,{});return {completed:Array.isArray(raw.completed)?raw.completed:[],records:raw.records&&typeof raw.records==='object'?raw.records:{}};}
 function saveProgress(progress){try{localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));}catch{}}
-function isUnlocked(item){const progress=loadProgress();return item.number===1||progress.completed.includes(LEVELS[item.number-2].id);}
+function isUnlocked(item){if(localStorage.getItem(DEV_FLAG)==='1')return true;const progress=loadProgress();return item.number===1||progress.completed.includes(LEVELS[item.number-2].id);}
 function setActiveLevel(item){activeLevel=item;resultHandled=false;try{sessionStorage.setItem(ACTIVE_KEY,item.id);}catch{}}
 function clearActiveLevel(){activeLevel=null;resultHandled=false;launching=false;try{sessionStorage.removeItem(ACTIVE_KEY);}catch{}}
 
