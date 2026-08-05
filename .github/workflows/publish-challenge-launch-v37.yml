@@ -1,0 +1,43 @@
+name: Publish Challenge gameplay launch V37
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-challenge-launch-v37.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Challenge launch bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/challenge-launch-v37.js
+          grep -q "challenge-launch-v37.js?v=37" assets/app-v13.js
+          grep -q "challenge-mode-v33.js?v=37" assets/app-v13.js
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('index.html')
+          text=path.read_text()
+          text=text.replace('POLISHED BUILD V36','POLISHED BUILD V37')
+          text=text.replace('assets/app-v13.js?v=36','assets/app-v13.js?v=37')
+          path.write_text(text)
+          PY
+          grep -q 'POLISHED BUILD V37' index.html
+          grep -q 'assets/app-v13.js?v=37' index.html
+      - name: Commit V37
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/publish-challenge-launch-v37.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Launch Challenge Mode levels into gameplay V37'
+          git push
