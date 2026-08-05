@@ -1,0 +1,55 @@
+name: Publish minimal Challenge play button V35
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-challenge-play-v35.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: challenge-play-v35
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify and activate V35
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/challenge-play-button-v34.js
+          grep -q 'Preserve the original V33 challenge-card layout' assets/challenge-play-button-v34.js
+          python3 - <<'PY'
+          from pathlib import Path
+
+          loader = Path('assets/app-v13.js')
+          text = loader.read_text()
+          text = text.replace("./challenge-play-button-v34.js?v=34", "./challenge-play-button-v34.js?v=35")
+          loader.write_text(text)
+
+          index = Path('index.html')
+          text = index.read_text()
+          text = text.replace('POLISHED BUILD V34', 'POLISHED BUILD V35')
+          text = text.replace('assets/app-v13.js?v=34', 'assets/app-v13.js?v=35')
+          index.write_text(text)
+          PY
+          grep -q 'challenge-play-button-v34.js?v=35' assets/app-v13.js
+          grep -q 'POLISHED BUILD V35' index.html
+          grep -q 'assets/app-v13.js?v=35' index.html
+
+      - name: Commit V35
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/publish-challenge-play-v35.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Restore original challenge cards with play button V35'
+          git push
