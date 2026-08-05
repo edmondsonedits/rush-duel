@@ -5,6 +5,7 @@ const OVERRIDE_KEY='rush-duel-developer-challenges-v38';
 const PACK_VERSION_KEY='rush-duel-published-challenge-pack-version';
 const pack=window.__TETRIS_DUEL_CHALLENGE_PACK;
 if(!pack?.levels?.length)return;
+const packVersion=String(pack.version||'44');
 
 const BASE_PALETTE={
   I:'#54e8ff',
@@ -14,9 +15,12 @@ const BASE_PALETTE={
   S:'#66ed87',
   T:'#bd72ff',
   Z:'#ff5c72',
-  Y:'#ffe353'
+  Y:'#ffe353',
+  A:'#ff9b3e',
+  B:'#ff5877',
+  C:'#35e7ff'
 };
-const EXTRA_CODES=[...'ABCDEFGHKMNPQRUVWX'];
+const EXTRA_CODES=[...'DEFGHKMNPQRUVWX'];
 
 function readJson(key,fallback){
   try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}
@@ -61,7 +65,7 @@ function buildExport(){
   const palette=paletteFor(levels);
   const colorToCode=Object.fromEntries(Object.entries(palette).map(([code,color])=>[String(color).toLowerCase(),code]));
   return {
-    schema:'tetris-duel-challenge-pack-v42',
+    schema:`tetris-duel-challenge-pack-v${packVersion}`,
     exportedAt:new Date().toISOString(),
     palette,
     instructions:'Paste this complete object into ChatGPT to update the 10 public Challenge Mode levels.',
@@ -106,9 +110,9 @@ function restorePublishedPack(){
     updatedAt:new Date().toISOString()
   }));
   writeJson(OVERRIDE_KEY,overrides);
-  localStorage.setItem(PACK_VERSION_KEY,'42');
+  localStorage.setItem(PACK_VERSION_KEY,packVersion);
   document.getElementById('challengeModeButton')?.click();
-  showToast('Challenge edits reset to the published V42 levels.');
+  showToast(`Challenge edits reset to the published V${packVersion} levels.`);
 }
 function showToast(message){
   let node=document.getElementById('developerToastV38');
@@ -137,7 +141,7 @@ document.addEventListener('click',event=>{
   }
   if(button.id==='developerResetChallenges'){
     event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
-    if(confirm('Reset all Developer Mode challenge edits to the published V42 versions?'))restorePublishedPack();
+    if(confirm(`Reset all Developer Mode challenge edits to the published V${packVersion} versions?`))restorePublishedPack();
   }
 },true);
 })();
