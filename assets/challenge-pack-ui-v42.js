@@ -77,7 +77,7 @@ function applyPublishedPack(){
     const canvas=card.querySelector('canvas[data-challenge-preview]');
     if(canvas){
       drawPreview(canvas,level.grid);
-      canvas.dataset.publishedPack='42';
+      canvas.dataset.publishedPack=String(pack.version||'44');
       canvas.setAttribute('aria-label',`Level ${number}: ${level.name} preview`);
     }
   });
