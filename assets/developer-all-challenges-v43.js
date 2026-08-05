@@ -2,11 +2,14 @@
 'use strict';
 
 const DEV_FLAG='rush-duel-developer-mode-v38';
-const STYLE_ID='developer-all-challenges-v43-style';
-let observer=null;
+const SESSION_AUTH='rush-duel-developer-auth-v46';
+const STYLE_ID='developer-all-challenges-v46-style';
+let gridObserver=null;
 let scheduled=false;
 
-function isDeveloper(){return localStorage.getItem(DEV_FLAG)==='1';}
+function isDeveloper(){
+  return sessionStorage.getItem(SESSION_AUTH)==='1'&&localStorage.getItem(DEV_FLAG)==='1';
+}
 
 function installStyles(){
   if(document.getElementById(STYLE_ID))return;
@@ -45,17 +48,18 @@ function unlockCard(card){
   const number=levelNumber(card);
   if(!number)return;
 
-  card.classList.remove('locked');
-  card.classList.add('developer-unlocked');
-  card.setAttribute('aria-disabled','false');
+  if(card.classList.contains('locked'))card.classList.remove('locked');
+  if(!card.classList.contains('developer-unlocked'))card.classList.add('developer-unlocked');
+  if(card.getAttribute('aria-disabled')!=='false')card.setAttribute('aria-disabled','false');
   card.querySelector('.challenge-lock')?.remove();
 
   const play=card.querySelector('.challenge-level-play');
   if(play){
-    play.disabled=false;
+    if(play.disabled)play.disabled=false;
     play.removeAttribute('disabled');
-    play.setAttribute('aria-disabled','false');
-    play.textContent=card.classList.contains('completed')?'↻ Replay Challenge':'▶ Play Challenge';
+    if(play.getAttribute('aria-disabled')!=='false')play.setAttribute('aria-disabled','false');
+    const label=card.classList.contains('completed')?'↻ Replay Challenge':'▶ Play Challenge';
+    if(play.textContent!==label)play.textContent=label;
   }
 
   let edit=card.querySelector('.developer-level-edit');
@@ -68,7 +72,7 @@ function unlockCard(card){
     edit.setAttribute('aria-label',`Edit challenge level ${number}`);
     card.appendChild(edit);
   }else{
-    edit.disabled=false;
+    if(edit.disabled)edit.disabled=false;
     edit.removeAttribute('disabled');
     edit.dataset.developerEdit=String(number);
   }
@@ -80,25 +84,40 @@ function sync(){
   document.body.classList.add('dev-mode-enabled');
   document.querySelectorAll('.challenge-level-card').forEach(unlockCard);
   const next=document.getElementById('challengeNextLabel');
-  if(next)next.textContent='Developer Mode · All levels unlocked';
+  if(next&&next.textContent!=='Developer Mode · All levels unlocked')next.textContent='Developer Mode · All levels unlocked';
 }
 
 function scheduleSync(){
-  if(scheduled)return;
+  if(scheduled||!isDeveloper())return;
   scheduled=true;
   requestAnimationFrame(sync);
+}
+
+function attachGridObserver(){
+  if(!isDeveloper())return;
+  const grid=document.getElementById('challengeLevelGrid');
+  if(!grid||gridObserver)return;
+  // Only watch cards being created or replaced. Never watch class/disabled
+  // attributes because this module changes those values itself.
+  gridObserver=new MutationObserver(scheduleSync);
+  gridObserver.observe(grid,{childList:true,subtree:true});
+  scheduleSync();
 }
 
 function init(){
   installStyles();
   if(!isDeveloper())return;
-  sync();
-  const root=document.getElementById('challengeCampaignScreen')||document.body;
-  observer=new MutationObserver(scheduleSync);
-  observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','disabled']});
+  attachGridObserver();
+  const bodyObserver=new MutationObserver(()=>{
+    if(document.body.dataset.screen==='challenge-campaign'){
+      attachGridObserver();
+      scheduleSync();
+    }
+  });
+  bodyObserver.observe(document.body,{attributes:true,attributeFilter:['data-screen'],childList:true,subtree:false});
   document.addEventListener('click',event=>{
     const button=event.target instanceof Element?event.target.closest('#challengeModeButton'):null;
-    if(button)setTimeout(sync,30);
+    if(button)setTimeout(()=>{attachGridObserver();scheduleSync();},30);
   },true);
 }
 
