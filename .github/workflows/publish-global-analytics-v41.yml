@@ -1,0 +1,50 @@
+name: Publish global analytics dashboard V41
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-global-analytics-v41.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: global-analytics-v41
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify global analytics and publish V41
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/global-analytics-v41.js
+          node --check assets/app-v13.js
+          grep -q "unique_visitors" assets/global-analytics-v41.js
+          grep -q "mode_.*_play30" assets/global-analytics-v41.js
+          grep -q "Global mode performance" assets/global-analytics-v41.js
+          grep -q "global-analytics-v41.js?v=41" assets/app-v13.js
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('index.html')
+          text=path.read_text()
+          text=text.replace('POLISHED BUILD V40','POLISHED BUILD V41')
+          text=text.replace('assets/app-v13.js?v=40','assets/app-v13.js?v=41')
+          path.write_text(text)
+          PY
+          grep -q 'POLISHED BUILD V41' index.html
+          grep -q 'assets/app-v13.js?v=41' index.html
+      - name: Commit V41
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/publish-global-analytics-v41.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Show anonymous global player analytics in Developer Mode V41'
+          git push
