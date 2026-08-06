@@ -27,7 +27,7 @@ function activeCampaignId(){
   for(const key of ACTIVE_KEYS){
     try{const id=validLevelId(sessionStorage.getItem(key));if(id)return id;}catch{}
   }
-  return validLevelId(currentCampaignId);
+  return '';
 }
 function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}}
 function writeJson(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
@@ -217,7 +217,8 @@ function handleScreenChange(){
   if(screen==='custom-play'){
     const id=activeCampaignId();if(id){currentCampaignId=id;resultAttempt++;resultProcessedAttempt=-1;}
   }else if(screen==='custom-result')requestAnimationFrame(processResultScreen);
-  else if(screen==='challenge-campaign')scheduleRender();
+  else if(screen==='challenge-campaign'){currentCampaignId='';scheduleRender();}
+  else if(screen==='mode'||screen==='title')currentCampaignId='';
 }
 function bindUiInterception(){
   document.addEventListener('click',event=>{
