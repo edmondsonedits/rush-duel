@@ -16,9 +16,9 @@ const appFiles=['app-v13.js','app-v13-part1.js','app-v13-part2.js','app-v13-part
 const app=appFiles.map(file=>fs.readFileSync(path.join(root,'assets',file),'utf8')).join('\n');
 const loader=fs.readFileSync(path.join(root,'assets','app-v13.js'),'utf8');
 const physics=fs.readFileSync(path.join(root,'assets','physics-mode-v64.js'),'utf8');
+const continuous=fs.readFileSync(path.join(root,'assets','physics-mode-v68.js'),'utf8');
 const cohesion=fs.readFileSync(path.join(root,'assets','physics-cohesion-v65.js'),'utf8');
 const membrane=fs.readFileSync(path.join(root,'assets','physics-membrane-v66.js'),'utf8');
-const cadence=fs.readFileSync(path.join(root,'assets','physics-turn-cadence-v67.js'),'utf8');
 const mobileCss=fs.readFileSync(path.join(root,'assets','mobile-fit-v13.css'),'utf8');
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
 check('unique HTML ids',ids.length===new Set(ids).size);
@@ -26,17 +26,15 @@ const refs=[...app.matchAll(/\$\('([^']+)'\)/g)].map(match=>match[1]);
 const missing=[...new Set(refs)].filter(id=>!ids.includes(id));
 check('app element references',missing.length===0,missing.join(', '));
 check('runtime patch chain removed',!html.includes('play-v12.html')&&!html.includes('document.write('));
-for(const file of ['assets/game-v13.css','assets/mobile-fit-v13.css','assets/core-v13.js','assets/core-rules-v13.js','assets/core-game-v13.js','assets/network-v13.js','assets/app-v13.js','assets/app-v13-part1.js','assets/app-v13-part2.js','assets/app-v13-part3.js','assets/bot-worker-v13.js','assets/physics-mode-v64.js','assets/physics-cohesion-v65.js','assets/physics-membrane-v66.js','assets/physics-turn-cadence-v67.js','assets/physics-mode-v62.css'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
+for(const file of ['assets/game-v13.css','assets/mobile-fit-v13.css','assets/core-v13.js','assets/core-rules-v13.js','assets/core-game-v13.js','assets/network-v13.js','assets/app-v13.js','assets/app-v13-part1.js','assets/app-v13-part2.js','assets/app-v13-part3.js','assets/bot-worker-v13.js','assets/physics-mode-v64.js','assets/physics-mode-v68.js','assets/physics-cohesion-v65.js','assets/physics-membrane-v66.js','assets/physics-mode-v62.css'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
 check('mobile fitting stylesheet linked after base styles',html.indexOf('assets/mobile-fit-v13.css')>html.indexOf('assets/game-v13.css'));
 check('dynamic viewport resizing enabled',html.includes('interactive-widget=resizes-content')&&mobileCss.includes('100dvh'));
 check('mobile screens prevent scrolling',mobileCss.includes('overflow:hidden')&&!mobileCss.includes('overflow:auto'));
 check('title duplicate overlays hidden',mobileCss.includes('.title-rules,.build-label{display:none}'));
 check('mobile game uses remaining-height arena',mobileCss.includes('grid-template-rows:auto minmax(0,1fr) auto')&&mobileCss.includes('.arena canvas{display:block;width:auto;height:100%'));
 
-// Jelly Drop V64 core: aim with a logical preview and create fresh dynamic bodies on DROP.
-try{new Function(physics);check('Jelly Drop V64 parses',true);}catch(error){check('Jelly Drop V64 parses',false,error.message);}
-check('Jelly Drop V64 loader active',loader.includes("./physics-mode-v64.js?v=64")&&!loader.includes("./physics-mode-v63.js?v=63"));
-check('Jelly Drop V67 build cache-busted',html.includes('POLISHED BUILD V67')&&html.includes('assets/app-v13.js?v=67'));
+// Proven Jelly Drop core remains the physics implementation V68 transforms at boot.
+try{new Function(physics);check('Jelly Drop base physics parses',true);}catch(error){check('Jelly Drop base physics parses',false,error.message);}
 check('Jelly Drop aiming uses logical preview',physics.includes('heldPiece={shapeIndex,holdX,holdY:holdYForSettings(),rotation:0,color:SHAPES[shapeIndex].color}'));
 check('Jelly Drop tetrominoes never use static conversion',!physics.includes('Body.setStatic('));
 check('Jelly Drop release creates fresh dynamic piece',physics.includes('const piece=createDynamicPiece(preview)')&&physics.includes('function createDynamicPiece(preview)'));
@@ -44,9 +42,7 @@ check('Jelly Drop release gives immediate downward velocity',physics.includes("B
 check('Jelly Drop engine advances every active frame',physics.includes('MatterRef.Engine.update(engine,delta)'));
 check('Jelly Drop touch uses pointerdown',physics.includes("button.addEventListener('pointerdown'"));
 check('Jelly Drop has click fallback',physics.includes("button.addEventListener('click'"));
-check('Jelly Drop visibly acknowledges DROP',physics.includes("showMessage('DROP REGISTERED'"));
 check('Jelly Drop pause click does not pass MouseEvent',physics.includes("$('physicsPauseButton')?.addEventListener('click',()=>togglePause())"));
-check('Jelly Drop paused next-piece timer retries',physics.includes('if(paused){spawnTimer=setTimeout(attempt,120);return;}'));
 check('Jelly Drop release watchdog forces engine recovery',physics.includes('stalled release detected; forcing physics step')&&physics.includes('for(let i=0;i<3;i++)MatterRef.Engine.update(engine,1000/60)'));
 check('Jelly Drop diagnostics exposed',physics.includes('window.__JELLY_DROP_DIAGNOSTICS')&&physics.includes('forceDrop:()=>releaseHeldPiece()'));
 
@@ -67,14 +63,17 @@ check('Jelly Drop V66 aligns cube angles',membrane.includes('const ANGLE_ALIGNME
 check('Jelly Drop V66 cleans detached membrane constraints',membrane.includes('cleanupDetachedMembranes')&&membrane.includes('Matter.Composite.remove(engine.world,constraint,true)'));
 check('Jelly Drop V66 increases constraint iterations',membrane.includes('engine.constraintIterations=Math.max(Number(engine.constraintIterations)||0,10)'));
 
-// V67 shortens the wait between turns without changing initial fall speed.
-try{new Function(cadence);check('Jelly Drop V67 cadence parses',true);}catch(error){check('Jelly Drop V67 cadence parses',false,error.message);}
-check('Jelly Drop V67 cadence loader active',loader.includes("./physics-turn-cadence-v67.js?v=67"));
-check('Jelly Drop V67 keeps a short bounce window',cadence.includes('const SOFT_DAMP_START=260')&&cadence.includes('const STRONG_DAMP_START=650'));
-check('Jelly Drop V67 accelerates low-energy settling',cadence.includes("Matter.Body.setVelocity(body,{x:(body.velocity?.x||0)*.24,y:(body.velocity?.y||0)*.32})"));
-check('Jelly Drop V67 can sleep a clearly settled active piece',cadence.includes('const SLEEP_ASSIST_START=900')&&cadence.includes('Matter.Sleeping?.set(body,true)'));
-check('Jelly Drop V67 caps post-settle spawn delay',cadence.includes('const NEXT_SPAWN_DELAY=25')&&cadence.includes("source.includes('spawnHeldPiece')&&source.includes('releasedPiece')"));
-check('Jelly Drop V67 does not speed paused retry loop',cadence.includes('if(!state?.paused)'));
+// V68 removes the turn gate: DROP immediately produces the next controllable piece.
+try{new Function(continuous);check('Jelly Drop V68 continuous runtime parses',true);}catch(error){check('Jelly Drop V68 continuous runtime parses',false,error.message);}
+check('Jelly Drop V68 loader active',loader.includes("./physics-mode-v68.js?v=68")&&!loader.includes("./physics-mode-v64.js?v=64")&&!loader.includes("./physics-turn-cadence-v67.js?v=67"));
+check('Jelly Drop V68 build cache-busted',html.includes('POLISHED BUILD V68')&&html.includes('assets/app-v13.js?v=68'));
+check('Jelly Drop V68 reuses proven core',continuous.includes("new URL('./physics-mode-v64.js?v=64',scriptSrc)"));
+check('Jelly Drop V68 removes released-piece spawn gate',continuous.includes("'function spawnHeldPiece(){if(!running||heldPiece||releasedPiece||resultOpen)return false;'")&&continuous.includes("'function spawnHeldPiece(){if(!running||heldPiece||resultOpen)return false;'"));
+check('Jelly Drop V68 removes DROP REGISTERED toast',continuous.includes("showMessage('DROP REGISTERED','clear',480)")&&continuous.includes("updateHud();tone('drop');armReleaseWatch(piece,sessionId);spawnHeldPiece();return true;"));
+check('Jelly Drop V68 immediately spawns next piece',continuous.includes('synchronously spawn the next controllable preview')&&continuous.includes('spawnHeldPiece();return true;'));
+check('Jelly Drop V68 ignores moving pieces in fallback spawn',continuous.includes("'if(!heldPiece&&!releasedPiece)spawnHeldPiece();'")&&continuous.includes("'if(!heldPiece)spawnHeldPiece();'"));
+check('Jelly Drop V68 removes forced settle damping',continuous.includes('Remove the old five-second forced velocity damping')&&continuous.includes("'if(age>=FORCE_SETTLE_MS&&!p.timeoutAssist)p.timeoutAssist=true;if(age>=ABSOLUTE_NEXT_MS)finalizeReleasedPiece(p);'"));
+check('Jelly Drop V68 no longer loads V67 artificial settle assist',!loader.includes('physics-turn-cadence-v67.js'));
 
 const host=new RushGame();host.setMode('online');host.reset(0);host.beginActive(3000);
 const guest=new RushGame();guest.setMode('online');guest.applySnapshot(host.snapshot(3000,{stateSeq:1,ackSeq:0}),3000);
@@ -93,4 +92,4 @@ const average=(performance.now()-started)/25;
 check('expert planning budget',average<80,`${average.toFixed(1)}ms average`);
 
 if(failures.length){console.error(`Validation failed (${failures.length}):\n- ${failures.join('\n- ')}`);process.exit(1);}
-console.log(`Rush Duel V13 validation passed. Jelly Drop V67 turn-cadence regressions passed. Impossible bot average: ${average.toFixed(1)}ms (worker offloaded in browser).`);
+console.log(`Rush Duel V13 validation passed. Jelly Drop V68 continuous-drop regressions passed. Impossible bot average: ${average.toFixed(1)}ms (worker offloaded in browser).`);
