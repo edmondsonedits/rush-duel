@@ -1,0 +1,87 @@
+/* Jelly Drop — Physics Mode V62 */
+.physics-hidden{display:none!important}
+.physics-mode-button{position:relative;overflow:hidden;border-color:rgba(84,232,255,.42)!important;background:linear-gradient(135deg,rgba(18,49,70,.9),rgba(27,18,61,.94))!important}
+.physics-mode-button::after{content:"≈";position:absolute;right:14px;top:4px;font:900 48px/1 system-ui,sans-serif;color:rgba(91,232,255,.12);transform:rotate(-11deg);pointer-events:none}
+.physics-mode-button strong{color:#6cecff!important;text-shadow:0 0 14px rgba(84,232,255,.38)}
+.physics-menu-best{position:absolute;right:12px;bottom:8px;font-size:9px;font-weight:900;letter-spacing:.1em;color:rgba(255,255,255,.48)}
+
+.physics-screen{overflow:hidden;background:radial-gradient(circle at 50% 8%,#112237 0,#080914 38%,#030409 100%);color:#f4fbff}
+.physics-screen.active{display:flex!important;align-items:center;justify-content:center}
+.physics-shell{position:relative;width:min(860px,100%);height:min(940px,100dvh);padding:max(8px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom));box-sizing:border-box;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.physics-header{height:62px;flex:0 0 62px;display:grid;grid-template-columns:52px 1fr 52px;gap:9px;align-items:center;padding:0 4px}
+.physics-icon-button{width:48px;height:48px;border:1px solid rgba(112,223,255,.35);border-radius:14px;background:linear-gradient(180deg,rgba(23,42,61,.9),rgba(9,12,25,.95));color:#e9fbff;font:800 24px/1 system-ui,sans-serif;box-shadow:inset 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.22);touch-action:manipulation}
+.physics-icon-button:active{transform:translateY(1px);filter:brightness(1.2)}
+.physics-title-block{text-align:center;min-width:0;line-height:1.05}
+.physics-title-block span{display:block;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.24em;color:#6cecff}
+.physics-title-block strong{display:block;margin-top:3px;font:1000 clamp(22px,5vw,32px)/1 system-ui,sans-serif;letter-spacing:.06em;background:linear-gradient(180deg,#fff 0,#bcf8ff 48%,#54e8ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 7px 28px rgba(47,210,255,.14)}
+.physics-title-block small{display:block;margin-top:4px;font:800 9px/1 system-ui,sans-serif;letter-spacing:.12em;color:rgba(255,255,255,.5)}
+
+.physics-stage{position:relative;min-height:0;flex:1;display:grid;grid-template-columns:minmax(280px,380px) 164px;justify-content:center;gap:12px;align-items:stretch}
+.physics-canvas-wrap{position:relative;min-height:0;aspect-ratio:380/742;max-height:100%;justify-self:center;border-radius:18px;overflow:visible;filter:drop-shadow(0 20px 35px rgba(0,0,0,.38))}
+#physicsCanvas{display:block;width:100%;height:100%;border-radius:18px;border:1px solid rgba(98,225,255,.25);background:#050711;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 0 34px rgba(39,187,255,.08)}
+.physics-settings-tab{position:absolute;right:-58px;top:78px;width:54px;height:72px;border:1px solid rgba(111,231,255,.4);border-left-color:rgba(111,231,255,.8);border-radius:0 13px 13px 0;background:linear-gradient(180deg,rgba(16,39,58,.97),rgba(12,12,27,.98));color:#dbfbff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;z-index:7;box-shadow:7px 9px 22px rgba(0,0,0,.28);touch-action:manipulation}
+.physics-settings-tab span{font-size:22px;line-height:1}.physics-settings-tab small{font:800 8px/1 system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase}
+.physics-settings-tab:active{filter:brightness(1.25)}
+.physics-message{position:absolute;left:50%;top:138px;transform:translateX(-50%);z-index:6;max-width:82%;padding:9px 13px;border:1px solid rgba(94,228,255,.3);border-radius:999px;background:rgba(4,11,22,.88);backdrop-filter:blur(8px);font:800 10px/1.25 system-ui,sans-serif;letter-spacing:.05em;text-align:center;color:#eaffff;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.physics-message[data-type="clear"]{color:#fff3a8;border-color:rgba(255,225,91,.48);box-shadow:0 0 26px rgba(255,218,74,.16)}
+.physics-message[data-type="error"]{color:#ffd8df;border-color:rgba(255,92,117,.5)}
+.physics-pause-overlay{position:absolute;inset:0;z-index:8;border-radius:18px;background:rgba(3,5,12,.67);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px}
+.physics-pause-overlay strong{font:1000 30px/1 system-ui,sans-serif;letter-spacing:.08em;color:#fff}.physics-pause-overlay span{font:700 10px/1 system-ui,sans-serif;letter-spacing:.12em;color:#6cecff}
+
+.physics-rail{min-height:0;padding:9px;display:flex;flex-direction:column;gap:8px;border:1px solid rgba(110,222,255,.18);border-radius:17px;background:linear-gradient(180deg,rgba(12,24,41,.83),rgba(7,7,19,.92));box-shadow:inset 0 1px rgba(255,255,255,.045),0 14px 32px rgba(0,0,0,.22);overflow:hidden}
+.physics-objective{padding:9px;border-radius:11px;border:1px solid rgba(255,224,83,.18);background:rgba(255,216,64,.045)}
+.physics-objective span,.physics-next-card>span{display:block;font:900 8px/1 system-ui,sans-serif;letter-spacing:.16em;color:rgba(255,255,255,.42)}
+.physics-objective b{display:block;margin-top:4px;font:900 11px/1.15 system-ui,sans-serif;color:#ffe966}.physics-objective small{display:block;margin-top:5px;font:600 8px/1.25 system-ui,sans-serif;color:rgba(255,255,255,.48)}
+.physics-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.physics-stat-grid div{padding:8px 7px;border:1px solid rgba(106,225,255,.14);border-radius:10px;background:rgba(0,0,0,.18)}
+.physics-stat-grid span{display:block;font:800 7px/1 system-ui,sans-serif;letter-spacing:.13em;color:rgba(255,255,255,.38)}.physics-stat-grid b{display:block;margin-top:4px;font:900 15px/1 system-ui,sans-serif;color:#ecfdff}
+.physics-next-card{padding:8px;border:1px solid rgba(193,108,255,.2);border-radius:11px;background:rgba(117,43,173,.045);text-align:center}.physics-next-card canvas{display:block;width:100%;height:auto;max-height:82px}
+.physics-live-readout{display:grid;grid-template-columns:1fr;gap:5px}.physics-live-readout span{display:flex;align-items:center;justify-content:space-between;padding:5px 7px;border-radius:8px;background:rgba(255,255,255,.035);font-size:9px}.physics-live-readout i{font-style:normal;color:#6cecff}.physics-live-readout b{color:rgba(255,255,255,.72)}
+.physics-rail-button{margin-top:auto;min-height:40px;border:1px solid rgba(119,222,255,.25);border-radius:11px;background:rgba(17,34,50,.82);color:#e9fbff;font:800 11px/1 system-ui,sans-serif;touch-action:manipulation}
+
+.physics-controls{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;max-width:560px;width:100%;margin:0 auto;user-select:none;-webkit-user-select:none}
+.physics-control-row{display:grid;gap:6px}.physics-control-major{grid-template-columns:1fr 1.4fr 1fr}.physics-control-move{grid-template-columns:1fr 1.7fr 1fr}
+.physics-controls button{min-height:54px;border:1px solid rgba(106,224,255,.24);border-radius:14px;background:linear-gradient(180deg,rgba(26,44,62,.96),rgba(10,13,26,.98));color:#f0fcff;font:900 22px/1 system-ui,sans-serif;box-shadow:inset 0 1px rgba(255,255,255,.06),0 8px 20px rgba(0,0,0,.18);touch-action:none}
+.physics-controls button small{display:block;margin-top:4px;font:800 8px/1 system-ui,sans-serif;letter-spacing:.08em;color:rgba(255,255,255,.44)}
+.physics-controls .physics-drop-button{border-color:rgba(255,223,79,.55);background:linear-gradient(180deg,#ad7b19,#49300b);color:#fff7b8;box-shadow:inset 0 1px rgba(255,255,255,.18),0 0 25px rgba(255,196,31,.11)}.physics-drop-button b{font-size:16px;letter-spacing:.08em}
+.physics-controls button:active{transform:translateY(1px);filter:brightness(1.22)}
+.physics-controls button.physics-disabled{opacity:.36;filter:saturate(.35);pointer-events:none}
+.physics-control-tip{min-height:54px;display:flex;align-items:center;justify-content:center;padding:0 8px;border:1px dashed rgba(107,226,255,.16);border-radius:14px;font:700 9px/1.3 system-ui,sans-serif;text-align:center;color:rgba(255,255,255,.43)}
+
+.physics-settings-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.52);backdrop-filter:blur(2px)}
+.physics-settings-drawer{position:fixed;z-index:210;right:0;top:0;width:min(360px,94vw);height:100dvh;box-sizing:border-box;padding:max(16px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));overflow:auto;background:linear-gradient(180deg,#102237 0,#090b18 25%,#060711 100%);border-left:1px solid rgba(105,226,255,.34);box-shadow:-18px 0 50px rgba(0,0,0,.48);transform:translateX(105%);transition:transform .22s ease;color:#eefcff}
+.physics-settings-drawer.open{transform:translateX(0)}
+.physics-settings-drawer header{display:flex;align-items:center;justify-content:space-between;gap:10px}.physics-settings-drawer header span{display:block;font:900 8px/1 system-ui,sans-serif;letter-spacing:.18em;color:#6cecff}.physics-settings-drawer header strong{display:block;margin-top:4px;font:1000 23px/1 system-ui,sans-serif}.physics-settings-drawer header button{width:42px;height:42px;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;font-size:25px}
+.physics-settings-intro{margin:13px 0 12px;font:600 10px/1.45 system-ui,sans-serif;color:rgba(255,255,255,.55)}
+.physics-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:13px}.physics-presets button{min-height:38px;border:1px solid rgba(110,224,255,.22);border-radius:10px;background:rgba(20,42,61,.6);color:#dffbff;font:800 9px/1 system-ui,sans-serif}.physics-presets button:active{background:rgba(70,201,233,.2)}
+.physics-slider-list{display:flex;flex-direction:column;gap:9px}.physics-slider-row{display:block;padding:9px 10px;border:1px solid rgba(255,255,255,.075);border-radius:11px;background:rgba(255,255,255,.025)}.physics-slider-row>span{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}.physics-slider-row b{font:800 10px/1 system-ui,sans-serif}.physics-slider-row output{font:900 9px/1 system-ui,sans-serif;color:#6cecff}.physics-slider-row input{width:100%;accent-color:#54e8ff}
+.physics-toggle-list{display:flex;flex-direction:column;gap:7px;margin-top:12px}.physics-toggle-list label{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border:1px solid rgba(255,255,255,.075);border-radius:11px;background:rgba(255,255,255,.025)}.physics-toggle-list span b{display:block;font:800 10px/1 system-ui,sans-serif}.physics-toggle-list span small{display:block;margin-top:4px;font:600 8px/1.3 system-ui,sans-serif;color:rgba(255,255,255,.43)}.physics-toggle-list input{width:20px;height:20px;accent-color:#54e8ff}
+.physics-settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:13px}.physics-settings-actions button,.physics-result-actions button{min-height:44px;border:1px solid rgba(255,255,255,.15);border-radius:11px;background:rgba(255,255,255,.05);color:#effcff;font:800 10px/1 system-ui,sans-serif}.physics-settings-actions .physics-primary,.physics-result-actions .physics-primary{border-color:rgba(84,232,255,.5);background:linear-gradient(180deg,#176780,#0b3445);color:#e9fdff}
+.physics-settings-drawer footer{margin-top:13px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);font:600 8px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.32);text-align:center}
+
+.physics-result-dialog{width:min(420px,90vw);border:1px solid rgba(99,229,255,.32);border-radius:20px;padding:20px;background:linear-gradient(180deg,#102338,#080916);color:#effcff;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.65)}.physics-result-dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}.physics-result-dialog h2{margin:6px 0;font:1000 28px/1 system-ui,sans-serif}.physics-result-dialog>p:not(.kicker){font:600 11px/1.45 system-ui,sans-serif;color:rgba(255,255,255,.6)}
+.physics-result-icon{font:1000 45px/1 system-ui,sans-serif;color:#6cecff;text-shadow:0 0 25px rgba(84,232,255,.45)}.physics-result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:16px 0}.physics-result-stats span{padding:10px 5px;border:1px solid rgba(255,255,255,.08);border-radius:10px;font:700 8px/1 system-ui,sans-serif;color:rgba(255,255,255,.45)}.physics-result-stats b{display:block;margin-bottom:5px;font:900 17px/1 system-ui,sans-serif;color:#fff}.physics-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+@media (max-width:700px){
+  .physics-shell{width:100%;height:100dvh;padding:max(4px,env(safe-area-inset-top)) 6px max(4px,env(safe-area-inset-bottom));gap:4px}
+  .physics-header{height:50px;flex-basis:50px;grid-template-columns:42px 1fr 42px;gap:4px;padding:0}
+  .physics-icon-button{width:40px;height:40px;border-radius:11px;font-size:20px}.physics-title-block strong{font-size:21px}.physics-title-block span{font-size:7px}.physics-title-block small{font-size:7px;margin-top:2px}
+  .physics-stage{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;overflow:hidden}
+  .physics-rail{order:-1;flex:0 0 58px;width:min(100%,430px);box-sizing:border-box;padding:4px 5px;border-radius:11px;display:grid;grid-template-columns:1fr 2.1fr 58px;gap:4px;overflow:hidden}
+  .physics-objective{display:none}.physics-stat-grid{grid-template-columns:repeat(4,1fr);gap:3px}.physics-stat-grid div{padding:5px 3px;border-radius:7px;text-align:center}.physics-stat-grid span{font-size:6px}.physics-stat-grid b{font-size:11px;margin-top:2px}
+  .physics-next-card{padding:4px;border-radius:8px;display:flex;flex-direction:column;justify-content:center}.physics-next-card>span{font-size:6px}.physics-next-card canvas{height:38px;width:50px;margin:auto}.physics-live-readout{display:none}.physics-rail-button{min-height:50px;margin:0;padding:0 4px;border-radius:8px;font-size:8px}
+  .physics-canvas-wrap{flex:1 1 auto;width:auto;height:min(calc(100dvh - 225px),calc(100vw * 742 / 380));max-width:100%;max-height:100%;aspect-ratio:380/742}
+  #physicsCanvas{border-radius:12px}
+  .physics-settings-tab{right:3px;top:72px;width:43px;height:55px;border-radius:11px;border-left:1px solid rgba(111,231,255,.4);background:rgba(10,27,43,.91);box-shadow:0 7px 20px rgba(0,0,0,.35)}.physics-settings-tab span{font-size:18px}.physics-settings-tab small{font-size:6px}
+  .physics-message{top:110px;font-size:8px;padding:7px 10px}
+  .physics-controls{gap:3px;flex:0 0 104px;max-width:430px}.physics-control-row{gap:3px}.physics-controls button{min-height:50px;border-radius:11px;font-size:19px}.physics-controls button small{font-size:6px;margin-top:2px}.physics-drop-button b{font-size:13px}.physics-control-tip{min-height:50px;border-radius:11px;font-size:7px;padding:0 5px}
+  .physics-presets{grid-template-columns:repeat(3,1fr)}
+}
+
+@media (max-height:690px) and (max-width:700px){
+  .physics-header{height:44px;flex-basis:44px}.physics-icon-button{width:36px;height:36px}.physics-title-block small{display:none}
+  .physics-rail{flex-basis:48px}.physics-rail-button{min-height:40px}.physics-next-card canvas{height:30px}
+  .physics-canvas-wrap{height:min(calc(100dvh - 196px),calc(100vw * 742 / 380))}
+  .physics-controls{flex-basis:94px}.physics-controls button,.physics-control-tip{min-height:45px}
+}
+
+@media (prefers-reduced-motion:reduce){.physics-settings-drawer{transition:none}.physics-controls button:active,.physics-icon-button:active{transform:none}}
