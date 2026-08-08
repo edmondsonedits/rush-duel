@@ -18,6 +18,7 @@ const loader=fs.readFileSync(path.join(root,'assets','app-v13.js'),'utf8');
 const physics=fs.readFileSync(path.join(root,'assets','physics-mode-v64.js'),'utf8');
 const cohesion=fs.readFileSync(path.join(root,'assets','physics-cohesion-v65.js'),'utf8');
 const membrane=fs.readFileSync(path.join(root,'assets','physics-membrane-v66.js'),'utf8');
+const cadence=fs.readFileSync(path.join(root,'assets','physics-turn-cadence-v67.js'),'utf8');
 const mobileCss=fs.readFileSync(path.join(root,'assets','mobile-fit-v13.css'),'utf8');
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
 check('unique HTML ids',ids.length===new Set(ids).size);
@@ -25,7 +26,7 @@ const refs=[...app.matchAll(/\$\('([^']+)'\)/g)].map(match=>match[1]);
 const missing=[...new Set(refs)].filter(id=>!ids.includes(id));
 check('app element references',missing.length===0,missing.join(', '));
 check('runtime patch chain removed',!html.includes('play-v12.html')&&!html.includes('document.write('));
-for(const file of ['assets/game-v13.css','assets/mobile-fit-v13.css','assets/core-v13.js','assets/core-rules-v13.js','assets/core-game-v13.js','assets/network-v13.js','assets/app-v13.js','assets/app-v13-part1.js','assets/app-v13-part2.js','assets/app-v13-part3.js','assets/bot-worker-v13.js','assets/physics-mode-v64.js','assets/physics-cohesion-v65.js','assets/physics-membrane-v66.js','assets/physics-mode-v62.css'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
+for(const file of ['assets/game-v13.css','assets/mobile-fit-v13.css','assets/core-v13.js','assets/core-rules-v13.js','assets/core-game-v13.js','assets/network-v13.js','assets/app-v13.js','assets/app-v13-part1.js','assets/app-v13-part2.js','assets/app-v13-part3.js','assets/bot-worker-v13.js','assets/physics-mode-v64.js','assets/physics-cohesion-v65.js','assets/physics-membrane-v66.js','assets/physics-turn-cadence-v67.js','assets/physics-mode-v62.css'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
 check('mobile fitting stylesheet linked after base styles',html.indexOf('assets/mobile-fit-v13.css')>html.indexOf('assets/game-v13.css'));
 check('dynamic viewport resizing enabled',html.includes('interactive-widget=resizes-content')&&mobileCss.includes('100dvh'));
 check('mobile screens prevent scrolling',mobileCss.includes('overflow:hidden')&&!mobileCss.includes('overflow:auto'));
@@ -35,7 +36,7 @@ check('mobile game uses remaining-height arena',mobileCss.includes('grid-templat
 // Jelly Drop V64 core: aim with a logical preview and create fresh dynamic bodies on DROP.
 try{new Function(physics);check('Jelly Drop V64 parses',true);}catch(error){check('Jelly Drop V64 parses',false,error.message);}
 check('Jelly Drop V64 loader active',loader.includes("./physics-mode-v64.js?v=64")&&!loader.includes("./physics-mode-v63.js?v=63"));
-check('Jelly Drop V66 build cache-busted',html.includes('POLISHED BUILD V66')&&html.includes('assets/app-v13.js?v=66'));
+check('Jelly Drop V67 build cache-busted',html.includes('POLISHED BUILD V67')&&html.includes('assets/app-v13.js?v=67'));
 check('Jelly Drop aiming uses logical preview',physics.includes('heldPiece={shapeIndex,holdX,holdY:holdYForSettings(),rotation:0,color:SHAPES[shapeIndex].color}'));
 check('Jelly Drop tetrominoes never use static conversion',!physics.includes('Body.setStatic('));
 check('Jelly Drop release creates fresh dynamic piece',physics.includes('const piece=createDynamicPiece(preview)')&&physics.includes('function createDynamicPiece(preview)'));
@@ -66,6 +67,15 @@ check('Jelly Drop V66 aligns cube angles',membrane.includes('const ANGLE_ALIGNME
 check('Jelly Drop V66 cleans detached membrane constraints',membrane.includes('cleanupDetachedMembranes')&&membrane.includes('Matter.Composite.remove(engine.world,constraint,true)'));
 check('Jelly Drop V66 increases constraint iterations',membrane.includes('engine.constraintIterations=Math.max(Number(engine.constraintIterations)||0,10)'));
 
+// V67 shortens the wait between turns without changing initial fall speed.
+try{new Function(cadence);check('Jelly Drop V67 cadence parses',true);}catch(error){check('Jelly Drop V67 cadence parses',false,error.message);}
+check('Jelly Drop V67 cadence loader active',loader.includes("./physics-turn-cadence-v67.js?v=67"));
+check('Jelly Drop V67 keeps a short bounce window',cadence.includes('const SOFT_DAMP_START=260')&&cadence.includes('const STRONG_DAMP_START=650'));
+check('Jelly Drop V67 accelerates low-energy settling',cadence.includes("Matter.Body.setVelocity(body,{x:(body.velocity?.x||0)*.24,y:(body.velocity?.y||0)*.32})"));
+check('Jelly Drop V67 can sleep a clearly settled active piece',cadence.includes('const SLEEP_ASSIST_START=900')&&cadence.includes('Matter.Sleeping?.set(body,true)'));
+check('Jelly Drop V67 caps post-settle spawn delay',cadence.includes('const NEXT_SPAWN_DELAY=25')&&cadence.includes("source.includes('spawnHeldPiece')&&source.includes('releasedPiece')"));
+check('Jelly Drop V67 does not speed paused retry loop',cadence.includes('if(!state?.paused)'));
+
 const host=new RushGame();host.setMode('online');host.reset(0);host.beginActive(3000);
 const guest=new RushGame();guest.setMode('online');guest.applySnapshot(host.snapshot(3000,{stateSeq:1,ackSeq:0}),3000);
 const network=new NetworkDuel({game:guest});network.role='guest';network.pendingInputs=[{seq:1,round:guest.round,action:'left'}];network.applyPredictedInput('left');
@@ -83,4 +93,4 @@ const average=(performance.now()-started)/25;
 check('expert planning budget',average<80,`${average.toFixed(1)}ms average`);
 
 if(failures.length){console.error(`Validation failed (${failures.length}):\n- ${failures.join('\n- ')}`);process.exit(1);}
-console.log(`Rush Duel V13 validation passed. Jelly Drop V66 membrane regressions passed. Impossible bot average: ${average.toFixed(1)}ms (worker offloaded in browser).`);
+console.log(`Rush Duel V13 validation passed. Jelly Drop V67 turn-cadence regressions passed. Impossible bot average: ${average.toFixed(1)}ms (worker offloaded in browser).`);
