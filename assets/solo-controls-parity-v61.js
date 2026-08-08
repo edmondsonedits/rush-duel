@@ -117,6 +117,9 @@ body:not(.${ACTIVE_CLASS}) .offline-parity-pause-v61{display:none!important;}
 
 function pauseMarkup(button,mobile=false){
   const paused=Boolean(gameApi.game.paused);
+  const state=paused?'resume':'pause';
+  if(button.dataset.pauseState===state)return;
+  button.dataset.pauseState=state;
   button.setAttribute('aria-label',paused?'Resume game':'Pause game');
   button.title=paused?'Resume game':'Pause game';
   if(mobile){
@@ -175,9 +178,8 @@ syncPauseButtons();
 
 new MutationObserver(()=>{
   syncModeClass();
-  installPauseButtons();
   syncPauseButtons();
-}).observe(document.body,{attributes:true,attributeFilter:['data-screen','data-mode'],childList:true,subtree:true});
+}).observe(document.body,{attributes:true,attributeFilter:['data-screen','data-mode']});
 
 setInterval(()=>{
   if(isParityMode())syncPauseButtons();
