@@ -20,7 +20,11 @@ jobs:
         run: node --check assets/story-playtest-v72.js
       - name: Check Story V73 syntax
         run: node --check assets/story-playtest-v73.js
+      - name: Check Story production bridge V74 syntax
+        run: node --check assets/story-production-v74.js
       - name: Validate production build
         run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs
       - name: Validate Story V73
         run: node tests/story-playtest-v73-validate.mjs
+      - name: Verify production routes to layered Story Mode
+        run: grep -q "story-production-v74.js?v=74" assets/app-v13.js && grep -q "story-test.html" assets/story-production-v74.js
