@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-content">
+  <meta name="theme-color" content="#030713">
+  <meta name="description" content="Pixel Journey — a story-driven falling-block arcade campaign inside Tetris Duel.">
+  <title>Pixel Journey — Tetris Duel Story Mode</title>
+  <link rel="stylesheet" href="assets/game-v13.css?v=22">
+  <link id="story-mode-v69-style" rel="stylesheet" href="assets/story-mode-v69.css?v=69">
+  <style>html,body,#app{width:100%;height:100%;margin:0;overflow:hidden;background:#01030a}body{touch-action:manipulation}</style>
+</head>
+<body data-screen="story" data-mode="story">
+  <div id="app" class="app-shell"></div>
+  <script type="module">
+    import * as Core from './assets/core-v13.js?v=69';
+    window.__RUSH_MODULES={...Core};
+    window.__rushDuel={showScreen(name){document.body.dataset.screen=name;document.querySelectorAll('[data-screen-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.screenPanel===name));}};
+    const load=src=>new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>reject(new Error('Could not load '+src));document.head.appendChild(script);});
+    await load('./assets/challenge-pack-v51.js?v=51');
+    await load('./assets/story-mode-v69.js?v=69');
+    window.__rushDuelStory?.start?.();
+  </script>
+</body>
+</html>
