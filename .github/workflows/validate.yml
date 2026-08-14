@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: 22
       - name: Validate production build
-        run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs
+        run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs && node tests/story-playtest-validate.mjs
