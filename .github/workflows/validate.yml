@@ -17,12 +17,12 @@ jobs:
         with:
           node-version: 22
       - name: Check legacy Story syntax
-        run: node --check assets/story-playtest-v72.js && node --check assets/story-playtest-v73.js && node --check assets/story-production-v74.js
-      - name: Check current Story V75 syntax
-        run: node --check assets/story-playtest-v75.js && node --check assets/story-production-v75.js
+        run: node --check assets/story-playtest-v72.js && node --check assets/story-playtest-v73.js && node --check assets/story-playtest-v75.js && node --check assets/story-production-v74.js && node --check assets/story-production-v75.js
+      - name: Check current Story V76 syntax
+        run: node --check assets/story-playtest-v76.js && node --check assets/story-production-v76.js
       - name: Validate production build
         run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs
-      - name: Validate Story V75 reachability
-        run: node tests/story-playtest-v75-reachability.mjs
-      - name: Verify production routes to reachable Story Mode
-        run: grep -q "story-production-v75.js?v=75" assets/app-v13.js && grep -q "story-test.html" assets/story-production-v75.js && grep -q "story-playtest-v75.js?v=75" story-test.html
+      - name: Validate Story V76 strategy
+        run: node tests/story-playtest-v76-strategy.mjs
+      - name: Verify production routes to strategic Story Mode
+        run: grep -q "story-production-v76.js?v=76" assets/app-v13.js && grep -q "story-test.html" assets/story-production-v76.js && grep -q "story-playtest-v76.js?v=76" story-test.html
