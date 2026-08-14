@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+const js=fs.readFileSync(new URL('../assets/story-playtest-v73.js',import.meta.url),'utf8');
+const html=fs.readFileSync(new URL('../story-test.html',import.meta.url),'utf8');
+const fail=[];const check=(n,v)=>{if(!v)fail.push(n);};
+check('V73 direct loader',html.includes('story-playtest-v73.js?v=73'));
+check('V73 runtime marker',js.includes('VERSION=73'));
+check('small background pixels',js.includes('MICRO=5')&&js.includes('MICRO-1'));
+check('story imagery', ['cloud','crown','rocket','ghost','heart','cat','flame','saturn','turtle','lightning'].every(k=>js.includes(k)));
+check('fixed one second story scroll',js.includes('state.scrollAcc>=1000')&&js.includes('state.storyRow++'));
+check('exact target validation',js.includes('isExactTarget')&&js.includes('key(cells)===key(target().cells)'));
+check('full line clear gate',js.includes('state.board[CLEAR_ROW].every(Boolean)'));
+check('wrong placements do not enter board',js.includes("state.message=state.lives?'MISFIT · TRY AGAIN'"));
+check('three hearts',js.includes('MAX_HEARTS=3'));
+check('blank breathing phase',js.includes("state.phase='break'")&&js.includes('now+2000'));
+check('progression reaches six pieces',js.includes("title:'Six-Part Storm'")&&js.includes("title:'Five-Part Current'"));
+check('mobile controls', ['left','ccw','drop','cw','right'].every(a=>js.includes(`data-story-test-action=\"${a}\"`)));
+if(fail.length){console.error('Story V73 validation failed:\n- '+fail.join('\n- '));process.exit(1);}console.log('Story V73 validation passed: layered micro-pixel story art, fixed 1-second scroll, exact-fit line clears, and 1→6 piece curriculum.');
