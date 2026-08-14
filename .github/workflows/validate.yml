@@ -18,5 +18,9 @@ jobs:
           node-version: 22
       - name: Check Story V72 syntax
         run: node --check assets/story-playtest-v72.js
+      - name: Check Story V73 syntax
+        run: node --check assets/story-playtest-v73.js
       - name: Validate production build
         run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs
+      - name: Validate Story V73
+        run: node tests/story-playtest-v73-validate.mjs
