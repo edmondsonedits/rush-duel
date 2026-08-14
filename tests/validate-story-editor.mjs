@@ -7,7 +7,7 @@ const failures=[];
 const check=(name,condition,detail='')=>{if(!condition)failures.push(`${name}${detail?`: ${detail}`:''}`);};
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 
-for(const file of ['assets/story-scroll-editor-v70.js','assets/story-scroll-editor-v70.css','story-editor.html'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
+for(const file of ['assets/story-scroll-editor-v70.js','assets/story-scroll-editor-v70.css','assets/story-prediction-curriculum-v71.js','story-editor.html'])check(`file exists: ${file}`,fs.existsSync(path.join(root,file)));
 const story=read('assets/story-scroll-editor-v70.js');
 const css=read('assets/story-scroll-editor-v70.css');
 const html=read('story-editor.html');
@@ -21,8 +21,10 @@ check('Story Editor has editable tetromino stamps',story.includes("tool==='stamp
 check('Story Editor autosaves',story.includes('saveGrid(false)')&&story.includes("rush-duel-story-scroll-v70"));
 check('Story Editor import/export exists',story.includes('copyStory')&&story.includes('importStory'));
 check('Story Editor main loader active',loader.includes("./story-scroll-editor-v70.js?v=70"));
-check('Direct Story Editor entry loads module',html.includes('story-scroll-editor-v70.js?v=70')&&html.includes('window.__rushStoryEditor?.open?.()'));
+check('Prediction curriculum main loader active',loader.includes("./story-prediction-curriculum-v71.js?v=71"));
+check('Direct Story Editor entry loads editor',html.includes('story-scroll-editor-v70.js?v=71')&&html.includes('window.__rushStoryEditor?.open?.()'));
+check('Direct Story Editor entry loads curriculum',html.includes('story-prediction-curriculum-v71.js?v=71'));
 check('Mobile editor uses internal scrolling',css.includes('.story-scroll{')&&css.includes('overflow-y:auto')&&css.includes('@media(max-width:700px)'));
 
 if(failures.length){console.error(`Story Editor validation failed (${failures.length}):\n- ${failures.join('\n- ')}`);process.exit(1);}
-console.log('Story Editor V70 validation passed: 10 × 2000 virtualized editable story board is wired into Custom Mode and direct entry.');
+console.log('Story Editor validation passed: 10 × 2000 virtualized editable story board plus V71 prediction curriculum are wired into Custom Mode and direct entry.');
