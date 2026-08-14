@@ -16,5 +16,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Check Story V72 syntax
+        run: node --check assets/story-playtest-v72.js
       - name: Validate production build
-        run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs && node tests/story-playtest-validate.mjs
+        run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs
+      - name: Validate Story V72 integration
+        run: node tests/story-playtest-validate.mjs
