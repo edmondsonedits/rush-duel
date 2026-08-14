@@ -13,7 +13,7 @@ const failures=[];
 const check=(name,ok,detail='')=>{if(!ok)failures.push(`${name}${detail?`: ${detail}`:''}`);};
 
 try{new Function(addon);check('Story curriculum parses',true);}catch(error){check('Story curriculum parses',false,error.message);}
-const targetCount=(addon.match(/\bt\('/g)||[]).length-1; // subtract function t declaration
+const targetCount=(addon.match(/\bt\('/g)||[]).length;
 check('49 authored placement targets',targetCount===49,String(targetCount));
 for(const scene of ['castle','crown','rocket','ghost','heart','cat','flame','smiley','saturn','turtles','lightning','ending'])check(`scene curriculum: ${scene}`,addon.includes(`t('${scene}'`));
 for(const shape of ['I','J','L','O','S','T','Z'])check(`tetromino taught: ${shape}`,addon.includes(`'${shape}'`));
