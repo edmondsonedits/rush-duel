@@ -50,16 +50,10 @@
 .story-controls{position:relative;z-index:10;display:grid;grid-template-columns:1fr 1fr 1.3fr 1fr 1fr;gap:7px;min-height:68px}.story-controls button{min-width:0;min-height:64px;border:2px solid #49677d;border-radius:12px;background:linear-gradient(180deg,#152f43,#091621);color:#f3fbff;font:1000 clamp(21px,6vw,30px)/1 monospace;box-shadow:0 4px 0 #01040a,inset 0 1px 0 rgba(255,255,255,.09);touch-action:none;user-select:none;-webkit-user-select:none}.story-controls button small{display:block;margin-top:6px;color:#9db5c5;font:800 7px/1 monospace;letter-spacing:.06em}.story-controls button.drop{border-color:#66ed87;background:linear-gradient(180deg,#1a5743,#0a2d25);color:#f7ffcb}.story-controls button.active,.story-controls button:active{transform:translateY(2px);box-shadow:0 2px 0 #01040a;filter:brightness(1.24)}
 
 @media (max-width:520px) and (orientation:portrait){
-  [data-screen-panel="mode"] .mode-grid{grid-template-rows:repeat(4,minmax(0,1fr));gap:clamp(7px,1.05dvh,11px)}
-  [data-screen-panel="mode"] .mode-button,[data-screen-panel="mode"] .mode-button.gold,[data-screen-panel="mode"] .mode-button.pink,[data-screen-panel="mode"] .mode-button.story{padding:clamp(8px,1.25dvh,13px) clamp(12px,3.4vw,18px)}
-  [data-screen-panel="mode"] .mode-button strong{font-size:clamp(17px,5vw,23px)}
-  [data-screen-panel="mode"] .mode-button small{margin-top:5px;font-size:clamp(8px,2.45vw,11px);line-height:1.22}
-  [data-screen-panel="mode"] .score-panel{min-height:56px;padding:8px 12px}
   .story-screen{padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))}
   .story-shell{padding:5px;gap:5px;border-radius:14px}.story-hud{min-height:58px;gap:5px}.story-back{min-width:42px;height:42px;padding:0 7px}.story-icon-button{width:38px;min-width:38px;height:42px}.story-meta{padding:4px 6px}.story-controls{gap:5px;min-height:61px}.story-controls button{min-height:59px;border-radius:10px}.story-overlay{padding:10px}
 }
 @media (max-width:520px) and (orientation:portrait) and (max-height:720px){
-  [data-screen-panel="mode"] .menu-card{gap:6px;padding:9px 11px}[data-screen-panel="mode"] .brand{font-size:38px}[data-screen-panel="mode"] .brand span{margin-top:7px}[data-screen-panel="mode"] .score-panel{display:none}[data-screen-panel="mode"] .menu-actions{min-height:34px}
   .story-hud{min-height:50px}.story-hud-main strong{font-size:16px}.story-meta{padding:3px 6px}.story-hearts{font-size:15px}.story-controls{min-height:54px}.story-controls button{min-height:52px;font-size:20px}.story-controls button small{margin-top:3px;font-size:6px}
 }
 @media (orientation:landscape) and (max-height:560px){
