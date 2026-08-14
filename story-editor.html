@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-content">
+  <meta name="theme-color" content="#030817">
+  <meta name="description" content="Rush Duel Story Editor — edit a 10 by 2000 scrolling Tetris story board.">
+  <title>Story Editor — Tetris Duel</title>
+  <link rel="stylesheet" href="assets/game-v13.css?v=22">
+  <link rel="stylesheet" href="assets/custom-mode-v23.css?v=23">
+  <link rel="stylesheet" href="assets/story-scroll-editor-v70.css?v=70">
+  <style>html,body,#app{width:100%;height:100%;margin:0;overflow:hidden;background:#01030a}body{touch-action:manipulation}.mode-grid{display:none}</style>
+</head>
+<body data-screen="story-editor" data-mode="custom">
+  <div id="app" class="app-shell"></div>
+  <script type="module">
+    import * as Core from './assets/core-v13.js?v=70';
+    window.__RUSH_MODULES={...Core};
+    const load=src=>new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>reject(new Error('Could not load '+src));document.head.appendChild(script);});
+    await load('./assets/custom-mode-v23.js?v=25');
+    await load('./assets/story-scroll-editor-v70.js?v=70');
+    window.__rushStoryEditor?.open?.();
+  </script>
+</body>
+</html>
