@@ -51,10 +51,10 @@ expect(src.includes("$('storyTestScene').textContent='STORY MODE V80'"),'mode-se
 expect(src.includes("setInterval(()=>input(action),65)"),'touch movement auto-repeat missing');
 expect(src.includes('window.__rushStoryV80'),'V80 diagnostics export missing');
 expect(page.includes('Story Mode V80'),'V80 page identity missing');
-expect(page.includes('story-playtest-v80.js?v=80'),'V80 runtime is not loaded directly');
+expect(page.includes('story-playtest-v80.js?v=80.2'),'V80 runtime is not loaded with the current cache key');
 expect(!page.includes('story-placement-only-loss-v79'),'legacy V79 runtime patch still loaded');
 expect(app.includes('story-production-v80.js?v=80'),'production app does not load V80 bridge');
-expect(bridge.includes("url.searchParams.set('v','80')"),'Story button does not route to V80');
+expect(bridge.includes("url.searchParams.set('v','80.2')"),'Story button does not route to the current V80 build');
 expect(bridge.includes("lossRule:'wrong placement only'"),'production loss rule missing');
 
 if(failures.length){console.error('Story V80 runtime validation failed:\n- '+failures.join('\n- '));process.exit(1);}

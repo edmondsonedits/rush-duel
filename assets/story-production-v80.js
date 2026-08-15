@@ -10,9 +10,9 @@ button.addEventListener('click',event=>{
   event.preventDefault();
   event.stopImmediatePropagation();
   const url=new URL('story-test.html',location.href);
-  url.searchParams.set('v','80');
+  url.searchParams.set('v','80.2');
   url.searchParams.set('from','main');
   location.assign(url.href);
 });
-window.__rushDuelStoryProduction={version:80,page:'story-test.html?v=80',renderer:'story-playtest-v80',easy:'stationary strategy',medium:'one row per second with safe decision hold',lossRule:'wrong placement only'};
+window.__rushDuelStoryProduction={version:80,page:'story-test.html?v=80.2',renderer:'story-playtest-v80',easy:'stationary strategy',medium:'one row per second with safe decision hold',lossRule:'wrong placement only'};
 })();

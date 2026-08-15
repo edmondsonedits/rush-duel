@@ -29,4 +29,4 @@ jobs:
       - name: Validate current Story V80 runtime
         run: node tests/story-playtest-v80-runtime.mjs
       - name: Verify production routes to Story V80
-        run: grep -q "story-production-v80.js?v=80" assets/app-v13.js && grep -q "story-playtest-v80.js?v=80" story-test.html && grep -q "url.searchParams.set('v','80')" assets/story-production-v80.js
+        run: grep -q "story-production-v80.js?v=80.2" assets/app-v13.js && grep -q "story-playtest-v80.js?v=80.2" story-test.html && grep -q "url.searchParams.set('v','80.2')" assets/story-production-v80.js

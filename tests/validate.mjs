@@ -66,7 +66,7 @@ check('Jelly Drop V66 increases constraint iterations',membrane.includes('engine
 // V68 removes the turn gate: DROP immediately produces the next controllable piece.
 try{new Function(continuous);check('Jelly Drop V68 continuous runtime parses',true);}catch(error){check('Jelly Drop V68 continuous runtime parses',false,error.message);}
 check('Jelly Drop V68 loader active',loader.includes("./physics-mode-v68.js?v=68")&&!loader.includes("./physics-mode-v64.js?v=64")&&!loader.includes("./physics-turn-cadence-v67.js?v=67"));
-check('Jelly Drop V68 build cache-busted',html.includes('POLISHED BUILD V68')&&html.includes('assets/app-v13.js?v=68'));
+check('production build cache-busted',html.includes('POLISHED BUILD V80')&&html.includes('assets/app-v13.js?v=80.2'));
 check('Jelly Drop V68 reuses proven core',continuous.includes("new URL('./physics-mode-v64.js?v=64',scriptSrc)"));
 check('Jelly Drop V68 removes released-piece spawn gate',continuous.includes("'function spawnHeldPiece(){if(!running||heldPiece||releasedPiece||resultOpen)return false;'")&&continuous.includes("'function spawnHeldPiece(){if(!running||heldPiece||resultOpen)return false;'"));
 check('Jelly Drop V68 removes DROP REGISTERED toast',continuous.includes("showMessage('DROP REGISTERED','clear',480)")&&continuous.includes("updateHud();tone('drop');armReleaseWatch(piece,sessionId);spawnHeldPiece();return true;"));
