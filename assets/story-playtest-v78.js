@@ -57,19 +57,19 @@ function applyCellsAndClear(board,landing){
 }
 function shiftBoardUp(board){const next=board.slice(1).map(r=>r.slice());next.push(Array(COLS).fill(0));return next;}
 function key(cells){return cells.map(([x,y])=>`${x},${y}`).sort().join('|');}
-function boardFeatures(board){
+function boardFeatures(board,floorLimit=ROWS){
  const heights=Array(COLS).fill(0);let holes=0,bumpiness=0;
- for(let x=0;x<COLS;x++){let top=-1;for(let y=0;y<ROWS;y++)if(board[y][x]){top=y;break;}if(top>=0){heights[x]=ROWS-top;for(let y=top;y<ROWS;y++)if(!board[y][x])holes++;}}
+ for(let x=0;x<COLS;x++){let top=-1;for(let y=0;y<floorLimit;y++)if(board[y][x]){top=y;break;}if(top>=0){heights[x]=floorLimit-top;for(let y=top;y<floorLimit;y++)if(!board[y][x])holes++;}}
  for(let x=0;x<COLS-1;x++)bumpiness+=Math.abs(heights[x]-heights[x+1]);
  return {holes,bumpiness,heights};
 }
 function validateCurriculum(){
  for(let si=0;si<STAGES.length;si++){
   for(const baseY of [19,15,14,13,12,11,10]){
-   let b=buildStageBoard(si,baseY),prev=boardFeatures(b);if(prev.holes)throw new Error(`${STAGES[si].title}: start holes at base ${baseY}`);
+   let b=buildStageBoard(si,baseY),prev=boardFeatures(b,baseY+1);if(prev.holes)throw new Error(`${STAGES[si].title}: start holes at base ${baseY}`);
    for(let mi=0;mi<STAGES[si].moves.length;mi++){
     const m=STAGES[si].moves[mi],land=landingFor(b,m,baseY+1);if(!land)throw new Error(`${STAGES[si].title}: unreachable step ${mi+1} at base ${baseY}`);
-    const result=applyCellsAndClear(b,land),after=boardFeatures(result.board);if(result.lines!==m.clear)throw new Error(`${STAGES[si].title}: wrong clear at base ${baseY}`);if(after.holes)throw new Error(`${STAGES[si].title}: creates holes at base ${baseY}`);b=result.board;prev=after;
+    const result=applyCellsAndClear(b,land),after=boardFeatures(result.board,baseY+1);if(result.lines!==m.clear)throw new Error(`${STAGES[si].title}: wrong clear at base ${baseY}`);if(after.holes)throw new Error(`${STAGES[si].title}: creates holes at base ${baseY}`);b=result.board;prev=after;
    }
   }
  }
