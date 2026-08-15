@@ -45,6 +45,9 @@ expect(!src.includes('REACTION WINDOW EXPIRED'),'timer-based loss still exists')
 expect(!src.includes('THE BOARD CAUGHT THE PIECE · RETRY'),'board movement can still cost a heart');
 expect((src.match(/loseHeart\(/g)||[]).length===2,'heart loss must exist only in loseHeart itself and the wrong-placement branch');
 expect(src.includes("state.baseY<=MEDIUM_HOLD_BASE"),'safe conveyor hold missing');
+expect(src.includes('state.riseAcc+=elapsed'),'conveyor timing must use real elapsed time');
+expect(src.includes('while(state.riseAcc>=interval&&state.baseY>MEDIUM_HOLD_BASE)'),'conveyor must catch up safely after a slow frame');
+expect(src.includes("$('storyTestScene').textContent='STORY MODE V80'"),'mode-selection header still shows a legacy version');
 expect(src.includes("setInterval(()=>input(action),65)"),'touch movement auto-repeat missing');
 expect(src.includes('window.__rushStoryV80'),'V80 diagnostics export missing');
 expect(page.includes('Story Mode V80'),'V80 page identity missing');
