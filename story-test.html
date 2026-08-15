@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-content">
   <meta name="theme-color" content="#020612">
-  <meta name="description" content="Tetris Duel Story Mode V79 — Easy strategy training and Medium continuous rising-story play with losses only on wrong placements.">
-  <title>Story Mode V79 — Tetris Duel</title>
-  <link rel="stylesheet" href="assets/game-v13.css?v=79">
+  <meta name="description" content="Tetris Duel Story Mode V80 — Easy strategy training and a one-row-per-second Medium story conveyor where only wrong placements cost hearts.">
+  <title>Story Mode V80 — Tetris Duel</title>
+  <link rel="stylesheet" href="assets/game-v13.css?v=80">
   <style>
     *{box-sizing:border-box}html,body,#app{width:100%;height:100%;margin:0;overflow:hidden;background:#020612;color:#f4f8ff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{touch-action:manipulation;overscroll-behavior:none}.screen:not(.story-playtest-screen){display:none!important}
     .story-playtest-screen{display:flex!important;position:fixed;inset:0;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#101d43 0,#050a19 42%,#01030a 100%);padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));overflow:hidden}
@@ -19,17 +19,11 @@
 <body data-screen="story-test" data-mode="story">
   <div id="app"></div>
   <script type="module">
-    import * as Core from './assets/core-v13.js?v=79';
+    import * as Core from './assets/core-v13.js?v=80';
     window.__RUSH_MODULES={...Core};
     const story=document.createElement('script');
-    story.src='./assets/story-playtest-v78.js?v=79';
-    story.onload=()=>{
-      const rule=document.createElement('script');
-      rule.src='./assets/story-placement-only-loss-v79.js?v=79';
-      rule.onerror=()=>{console.error('Story Mode V79 loss-rule patch failed to load.');};
-      document.head.appendChild(rule);
-    };
-    story.onerror=()=>{document.body.innerHTML='<div style="padding:24px;color:white;background:#020612;font-family:system-ui">Story Mode V79 failed to load.</div>';};
+    story.src='./assets/story-playtest-v80.js?v=80';
+    story.onerror=()=>{document.body.innerHTML='<div style="padding:24px;color:white;background:#020612;font-family:system-ui">Story Mode V80 failed to load.</div>';};
     document.head.appendChild(story);
   </script>
 </body>

@@ -1,4 +1,4 @@
-# Pixel Journey — Story Mode V69
+# Pixel Journey — Story Mode V80
 
 Pixel Journey is the story-driven falling-block campaign for Tetris Duel.
 
@@ -8,18 +8,20 @@ Pixel Journey is the story-driven falling-block campaign for Tetris Duel.
 - Move and rotate the piece so its four cells exactly match the slot.
 - A correct placement completes the frame, triggers the clear sweep, moves the cleared pixel row upward, and reduces its opacity in 20% steps as later frames advance.
 - A wrong placement shatters and disappears without corrupting the board. The same frame can be retried at the cost of one heart.
-- Three lost hearts rewind to the latest four-frame checkpoint.
+- Three incorrect placements restart the current lesson. Time, board height, and conveyor movement never remove hearts.
 
 ## Campaign
 
-Ten chapters reuse the game's block-art language: Crown, Rocket, Ghost, Heart, Cat Face, Flame, Smiley, Saturn, Turtles, and Lightning Bolt. Each chapter contains eight placement frames, for an 80-placement campaign that gradually adds harder tetrominoes, rotations, edge placements, reduced target assistance, and faster falling speed.
+Ten lessons reuse the game's block-art language: Clouds, Crown, Rocket, Ghost, Heart, Cat Face, Flame, Saturn, Turtles, and Lightning Bolt. The course grows from single placements into multi-piece lookahead, well-building, and a final Tetris payoff.
+
+Easy keeps the lesson stationary. Medium places the next lesson underneath the current board and moves the continuous story upward exactly one row every second. At the safe decision line, the conveyor holds until the active piece is placed.
 
 ## Controls
 
 - Left / Right: move
 - Rotate-left / Rotate-right: rotate
 - Drop: immediately test the current placement
-- Touch: buttons, horizontal swipes, tap to rotate, downward swipe to drop
+- Touch: buttons; hold Left or Right for fast auto-repeat
 - Keyboard: arrows, Z/Q, X/E/Up, Space/Down, P/Escape
 
 Progress, best score, and chapter unlocks are stored locally on the device. Story Mode uses the production tetromino matrices and rotation profiles from the Rush Duel core and the published Challenge artwork when available.
