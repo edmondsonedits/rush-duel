@@ -17,14 +17,14 @@ jobs:
         with:
           node-version: 22
       - name: Check legacy Story syntax
-        run: node --check assets/story-playtest-v72.js && node --check assets/story-playtest-v73.js && node --check assets/story-playtest-v75.js && node --check assets/story-playtest-v76.js && node --check assets/story-production-v74.js && node --check assets/story-production-v75.js && node --check assets/story-production-v76.js
-      - name: Check current Story V77 syntax
-        run: node --check assets/story-playtest-v77.js && node --check assets/story-production-v77.js
+        run: node --check assets/story-playtest-v72.js && node --check assets/story-playtest-v73.js && node --check assets/story-playtest-v75.js && node --check assets/story-playtest-v76.js && node --check assets/story-playtest-v77.js && node --check assets/story-production-v74.js && node --check assets/story-production-v75.js && node --check assets/story-production-v76.js && node --check assets/story-production-v77.js
+      - name: Check current Story V78 syntax
+        run: node --check assets/story-playtest-v78.js && node --check assets/story-production-v78.js
       - name: Validate production build
         run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs
-      - name: Validate Story V76 strategy foundation
+      - name: Validate Story strategy foundation
         run: node tests/story-playtest-v76-strategy.mjs
-      - name: Validate Story V77 Easy and Medium
-        run: node tests/story-playtest-v77-medium.mjs
-      - name: Verify production routes to Story V77
-        run: grep -q "story-production-v77.js?v=77" assets/app-v13.js && grep -q "story-test.html" assets/story-production-v77.js && grep -q "story-playtest-v77.js?v=77" story-test.html
+      - name: Validate Story V78 continuous conveyor
+        run: node tests/story-playtest-v78-continuous.mjs
+      - name: Verify production routes to Story V78
+        run: grep -q "story-production-v78.js?v=78" assets/app-v13.js && grep -q "story-test.html" assets/story-production-v78.js && grep -q "story-playtest-v78.js?v=78" story-test.html
