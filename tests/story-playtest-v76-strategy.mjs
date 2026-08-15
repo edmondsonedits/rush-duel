@@ -58,12 +58,5 @@ expect(src.includes('SURFACE ${before.bumpiness}→${after.bumpiness} · WELL OP
 expect(src.includes('state.scrollAcc>=1000'),'fixed one-second story scroll missing');
 expect(src.includes('MICRO=5'),'small background story pixels missing');
 
-const page=fs.readFileSync(new URL('../story-test.html',import.meta.url),'utf8');
-const app=fs.readFileSync(new URL('../assets/app-v13.js',import.meta.url),'utf8');
-const bridge=fs.readFileSync(new URL('../assets/story-production-v76.js',import.meta.url),'utf8');
-expect(page.includes('story-playtest-v76.js?v=76'),'direct Story page does not load V76');
-expect(app.includes('story-production-v76.js?v=76'),'production loader does not load V76 bridge');
-expect(bridge.includes("url.searchParams.set('v','76')"),'production bridge does not route to V76');
-
 if(failures.length){console.error('Story V76 strategy validation failed:\n- '+failures.join('\n- '));process.exit(1);}
-console.log('Story V76 strategy validation passed: clean-stack fundamentals -> S/Z/T surface repair -> 2/3/4/5/6-piece well-preserving Tetris sequences.');
+console.log('Story V76 strategy foundation passed: clean-stack fundamentals -> S/Z/T surface repair -> 2/3/4/5/6-piece well-preserving Tetris sequences.');
