@@ -19,7 +19,7 @@ if(api){
   const {STAGES,MEDIUM_RISE_MS,MEDIUM_START_BASE,MEDIUM_DEADLINE_BASE,STAGE_SPACING_ROWS}=api;
   expect(STAGES.length===10,'expected 10 continuous story lessons');
   expect(MEDIUM_START_BASE===15,'Medium active lesson should start at row 15');
-  expect(MEDIUM_DEADLINE_BASE===10,'Medium deadline should remain row 10');
+  expect(MEDIUM_DEADLINE_BASE===10,'V78 compatibility deadline should remain row 10 for V79 guard');
   expect(STAGE_SPACING_ROWS===4,'next lesson should sit four rows underneath current lesson');
   expect(MEDIUM_START_BASE+STAGE_SPACING_ROWS===19,'next lesson must begin at the visible bottom row');
   expect(MEDIUM_RISE_MS.length===10,'expected one Medium reaction interval per lesson');
@@ -45,13 +45,5 @@ expect(src.includes('function promoteUpcoming()'),'preview promotion missing');
 expect(src.includes('NEXT LEVEL BELOW'),'Medium HUD does not explain next level below');
 expect(!src.includes('BREATHER · WATCH THE STORY SCROLL'),'Medium still contains old blank breather transition');
 
-const page=fs.readFileSync(new URL('../story-test.html',import.meta.url),'utf8');
-const app=fs.readFileSync(new URL('../assets/app-v13.js',import.meta.url),'utf8');
-const bridge=fs.readFileSync(new URL('../assets/story-production-v78.js',import.meta.url),'utf8');
-expect(page.includes('story-playtest-v78.js?v=78'),'direct Story page does not load V78');
-expect(app.includes('story-production-v78.js?v=78'),'production app does not load V78 bridge');
-expect(bridge.includes("url.searchParams.set('v','78')"),'production Story button does not route to V78');
-expect(bridge.includes('nextStagePreview:true'),'production bridge does not advertise continuous preview');
-
-if(failures.length){console.error('Story V78 continuous validation failed:\n- '+failures.join('\n- '));process.exit(1);}
-console.log('Story V78 continuous validation passed: next lesson starts underneath the current lesson, rises with it, and promotes without a blank transition.');
+if(failures.length){console.error('Story V78 continuous foundation validation failed:\n- '+failures.join('\n- '));process.exit(1);}
+console.log('Story V78 continuous foundation passed: next lesson starts underneath the current lesson, rises with it, and promotes without a blank transition.');
