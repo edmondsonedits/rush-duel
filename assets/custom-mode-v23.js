@@ -27,9 +27,30 @@ let editorPointerDown=false;
 let editorLastCell='';
 let currentChallenge=null;
 let play=null;
+let playSession=0;
 let playFrame=0;
 let playPointer=null;
 let repeatTimer=0;
+const customListeners=new Map();
+
+function onCustom(type,handler){
+  if(typeof handler!=='function')return ()=>{};
+  const listeners=customListeners.get(type)||new Set();listeners.add(handler);customListeners.set(type,listeners);
+  return ()=>{listeners.delete(handler);if(!listeners.size)customListeners.delete(type);};
+}
+function emitCustom(type,detail={}){
+  for(const handler of [...(customListeners.get(type)||[])]){try{handler(detail);}catch(error){console.error(`Custom Mode ${type} listener failed.`,error);}}
+}
+function getPlayState(){
+  if(!play)return null;
+  return {session:play.session,board:play.board,queue:play.queue.slice(),activeShape:play.board.active?.shapeIndex??null,status:play.status};
+}
+function replaceHiddenQueuePiece(session,index,shape){
+  if(!play||play.session!==session||play.status!=='active')return false;
+  if(!Number.isInteger(index)||index<3||index>=play.queue.length)return false;
+  if(!Number.isInteger(shape)||shape<0||shape>=SHAPES.length)return false;
+  play.queue[index]=shape;return true;
+}
 
 ensureStyle();
 injectInterface();
@@ -124,7 +145,7 @@ function injectInterface(){
     playScreen.className='screen custom-screen custom-play-screen';
     playScreen.dataset.screenPanel='custom-play';
     playScreen.id='customPlayScreen';
-    playScreen.setAttribute('aria-label','Play custom challenge');
+    playScreen.setAttribute('aria-label','Play custom challenge gameplay');
     playScreen.innerHTML=`
       <main class="custom-play-shell">
         <header class="custom-play-header">
@@ -384,14 +405,19 @@ function startChallenge(challenge){
   const normalized=normalizeChallenge(challenge);if(!normalized||!countBlocks(normalized.grid))return;
   stopPlay();currentChallenge=normalized;
   const board=new Board('CUSTOM');board.grid=copyGrid(normalized.grid);board.updateMaxHeight();
-  play={board,rng:createRng(normalized.seed),bag:[],queue:[],pieces:0,lines:0,startedAt:performance.now(),pausedAt:0,totalPaused:0,lastGravity:performance.now(),groundedAt:0,status:'active',message:'',gravity:820,lockDelay:500};
+  const session=++playSession;
+  play={session,board,rng:createRng(normalized.seed),bag:[],queue:[],pieces:0,lines:0,startedAt:performance.now(),pausedAt:0,totalPaused:0,lastGravity:performance.now(),groundedAt:0,status:'active',message:'',gravity:820,lockDelay:500};
+  emitCustom('challengeStarted',{session,challengeId:normalized.id});
   while(play.queue.length<5)play.queue.push(nextBagPiece());
   if(!spawnCustomPiece())return finishCustom(false,'The starting blocks cover the piece spawn area.');
   if($c('customPlayName'))$c('customPlayName').textContent=normalized.name;
   $c('customPlayOverlay')?.classList.add('hidden');
   navigate('custom-play');renderPlay();tone('start');playFrame=requestAnimationFrame(customFrame);
 }
-function stopPlay(){stopPlayLoop();play=null;playPointer=null;clearInterval(repeatTimer);}
+function stopPlay(){
+  if(play)emitCustom('stopped',{session:play.session,status:play.status});
+  stopPlayLoop();play=null;playPointer=null;clearInterval(repeatTimer);
+}
 function stopPlayLoop(){if(playFrame)cancelAnimationFrame(playFrame);playFrame=0;clearInterval(repeatTimer);}
 function isPlayActive(){return document.body.dataset.screen==='custom-play'&&play&&play.status==='active';}
 function createRng(seed){
@@ -404,7 +430,9 @@ function nextBagPiece(){
 }
 function spawnCustomPiece(){
   const shape=play.queue.shift();play.queue.push(nextBagPiece());play.groundedAt=0;play.lastGravity=performance.now();
-  return play.board.spawn(shape);
+  const spawned=play.board.spawn(shape);
+  if(spawned)emitCustom('pieceSpawned',{session:play.session,shape,queue:play.queue.slice()});
+  return spawned;
 }
 function customAction(action){
   if(!isPlayActive()||play.paused)return false;const board=play.board,now=performance.now();let changed=false;
@@ -420,6 +448,7 @@ function customAction(action){
 function lockCustomPiece(){
   if(!isPlayActive()||!play.board.active)return;
   const result=play.board.lock();play.pieces++;play.lines+=result.lines;tone(result.lines?`clear${Math.min(4,result.lines)}`:'lock');
+  emitCustom('pieceLocked',{session:play.session,result:{lines:result.lines,toppedOut:result.toppedOut,distance:result.distance},queue:play.queue.slice()});
   if(boardEmpty(play.board.grid)){finishCustom(true);return;}
   if(!spawnCustomPiece()){finishCustom(false,'The stack reached the top before the board was empty.');return;}
   renderPlay();
@@ -448,6 +477,7 @@ function toggleCustomPause(){
 function playElapsed(at=performance.now()){return play?Math.max(0,at-play.startedAt-play.totalPaused-(play.paused?at-play.pausedAt:0)):0;}
 function finishCustom(won,reason=''){
   if(!play)return;play.status=won?'won':'lost';stopPlayLoop();const elapsed=playElapsed(),pieces=play.pieces,lines=play.lines;
+  emitCustom('finished',{session:play.session,won,reason});
   if(won){
     const challenges=loadChallenges(),saved=challenges.find(item=>item.id===currentChallenge.id)||currentChallenge;
     saved.verified=true;saved.bestMs=saved.bestMs==null?elapsed:Math.min(saved.bestMs,elapsed);saved.bestPieces=saved.bestPieces==null?pieces:Math.min(saved.bestPieces,pieces);saved.completions=(saved.completions||0)+1;saved.updatedAt=nowIso();
@@ -510,11 +540,16 @@ function tone(name){try{if(typeof playTone==='function')playTone(name);}catch{}}
 window.__rushDuelCustom={
   open:()=>{renderHub();navigate('custom-hub');},
   loadChallenges,
+  on:onCustom,
+  getPlayState,
+  replaceHiddenQueuePiece,
   runSelfTests(){
     const testGrid=emptyGrid();testGrid[19][0]='#fff';
     const rngA=createRng('same-seed'),rngB=createRng('same-seed');
     const deterministic=Array.from({length:12},()=>rngA()).every(value=>value===rngB());
-    return {pass:deterministic&&countBlocks(testGrid)===1&&!boardEmpty(testGrid)&&boardEmpty(emptyGrid()),tests:[{name:'seeded sequence deterministic',pass:deterministic},{name:'block counter',pass:countBlocks(testGrid)===1},{name:'empty-board victory check',pass:boardEmpty(emptyGrid())}]};
+    let eventCount=0;const off=onCustom('selftest',()=>eventCount++);emitCustom('selftest');off();emitCustom('selftest');
+    const lifecycle=eventCount===1;
+    return {pass:deterministic&&lifecycle&&countBlocks(testGrid)===1&&!boardEmpty(testGrid)&&boardEmpty(emptyGrid())&&!replaceHiddenQueuePiece(-1,3,0),tests:[{name:'seeded sequence deterministic',pass:deterministic},{name:'lifecycle subscribe/unsubscribe',pass:lifecycle},{name:'hidden queue mutation rejects inactive session',pass:!replaceHiddenQueuePiece(-1,3,0)},{name:'block counter',pass:countBlocks(testGrid)===1},{name:'empty-board victory check',pass:boardEmpty(emptyGrid())}]};
   }
 };
 })();
