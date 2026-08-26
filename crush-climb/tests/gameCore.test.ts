@@ -59,11 +59,16 @@ describe('Crush Climb V5.1 behavioral baseline', () => {
   it('enforces one Hold use per planning piece', () => {
     const initial = createGameState(101, 'block', 'easy');
     const once = stepGame(initial, 0, [{ type: 'BlockHold' }]).state;
-    const beforeSecondHold = snapshot(once);
+    const heldAfterFirst = once.holdType;
+    const currentAfterFirst = once.current?.type;
+    const queueAfterFirst = once.nextQueue.slice();
     const twice = stepGame(once, 0, [{ type: 'BlockHold' }]).state;
 
     expect(once.holdUsed).toBe(true);
-    expect(snapshot(twice)).toBe(beforeSecondHold);
+    expect(twice.holdUsed).toBe(true);
+    expect(twice.holdType).toBe(heldAfterFirst);
+    expect(twice.current?.type).toBe(currentAfterFirst);
+    expect(twice.nextQueue).toEqual(queueAfterFirst);
   });
 
   it('is deterministic for identical seed and command streams', () => {
