@@ -1,6 +1,6 @@
 'use strict';
 
-const COLS=10,ROWS=20,FIXED_DT=1/120,MAX_STEPS=8,DROP_SPEED=8.4,AIM_LIMIT=1.30,DAS=.105,ARR=.028;
+let COLS=10;const ROWS=20,FIXED_DT=1/120,MAX_STEPS=8,DROP_SPEED=8.4,AIM_LIMIT=1.30,DAS=.105,ARR=.028;
 const TYPES=['I','J','L','O','S','T','Z'];
 const COLORS={I:'#63e7ff',J:'#6683ff',L:'#ffac49',O:'#ffe36b',S:'#72ec91',T:'#c482ff',Z:'#ff6b81'};
 const ORI={
