@@ -1,6 +1,6 @@
 'use strict';
 
-// V6.4 vertical-world + lava timing layer.
+// V6.5 vertical-world + lava timing layer.
 // The simulation keeps a fixed 20-row working window, but when a piece would
 // lock above the visible ceiling we rebase the world downward. This is the
 // equivalent of moving the camera upward: settled terrain, falling pieces,
@@ -8,9 +8,9 @@
 // Master gains fresh placement headroom. There is therefore no tetromino
 // top-out caused by reaching row 0.
 const VERTICAL_REBASE_PAD=6;
-const LAVA_START_BELOW=.08;       // hazard surface begins just below the arena
+const LAVA_START_BELOW=.02;       // hazard surface begins just below the arena
 const LAVA_GRACE_SECONDS=6;       // visible but stationary at match start
-const LAVA_RISE_SPEED_V64=.0015;  // cells/sec: ~1 row every 11.1 minutes
+const LAVA_RISE_SPEED_V65=.0222222; // cells/sec: ~1 row every 45 seconds
 let lavaGraceRemaining=LAVA_GRACE_SECONDS;
 window.CC_WORLD_OFFSET=0;
 
@@ -29,7 +29,6 @@ function rebaseVertical(rows){
   lavaY+=rows;
   window.CC_WORLD_OFFSET+=rows;
 
-  // Keep temporary effects aligned with the shifted world where practical.
   for(const p of particles)p.y+=rows;
 }
 
@@ -40,8 +39,6 @@ function pieceMinLockY(piece){
   return min;
 }
 
-// Rebase before the legacy lock routine sees a negative cell, preventing the
-// old ceiling/top-out rule from firing.
 const lockPieceBeforeVertical=lockPiece;
 lockPiece=function(piece){
   const minY=pieceMinLockY(piece);
@@ -49,8 +46,6 @@ lockPiece=function(piece){
   return lockPieceBeforeVertical(piece);
 };
 
-// Preserve the runner's original summit objective in world coordinates even
-// when the camera window has been rebased upward.
 const moveRunnerBeforeVertical=moveRunner;
 moveRunner=function(dt,inputX,wantJump){
   moveRunnerBeforeVertical(dt,inputX,wantJump);
@@ -59,8 +54,6 @@ moveRunner=function(dt,inputX,wantJump){
   if(worldY<=.11)endGame('runner','The runner reached the summit.');
 };
 
-// Start the physical lava just below the floor, but keep a visible animated
-// pool at the bottom edge so the threat is always readable.
 const startGameBeforeVertical=startGame;
 startGame=function(){
   window.CC_WORLD_OFFSET=0;
@@ -72,9 +65,7 @@ document.querySelector('#startBtn').onclick=startGame;
 document.querySelector('#rematchBtn').onclick=startGame;
 
 // The V6.2 feature layer owns the original lava update. Run it with a harmless
-// temporary lava coordinate, then restore the true lava and apply V6.4 timing.
-// This cleanly preserves all touch controls, AI, block falling and attacks
-// without allowing the old faster lava rate to leak through.
+// temporary lava coordinate, then restore the true lava and apply V6.5 timing.
 const updateBeforeVertical=update;
 update=function(dt){
   if(state!=='playing'||paused){updateBeforeVertical(dt);return}
@@ -90,23 +81,23 @@ update=function(dt){
   if(lavaGraceRemaining>0){
     lavaGraceRemaining=Math.max(0,lavaGraceRemaining-dt);
   }else{
-    lavaY=Math.max(-1,lavaY-LAVA_RISE_SPEED_V64*dt);
+    lavaY=Math.max(-1,lavaY-LAVA_RISE_SPEED_V65*dt);
   }
 
   if(runner.y+runner.h>=lavaY-.006){
     dangerPulse=.95;
     shake=Math.max(shake,.22);
     tone(105,.13,.045);
-    endGame('block','The slowly rising lava caught the runner.');
+    endGame('block','The rising lava caught the runner.');
   }
 };
 
-// Always render lava. While its physical surface is below the camera, show a
-// shallow animated pool peeking up from the bottom edge. Once the real surface
-// enters the arena, render it at its true height.
+// Always render lava. It starts as a thin visible pool, then its actual surface
+// enters the arena almost immediately after the grace period and visibly creeps
+// upward at roughly one row every 45 seconds.
 renderLava=function(){
   const visualY=lavaY>ROWS
-    ? H-Math.max(3,CH*.12)
+    ? H-Math.max(4,CH*.14)
     : Math.max(0,Math.min(H,lavaY*CH));
   const y=visualY;
   const wave=Math.max(1.5,Math.min(4,CH*.12));
@@ -142,18 +133,18 @@ renderLava=function(){
 };
 
 const small=document.querySelector('.logo small');
-if(small)small.textContent='DUEL · V6.4';
+if(small)small.textContent='DUEL · V6.5';
 const versionLabel=document.querySelector('.version');
-if(versionLabel)versionLabel.textContent='VISIBLE SLOW LAVA · UNLIMITED BUILD HEIGHT';
+if(versionLabel)versionLabel.textContent='VISIBLE RISING LAVA · UNLIMITED BUILD HEIGHT';
 const rulesLabel=document.querySelector('.rules');
-if(rulesLabel)rulesLabel.innerHTML='<b>Runner:</b> lava is visible from the start, waits 6 seconds, then rises extremely slowly. Corners are safe; only a broad flat squish kills. Hold either half of the board to move and quick-tap to jump. <b>Block Master:</b> there is no stack-height top-out; the world rebases upward as the structure grows. 7-bag, Hold, SRS and automatic release remain unchanged.';
+if(rulesLabel)rulesLabel.innerHTML='<b>Runner:</b> lava is visible from the start, waits 6 seconds, then visibly rises about one row every 45 seconds. Corners are safe; only a broad flat squish kills. Hold either half of the board to move and quick-tap to jump. <b>Block Master:</b> there is no stack-height top-out; the world rebases upward as the structure grows. 7-bag, Hold, SRS and automatic release remain unchanged.';
 
 const testsBeforeVertical=window.CRUSH_CLIMB_TESTS;
 window.CRUSH_CLIMB_TESTS=()=>{
   const checks=testsBeforeVertical?testsBeforeVertical():[];
-  checks.push(['lava-visible-start',LAVA_START_BELOW>0&&LAVA_START_BELOW<.2]);
-  checks.push(['lava-grace-period',LAVA_GRACE_SECONDS>=3]);
-  checks.push(['lava-extra-slow',LAVA_RISE_SPEED_V64>0&&LAVA_RISE_SPEED_V64<=.0015]);
+  checks.push(['lava-visible-start',LAVA_START_BELOW>0&&LAVA_START_BELOW<=.03]);
+  checks.push(['lava-grace-period',LAVA_GRACE_SECONDS===6]);
+  checks.push(['lava-visible-rise-rate',LAVA_RISE_SPEED_V65>.02&&LAVA_RISE_SPEED_V65<.025]);
   checks.push(['vertical-rebase',typeof rebaseVertical==='function'&&VERTICAL_REBASE_PAD>=4]);
   checks.push(['no-block-topout-layer',lockPiece.toString().includes('rebaseVertical')]);
   checks.push(['world-offset-tracking',typeof window.CC_WORLD_OFFSET==='number']);
