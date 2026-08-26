@@ -8,6 +8,7 @@ export class NetworkDuel{
   }
   static available(){return typeof window!=='undefined'&&typeof window.Peer==='function';}
   makeCode(){const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);return [...bytes].map(value=>ROOM_ALPHABET[value%ROOM_ALPHABET.length]).join('');}
+  makeStartToken(){const bytes=new Uint32Array(2);try{crypto.getRandomValues(bytes);}catch{bytes[0]=Date.now()>>>0;bytes[1]=(this.stateSeq+1)>>>0;}return `v13-${Date.now().toString(36)}-${[...bytes].map(value=>value.toString(36)).join('')}`;}
   hostId(){return `rush-duel-${this.room.toLowerCase()}`;}
   status(message,error=false){this.onStatus({message,error,connected:this.connected,room:this.room,role:this.role,latency:this.latency});}
   cleanup({keepRole=false}={}){
@@ -73,7 +74,7 @@ export class NetworkDuel{
   }
   send(payload){if(!this.connected||!this.conn?.open)return false;try{this.conn.send(payload);return true;}catch{return false;}}
   startHostMatch(){
-    if(this.role!=='host'||!this.connected)return;this.startToken=`v13-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;this.startAcked=false;this.onStart({host:true});
+    if(this.role!=='host'||!this.connected)return;this.startToken=this.makeStartToken();this.startAcked=false;this.onStart({host:true});
     const sync=()=>{if(!this.connected||this.startAcked){clearInterval(this.startTimer);return;}this.sendStart('start');this.broadcast(true);};sync();clearInterval(this.startTimer);this.startTimer=setInterval(sync,500);
   }
   sendStart(type='start'){return this.send({type,protocol:PROTOCOL,token:this.startToken,state:this.game.snapshot(performance.now(),{stateSeq:++this.stateSeq,ackSeq:this.guestAckSeq})});}
@@ -81,11 +82,11 @@ export class NetworkDuel{
     if(this.role!=='guest'||!this.connected||!this.game?.canAct())return false;const predicted=this.applyPredictedInput(action);if(action==='down'&&!predicted)return false;const seq=++this.inputSeq;this.pendingInputs.push({seq,round:this.game.round,action});this.send({type:'input',protocol:PROTOCOL,seq,round:this.game.round,action});return true;
   }
   applyPredictedInput(action){
-    const board=this.game.rival;if(action==='left')return board.move(-1,0);if(action==='right')return board.move(1,0);if(action==='down')return this.game.move(board,0,1,true,performance.now());if(action==='ccw')return board.rotate(false);if(action==='cw')return board.rotate(true);return false;
+    if(action==='drop')return false;if(!['left','right','down','ccw','cw'].includes(action))return false;return this.game.applyCommand('rival',action,performance.now());
   }
   applyHostInput(data){
     const seq=Number(data.seq)||0;if(seq&&seq<=this.guestAckSeq)return;if(data.round&&data.round!==this.game.round){this.guestAckSeq=Math.max(this.guestAckSeq,seq);return;}
-    const board=this.game.rival,action=data.action;if(action==='left')board.move(-1,0);else if(action==='right')board.move(1,0);else if(action==='down')this.game.move(board,0,1,true,performance.now());else if(action==='ccw')board.rotate(false);else if(action==='cw')board.rotate(true);else if(action==='drop')this.game.commit('rival');this.guestAckSeq=Math.max(this.guestAckSeq,seq);this.broadcast(true);
+    const action=data.action;if(['left','right','down','ccw','cw','drop'].includes(action))this.game.applyCommand('rival',action,performance.now());this.guestAckSeq=Math.max(this.guestAckSeq,seq);this.broadcast(true);
   }
   onData(data){
     if(!data||typeof data!=='object'||(data.protocol&&data.protocol!==PROTOCOL))return;
