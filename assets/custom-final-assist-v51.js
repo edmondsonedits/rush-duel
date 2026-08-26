@@ -2,30 +2,26 @@
 'use strict';
 
 const Rush=window.__RUSH_MODULES||{};
-const Board=Rush.Board,SHAPES=Rush.SHAPES||[],ROTATIONS=Rush.ROTATIONS||[];
+const SHAPES=Rush.SHAPES||[],ROTATIONS=Rush.ROTATIONS||[];
 const simulatePlacement=Rush.simulatePlacement,boardFeatures=Rush.boardFeatures;
 const COLS=Rush.COLS||10,ROWS=Rush.ROWS||20;
-if(!Board||SHAPES.length!==7)return;
-
-const NATIVE_PUSH=Array.prototype.push;
-const NATIVE_SHIFT=Array.prototype.shift;
-const originalLock=Board.prototype.lock;
-const QUEUE_MARK=Symbol('customForecastQueueV51');
+const Custom=window.__rushDuelCustom;
+if(SHAPES.length!==7||!Custom||typeof Custom.on!=='function'||typeof Custom.getPlayState!=='function'||typeof Custom.replaceHiddenQueuePiece!=='function')return;
 
 // PLAYER-PROTECTION RULE
 // The Custom Mode NEXT panel displays exactly three upcoming pieces. V51 never
 // changes those visible pieces or the currently active piece. Only queue slots
 // behind the visible three may be replaced by solver-selected helper pieces.
 const VISIBLE_NEXT_COUNT=3;
-const PROTECTED_PIECES=1+VISIBLE_NEXT_COUNT; // active piece + 3 visible NEXT pieces
+const PROTECTED_PIECES=1+VISIBLE_NEXT_COUNT;
 const TOTAL_LOOKAHEAD=12;
 const HARDWARE=Math.max(2,Number(navigator.hardwareConcurrency)||4);
 const WORKER_BUDGET_MS=HARDWARE<=4?160:210;
 const SCRIPT_SRC=document.currentScript?.src||new URL('assets/custom-final-assist-v51.js',location.href).href;
 
 let activeBoard=null;
-let queueRef=null;
-let lastShiftedShape=null;
+let activeSession=0;
+let queueSnapshot=[];
 let assistArmed=false;
 let revision=0;
 let worker=null;
@@ -87,13 +83,14 @@ function protectedSequence(activeShape,queue){
     .slice(0,PROTECTED_PIECES);
 }
 
-function contextStillHidden(context){
-  if(!context||context.revision!==revision)return false;
-  if(context.queue!==queueRef||!Array.isArray(queueRef)||queueRef.length!==5)return false;
-  if(activeBoard?.name!=='CUSTOM'||!bottomThreeRowsOnly(activeBoard.grid))return false;
-  if(activeBoard.active&&activeBoard.active.shapeIndex!==context.activeShape)return false;
-  for(let i=0;i<VISIBLE_NEXT_COUNT;i++)if(queueRef[i]!==context.visible[i])return false;
-  return true;
+function currentContextState(context){
+  if(!context||context.revision!==revision)return null;
+  const state=Custom.getPlayState();
+  if(!state||state.status!=='active'||state.session!==context.session||state.session!==activeSession)return null;
+  if(state.board!==activeBoard||activeBoard?.name!=='CUSTOM'||!bottomThreeRowsOnly(activeBoard.grid))return null;
+  if(state.activeShape!==context.activeShape||!Array.isArray(state.queue)||state.queue.length!==5||!isShapeArray(state.queue))return null;
+  for(let i=0;i<VISIBLE_NEXT_COUNT;i++)if(state.queue[i]!==context.visible[i])return null;
+  return state;
 }
 
 function startWorker(requestRevision,rows,protectedQueue){
@@ -108,10 +105,7 @@ function startWorker(requestRevision,rows,protectedQueue){
       stopWorker();
       scheduleFallback(requestRevision);
     };
-    worker.postMessage({
-      type:'plan',revision:requestRevision,rows,queue:protectedQueue,
-      budgetMs:WORKER_BUDGET_MS,lookahead:TOTAL_LOOKAHEAD
-    });
+    worker.postMessage({type:'plan',revision:requestRevision,rows,queue:protectedQueue,budgetMs:WORKER_BUDGET_MS,lookahead:TOTAL_LOOKAHEAD});
   }catch(error){
     lastError=String(error?.message||error);
     planning=false;
@@ -120,41 +114,34 @@ function startWorker(requestRevision,rows,protectedQueue){
   }
 }
 
-function requestPlan(activeShape,queue){
-  if(!assistArmed||!activeBoard||!bottomThreeRowsOnly(activeBoard.grid))return;
+function requestPlan(activeShape,queue,session){
+  if(!assistArmed||!activeBoard||session!==activeSession||!bottomThreeRowsOnly(activeBoard.grid))return;
   if(!Array.isArray(queue)||queue.length!==5||!isShapeArray(queue))return;
   const protectedQueue=protectedSequence(activeShape,queue);
   if(protectedQueue.length!==PROTECTED_PIECES)return;
 
   revision++;
   const requestRevision=revision;
-  queueRef=queue;
+  queueSnapshot=queue.slice();
   planning=true;
   requestPending=true;
   forecastExact=false;
   lastPlan=null;
   lastError='';
-  planContext={
-    revision:requestRevision,
-    queue,
-    activeShape,
-    visible:queue.slice(0,VISIBLE_NEXT_COUNT),
-    protectedQueue:protectedQueue.slice()
-  };
+  planContext={revision:requestRevision,session,activeShape,visible:queue.slice(0,VISIBLE_NEXT_COUNT),protectedQueue:protectedQueue.slice()};
   startWorker(requestRevision,gridRows(activeBoard.grid),protectedQueue);
 }
 
 function applyHiddenHelpers(plan,context){
-  if(!contextStillHidden(context))return false;
+  const state=currentContextState(context);
+  if(!state)return false;
   const helpers=(plan?.pieces||[]).filter(isShape);
   if(!helpers.length)return true;
-
-  // queue[0..2] are visible in NEXT. queue[3] and queue[4] are hidden and can
-  // safely be selected by the solver before the player ever sees them.
   let helperIndex=0;
-  for(let queueIndex=VISIBLE_NEXT_COUNT;queueIndex<queueRef.length&&helperIndex<helpers.length;queueIndex++){
-    queueRef[queueIndex]=helpers[helperIndex++];
+  for(let queueIndex=VISIBLE_NEXT_COUNT;queueIndex<state.queue.length&&helperIndex<helpers.length;queueIndex++){
+    if(!Custom.replaceHiddenQueuePiece(context.session,queueIndex,helpers[helperIndex++]))return false;
   }
+  queueSnapshot=Custom.getPlayState()?.queue||state.queue.slice();
   return true;
 }
 
@@ -175,10 +162,6 @@ function handleWorkerMessage(message){
   forecastExact=!!message.plan.exact;
   const context=planContext;
   stopWorker();
-
-  // A result is accepted only while the same active piece and same three visible
-  // NEXT pieces are still on screen. This prevents any already-seen piece from
-  // changing if the player locks unusually quickly.
   applyHiddenHelpers(message.plan,context);
 }
 
@@ -216,11 +199,12 @@ function scheduleFallback(requestRevision){
   setTimeout(()=>{
     if(requestRevision!==revision){requestPending=false;return;}
     requestPending=false;
-    const context=planContext;
-    if(!contextStillHidden(context))return;
+    const context=planContext,state=currentContextState(context);
+    if(!state)return;
     const helper=chooseFallbackPiece(activeBoard.grid);
     if(!isShape(helper))return;
-    queueRef[VISIBLE_NEXT_COUNT]=helper;
+    if(!Custom.replaceHiddenQueuePiece(context.session,VISIBLE_NEXT_COUNT,helper))return;
+    queueSnapshot=Custom.getPlayState()?.queue||state.queue.slice();
     lastPlan={pieces:[helper],exact:false,lookahead:1,elapsed:0,fallback:true};
   },0);
 }
@@ -237,60 +221,37 @@ function clearPlanningState({keepArmed=false}={}){
   if(!keepArmed)assistArmed=false;
 }
 
-function isLikelyCustomQueue(array){
-  return document.body.dataset.screen==='custom-play'&&
-    activeBoard&&activeBoard.name==='CUSTOM'&&
-    array.length>=4&&array.length<=5&&isShapeArray(array);
+function resetForSession(session=0){
+  clearPlanningState();activeSession=session;activeBoard=null;queueSnapshot=[];
+  const state=Custom.getPlayState();if(state&&state.session===session){activeBoard=state.board;queueSnapshot=state.queue.slice();}
 }
 
-Array.prototype.shift=function(...args){
-  if(isLikelyCustomQueue(this)&&this.length===5){
-    queueRef=this;
-    this[QUEUE_MARK]=true;
-    lastShiftedShape=this[0];
-  }
-  return NATIVE_SHIFT.apply(this,args);
-};
-
-Array.prototype.push=function(...items){
-  const isQueueAppend=!!this[QUEUE_MARK]&&
-    this.length===4&&items.length===1&&isShape(items[0]);
-  if(!isQueueAppend)return NATIVE_PUSH.apply(this,items);
-
-  queueRef=this;
-  this[QUEUE_MARK]=true;
-  const result=NATIVE_PUSH.apply(this,items);
-
-  // Search begins as soon as the next active piece is selected, giving the worker
-  // the player's whole placement window to choose the two hidden queue pieces.
-  if(assistArmed&&isShape(lastShiftedShape)&&bottomThreeRowsOnly(activeBoard.grid)){
-    requestPlan(lastShiftedShape,this);
-  }
-  return result;
-};
-
-Board.prototype.lock=function(){
-  const result=originalLock.call(this);
-  if(this.name!=='CUSTOM')return result;
-
-  activeBoard=this;
-
-  // Replan from the exact board created by the player's real placement after every
-  // lock; V51's worker now uses the same multi-line-clear semantics as Board.lock.
+Custom.on('challengeStarted',({session})=>resetForSession(session));
+Custom.on('pieceLocked',({session})=>{
+  const state=Custom.getPlayState();
+  if(!state||state.session!==session)return;
+  activeSession=session;activeBoard=state.board;queueSnapshot=state.queue.slice();
   clearPlanningState({keepArmed:true});
-  assistArmed=bottomThreeRowsOnly(this.grid);
-  if(!assistArmed)lastShiftedShape=null;
-  return result;
-};
+  assistArmed=bottomThreeRowsOnly(activeBoard.grid);
+});
+Custom.on('pieceSpawned',({session,shape})=>{
+  const state=Custom.getPlayState();
+  if(!state||state.session!==session)return;
+  activeSession=session;activeBoard=state.board;queueSnapshot=state.queue.slice();
+  if(assistArmed&&isShape(shape)&&bottomThreeRowsOnly(activeBoard.grid))requestPlan(shape,state.queue,session);
+});
+Custom.on('finished',({session})=>{if(session===activeSession)resetForSession(0);});
+Custom.on('stopped',({session})=>{if(session===activeSession)resetForSession(0);});
 
 removeForecastUi();
 
 window.__rushDuelFinalAssist={
   version:51,
+  integration:'custom-mode-lifecycle',
   active:()=>assistArmed&&(planning||!!lastPlan),
   exact:()=>forecastExact,
   planning:()=>planning,
-  queue:()=>queueRef?.slice?.()||[],
+  queue:()=>Custom.getPlayState()?.queue?.slice?.()||queueSnapshot.slice(),
   protected:()=>planContext?.protectedQueue?.slice?.()||[],
   visibleCount:()=>VISIBLE_NEXT_COUNT,
   lookahead:()=>TOTAL_LOOKAHEAD,
