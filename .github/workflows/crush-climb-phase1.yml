@@ -35,3 +35,6 @@ jobs:
 
       - name: Vitest regression suite
         run: npm test
+
+      - name: Vite build
+        run: npm run build
