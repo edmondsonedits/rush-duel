@@ -23,7 +23,7 @@ jobs:
           node --check crush-climb/vertical.js
       - name: Check playable wiring
         run: |
-          grep -q 'Crush Climb Duel V6.4' crush-climb/index.html
+          grep -q 'Crush Climb Duel V6.5' crush-climb/index.html
           grep -q 'core.js' crush-climb/index.html
           grep -q 'runner.js' crush-climb/index.html
           grep -q 'ai.js' crush-climb/index.html
@@ -31,6 +31,6 @@ jobs:
           grep -q 'features.js' crush-climb/index.html
           grep -q 'vertical.js' crush-climb/index.html
           grep -q 'LAVA_GRACE_SECONDS=6' crush-climb/vertical.js
-          grep -q 'LAVA_RISE_SPEED_V64=.0015' crush-climb/vertical.js
+          grep -q 'LAVA_RISE_SPEED_V65=.0222222' crush-climb/vertical.js
           grep -q 'rebaseVertical' crush-climb/vertical.js
           test -s crush-climb/style.css
