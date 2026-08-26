@@ -1,18 +1,23 @@
 import {Board,COLS,ROWS,SHAPES,DIFFICULTIES,SETTINGS,cloneMatrix,rotatePieceMatrix,boardFeatures,chooseBotPlan,canPlaceGrid} from './core-rules-v13.js';
+import {SeededRandom,createSessionSeed,deriveSeed,normalizeSeed} from './randomizer.js';
 const SOFT_DROP_GRACE_MS=1000;
 export class RushGame{
   constructor(onEvent=()=>{}){
-    this.onEvent=onEvent;this.player=new Board('YOU');this.rival=new Board('RIVAL');this.mode='bot';this.difficulty='easy';this.phase='idle';this.started=false;this.paused=false;this.winner='';this.round=0;this.bag=[];this.queue=[];this.currentShape=0;this.matchStart=0;this.roundStart=0;this.deadline=Infinity;this.countdownEnd=0;this.gravityAcc=0;this.gravityInterval=SETTINGS.baseGravity;this.currentRoundDuration=SETTINGS.baseRound;this.autoNextAt=0;this.level=1;this.rushWins=0;this.rivalRushes=0;this.playerRushReadyAt=0;this.rivalRushReadyAt=0;this.playerSoftDropReadyAt=0;this.rivalSoftDropReadyAt=0;this.groundedAt=0;this.lockResets=0;this.settle={player:{at:0,signature:''},rival:{at:0,signature:''}};this.message='';this.messageUntil=0;
+    this.onEvent=onEvent;this.player=new Board('YOU');this.rival=new Board('RIVAL');this.mode='bot';this.difficulty='easy';this.phase='idle';this.started=false;this.paused=false;this.winner='';this.round=0;this.bag=[];this.queue=[];this.currentShape=0;this.matchStart=0;this.roundStart=0;this.deadline=Infinity;this.countdownEnd=0;this.gravityAcc=0;this.gravityInterval=SETTINGS.baseGravity;this.currentRoundDuration=SETTINGS.baseRound;this.autoNextAt=0;this.level=1;this.rushWins=0;this.rivalRushes=0;this.playerRushReadyAt=0;this.rivalRushReadyAt=0;this.playerSoftDropReadyAt=0;this.rivalSoftDropReadyAt=0;this.groundedAt=0;this.lockResets=0;this.settle={player:{at:0,signature:''},rival:{at:0,signature:''}};this.message='';this.messageUntil=0;this.configureSeed(createSessionSeed());
   }
   emit(type,data={}){this.onEvent(type,data);}
   setMode(mode,difficulty=this.difficulty){this.mode=mode;this.difficulty=difficulty;}
+  configureSeed(seed){
+    this.seed=normalizeSeed(seed);this.pieceRng=new SeededRandom(deriveSeed(this.seed,'pieces'));this.botRng=new SeededRandom(deriveSeed(this.seed,'bot'));return this.seed;
+  }
+  random(stream='bot'){return (stream==='pieces'?this.pieceRng:this.botRng).next();}
   nextShape(){
-    if(!this.bag.length){this.bag=[0,1,2,3,4,5,6];for(let i=this.bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[this.bag[i],this.bag[j]]=[this.bag[j],this.bag[i]];}}
+    if(!this.bag.length){this.bag=[0,1,2,3,4,5,6];for(let i=this.bag.length-1;i>0;i--){const j=this.pieceRng.int(i+1);[this.bag[i],this.bag[j]]=[this.bag[j],this.bag[i]];}}
     return this.bag.shift();
   }
   fillQueue(){while(this.queue.length<5)this.queue.push(this.nextShape());}
-  reset(now=performance.now()){
-    this.player.reset();this.rival.reset();this.bag=[];this.queue=[];this.round=0;this.rushWins=0;this.rivalRushes=0;this.winner='';this.paused=false;this.started=true;this.phase='countdown';this.matchStart=now;this.gravityAcc=0;this.gravityInterval=SETTINGS.baseGravity;this.currentRoundDuration=SETTINGS.baseRound;this.level=1;this.playerRushReadyAt=0;this.rivalRushReadyAt=0;this.playerSoftDropReadyAt=0;this.rivalSoftDropReadyAt=0;this.groundedAt=0;this.lockResets=0;this.message='GET READY';this.messageUntil=now+SETTINGS.countdown;this.fillQueue();this.startRound(now,true);this.emit('reset');
+  reset(now=performance.now(),seed=createSessionSeed()){
+    this.configureSeed(seed);this.player.reset();this.rival.reset();this.bag=[];this.queue=[];this.round=0;this.rushWins=0;this.rivalRushes=0;this.winner='';this.paused=false;this.started=true;this.phase='countdown';this.matchStart=now;this.gravityAcc=0;this.gravityInterval=SETTINGS.baseGravity;this.currentRoundDuration=SETTINGS.baseRound;this.level=1;this.playerRushReadyAt=0;this.rivalRushReadyAt=0;this.playerSoftDropReadyAt=0;this.rivalSoftDropReadyAt=0;this.groundedAt=0;this.lockResets=0;this.message='GET READY';this.messageUntil=now+SETTINGS.countdown;this.fillQueue();this.startRound(now,true);this.emit('reset',{seed:this.seed});
   }
   startRound(now,countdown=false){
     if(this.player.toppedOut||(this.mode!=='classic'&&this.rival.toppedOut)){this.finish();return;}
@@ -43,8 +48,19 @@ export class RushGame{
   move(board,dx,dy,scoreSoft=false,now=performance.now()){
     if(!this.canAct()||(scoreSoft&&dy>0&&!this.canSoftDrop(board,now)))return false;const ok=board.move(dx,dy);if(ok&&scoreSoft&&dy>0)board.score++;if(board===this.player&&this.mode==='classic')this.updateClassicGrounding(now,dx!==0);return ok;
   }
-  rotate(board,cw=true){
-    if(!this.canAct())return false;const ok=board.rotate(cw);if(ok&&board===this.player&&this.mode==='classic')this.updateClassicGrounding(performance.now(),true);return ok;
+  rotate(board,cw=true,now=performance.now()){
+    if(!this.canAct())return false;const ok=board.rotate(cw);if(ok&&board===this.player&&this.mode==='classic')this.updateClassicGrounding(now,true);return ok;
+  }
+  applyCommand(side,action,now=performance.now()){
+    const board=side==='rival'?this.rival:this.player;
+    if(action==='left')return this.move(board,-1,0,false,now);
+    if(action==='right')return this.move(board,1,0,false,now);
+    if(action==='down')return this.move(board,0,1,true,now);
+    if(action==='ccw')return this.rotate(board,false,now);
+    if(action==='cw')return this.rotate(board,true,now);
+    if(action==='drop')return this.commit(side==='rival'?(this.mode==='bot'?'bot':'rival'):'player',now);
+    if(action==='pause'&&side!=='rival')return this.togglePause(now);
+    return false;
   }
   updateClassicGrounding(now,allowReset=false){
     if(this.mode!=='classic'||!this.player.active)return;const grounded=!this.player.canPlace(this.player.active.m,this.player.active.x,this.player.active.y+1);
@@ -115,10 +131,10 @@ export class RushGame{
     const playerDead=this.player.toppedOut,rivalDead=this.rival.toppedOut;let winner='draw';if(rivalDead&&!playerDead)winner='player';else if(playerDead&&!rivalDead)winner='rival';else if(this.player.lines!==this.rival.lines)winner=this.player.lines>this.rival.lines?'player':'rival';else if(this.player.score!==this.rival.score)winner=this.player.score>this.rival.score?'player':'rival';this.winner=winner;this.emit('finish',{winner});
   }
   snapshot(now=performance.now(),extra={}){
-    return {type:'state',protocol:13,started:this.started,mode:this.mode,phase:this.phase,paused:this.paused,winner:this.winner,round:this.round,currentShape:this.currentShape,queue:this.queue.slice(),player:this.player.pack(),rival:this.rival.pack(),rushWins:this.rushWins,rivalRushes:this.rivalRushes,playerRushRemaining:this.rushRemaining('player',now),rivalRushRemaining:this.rushRemaining('rival',now),playerSoftDropRemaining:this.softDropRemaining(this.player,now),rivalSoftDropRemaining:this.softDropRemaining(this.rival,now),remaining:Number.isFinite(this.deadline)?Math.max(0,this.deadline-now):null,countdownRemaining:Math.max(0,this.countdownEnd-now),roundDuration:this.currentRoundDuration,gravityInterval:this.gravityInterval,gravityAcc:this.gravityAcc,message:this.message,messageRemaining:Math.max(0,this.messageUntil-now),nextRemaining:Math.max(0,this.autoNextAt-now),level:this.level,...extra};
+    return {type:'state',protocol:13,seed:this.seed,rng:{pieces:this.pieceRng.state,bot:this.botRng.state},bag:this.bag.slice(),started:this.started,mode:this.mode,phase:this.phase,paused:this.paused,winner:this.winner,round:this.round,currentShape:this.currentShape,queue:this.queue.slice(),player:this.player.pack(),rival:this.rival.pack(),rushWins:this.rushWins,rivalRushes:this.rivalRushes,playerRushRemaining:this.rushRemaining('player',now),rivalRushRemaining:this.rushRemaining('rival',now),playerSoftDropRemaining:this.softDropRemaining(this.player,now),rivalSoftDropRemaining:this.softDropRemaining(this.rival,now),remaining:Number.isFinite(this.deadline)?Math.max(0,this.deadline-now):null,countdownRemaining:Math.max(0,this.countdownEnd-now),roundDuration:this.currentRoundDuration,gravityInterval:this.gravityInterval,gravityAcc:this.gravityAcc,message:this.message,messageRemaining:Math.max(0,this.messageUntil-now),nextRemaining:Math.max(0,this.autoNextAt-now),level:this.level,...extra};
   }
   applySnapshot(state,now=performance.now()){
-    if(!state||state.protocol!==13)return false;this.mode=state.mode||'online';this.started=state.started;this.phase=state.phase;this.paused=state.paused;this.winner=state.winner;this.round=state.round;this.currentShape=state.currentShape;this.queue=state.queue.slice();this.player.unpack(state.player);this.rival.unpack(state.rival);this.rushWins=state.rushWins;this.rivalRushes=state.rivalRushes;this.playerRushReadyAt=now+(state.playerRushRemaining||0);this.rivalRushReadyAt=now+(state.rivalRushRemaining||0);this.playerSoftDropReadyAt=now+(state.playerSoftDropRemaining||0);this.rivalSoftDropReadyAt=now+(state.rivalSoftDropRemaining||0);this.deadline=Number.isFinite(state.remaining)?now+state.remaining:Infinity;this.countdownEnd=now+(state.countdownRemaining||0);this.currentRoundDuration=state.roundDuration;this.gravityInterval=state.gravityInterval;this.gravityAcc=state.gravityAcc;this.message=state.message||'';this.messageUntil=now+(state.messageRemaining||0);this.autoNextAt=now+(state.nextRemaining||0);this.level=state.level||1;return true;
+    if(!state||state.protocol!==13)return false;if(state.seed!==undefined)this.configureSeed(state.seed);if(state.rng?.pieces!==undefined)this.pieceRng.setState(state.rng.pieces);if(state.rng?.bot!==undefined)this.botRng.setState(state.rng.bot);this.bag=Array.isArray(state.bag)?state.bag.slice():[];this.mode=state.mode||'online';this.started=state.started;this.phase=state.phase;this.paused=state.paused;this.winner=state.winner;this.round=state.round;this.currentShape=state.currentShape;this.queue=state.queue.slice();this.player.unpack(state.player);this.rival.unpack(state.rival);this.rushWins=state.rushWins;this.rivalRushes=state.rivalRushes;this.playerRushReadyAt=now+(state.playerRushRemaining||0);this.rivalRushReadyAt=now+(state.rivalRushRemaining||0);this.playerSoftDropReadyAt=now+(state.playerSoftDropRemaining||0);this.rivalSoftDropReadyAt=now+(state.rivalSoftDropRemaining||0);this.deadline=Number.isFinite(state.remaining)?now+state.remaining:Infinity;this.countdownEnd=now+(state.countdownRemaining||0);this.currentRoundDuration=state.roundDuration;this.gravityInterval=state.gravityInterval;this.gravityAcc=state.gravityAcc;this.message=state.message||'';this.messageUntil=now+(state.messageRemaining||0);this.autoNextAt=now+(state.nextRemaining||0);this.level=state.level||1;return true;
   }
 }
 
@@ -128,9 +144,12 @@ export function runCoreTests(){
     let cycle=cloneMatrix(SHAPES[5].m);for(let i=0;i<4;i++)cycle=rotatePieceMatrix(cycle,5,true);check('rotation cycle',cycle.flat().join('')===SHAPES[5].m.flat().join(''));
     const board=new Board();board.spawn(0);check('wall collision',!board.canPlace(board.active.m,-4,0));
     const holeGrid=Array.from({length:ROWS},()=>Array(COLS).fill(null));holeGrid[17][0]='#';holeGrid[18][0]=null;holeGrid[19][0]='#';const metrics=boardFeatures(holeGrid);check('hole count',metrics.holes===1,JSON.stringify(metrics));check('blocks above holes',metrics.blocksAboveHoles===1,JSON.stringify(metrics));
-    const game=new RushGame();game.mode='bot';game.difficulty='hard';game.reset(0);game.beginActive(3000);const snapshot=game.snapshot(3000);const copy=new RushGame();check('snapshot applies',copy.applySnapshot(snapshot,3000)&&copy.round===game.round&&copy.player.active?.shapeIndex===game.player.active?.shapeIndex);
+    const sequenceFor=seed=>{const seeded=new RushGame();seeded.setMode('classic');seeded.reset(0,seed);const sequence=[seeded.currentShape,...seeded.queue];while(sequence.length<14)sequence.push(seeded.nextShape());return sequence;};
+    const sequenceA=sequenceFor(123456789),sequenceB=sequenceFor(123456789),sequenceC=sequenceFor(987654321);check('seeded piece sequence is reproducible',sequenceA.join(',')===sequenceB.join(','));check('different seeds produce different sequence',sequenceA.join(',')!==sequenceC.join(','));check('seven-bag contains each tetromino once',sequenceA.slice(0,7).slice().sort((a,b)=>a-b).join(',')==='0,1,2,3,4,5,6'&&sequenceA.slice(7,14).slice().sort((a,b)=>a-b).join(',')==='0,1,2,3,4,5,6');
+    const game=new RushGame();game.mode='bot';game.difficulty='hard';game.reset(0,424242);game.beginActive(3000);const snapshot=game.snapshot(3000);const copy=new RushGame();check('snapshot applies',copy.applySnapshot(snapshot,3000)&&copy.round===game.round&&copy.player.active?.shapeIndex===game.player.active?.shapeIndex);check('snapshot preserves randomizer state',copy.nextShape()===game.nextShape());
     const plan=chooseBotPlan({grid:game.rival.grid,shapeIndex:game.currentShape,difficulty:'hard',preview:game.queue.slice(0,2),opponentHeight:0,random:()=>.5});check('expert plan is legal',!!plan&&canPlaceGrid(game.rival.grid,plan.m,plan.x,-3));
-    const graceGame=new RushGame();graceGame.mode='classic';graceGame.reset(0);graceGame.beginActive(3000);graceGame.startRound(4000);const spawnY=graceGame.player.active.y;check('soft drop is blocked for one second after spawn',!graceGame.move(graceGame.player,0,1,true,4999)&&graceGame.player.active.y===spawnY);check('held soft drop resumes after spawn grace',graceGame.move(graceGame.player,0,1,true,5000)&&graceGame.player.active.y===spawnY+1);
+    const commandGame=new RushGame();commandGame.setMode('classic');commandGame.reset(0,99);commandGame.beginActive(3000);const startX=commandGame.player.active.x;check('normalized command moves active piece',commandGame.applyCommand('player','left',3000)&&commandGame.player.active.x===startX-1);check('unknown command is rejected',!commandGame.applyCommand('player','not-a-command',3000));
+    const graceGame=new RushGame();graceGame.mode='classic';graceGame.reset(0,7);graceGame.beginActive(3000);graceGame.startRound(4000);const spawnY=graceGame.player.active.y;check('soft drop is blocked for one second after spawn',!graceGame.move(graceGame.player,0,1,true,4999)&&graceGame.player.active.y===spawnY);check('held soft drop resumes after spawn grace',graceGame.move(graceGame.player,0,1,true,5000)&&graceGame.player.active.y===spawnY+1);
     check('difficulty pacing',DIFFICULTIES.easy.step>=240&&DIFFICULTIES.medium.step>=190&&DIFFICULTIES.hard.step>=110&&DIFFICULTIES.impossible.step>=75);
   }catch(error){check('test runner',false,error?.message||String(error));}
   return {pass:tests.every(test=>test.pass),tests};

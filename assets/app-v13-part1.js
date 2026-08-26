@@ -32,25 +32,30 @@ class BotAgent{
   resolve(message){
     const callback=this.pending.get(message.id);if(!callback)return;this.pending.delete(message.id);if(message.ok){this.lastPlanMs=message.elapsed||0;callback(message.plan);}else callback(null);
   }
+  fallbackPayload(payload){
+    if(!payload||!['hard','impossible'].includes(payload.difficulty))return payload;
+    return {...payload,difficulty:'medium'};
+  }
   request(payload){
-    if(!this.worker)return Promise.resolve(chooseBotPlan(payload));
-    const id=++this.requestId;return new Promise(resolve=>{this.pending.set(id,resolve);this.worker.postMessage({id,payload});setTimeout(()=>{if(this.pending.has(id)){this.pending.delete(id);resolve(chooseBotPlan(payload));}},900);});
+    if(!this.worker)return Promise.resolve(chooseBotPlan(this.fallbackPayload(payload)));
+    const id=++this.requestId;return new Promise(resolve=>{this.pending.set(id,resolve);this.worker.postMessage({id,payload});setTimeout(()=>{if(this.pending.has(id)){this.pending.delete(id);resolve(chooseBotPlan(this.fallbackPayload(payload)));}},900);});
   }
   async begin(now){
     this.reset();if(game.mode!=='bot'||!game.rival.active)return;this.planning=true;const profile=DIFFICULTIES[game.difficulty];
     const payload={grid:game.rival.grid.map(row=>row.slice()),shapeIndex:game.rival.active.shapeIndex,difficulty:game.difficulty,preview:game.queue.slice(0,3),opponentHeight:game.player.maxHeight};
     this.plan=await this.request(payload);this.planning=false;if(game.mode!=='bot'||game.phase!=='active'||!game.rival.active)return;
-    this.willRush=game.difficulty==='impossible'?(this.plan?.lines>0||game.player.maxHeight>=10||Math.random()<profile.forceChance):game.difficulty==='hard'?(this.plan?.lines>=2||game.player.maxHeight>=13||Math.random()<profile.forceChance):Math.random()<profile.forceChance;
+    const rushRoll=game.random('bot');
+    this.willRush=game.difficulty==='impossible'?(this.plan?.lines>0||game.player.maxHeight>=10||rushRoll<profile.forceChance):game.difficulty==='hard'?(this.plan?.lines>=2||game.player.maxHeight>=13||rushRoll<profile.forceChance):rushRoll<profile.forceChance;
     this.nextAction=Math.max(performance.now(),now)+profile.reaction;
   }
   replan(){if(game.mode==='bot'&&game.phase==='active')this.begin(performance.now());}
   update(now){
     if(game.mode!=='bot'||game.phase!=='active'||!game.rival.active||this.planning||!this.plan||now<this.nextAction)return;
     const profile=DIFFICULTIES[game.difficulty],board=game.rival;
-    if(board.active.rot!==this.plan.rot){const distance=(this.plan.rot-board.active.rot+4)%4;if(!game.rotate(board,distance!==3))return this.replan();this.nextAction=now+profile.step;return;}
-    if(board.active.x!==this.plan.x){if(!game.move(board,Math.sign(this.plan.x-board.active.x),0))return this.replan();this.nextAction=now+profile.step;return;}
-    if(!this.aligned){this.aligned=true;if(this.willRush){const base=game.difficulty==='impossible'?[540,950]:game.difficulty==='hard'?[1050,1750]:profile.drop||[1900,2750];let delay=base[0]+Math.random()*(base[1]-base[0]);if(board.maxHeight>13)delay*=.72;if(this.plan.lines>=2)delay*=.75;this.readyAt=now+delay;}}
-    if(this.willRush&&now>=this.readyAt&&game.canRush('rival',now))game.commit('bot',now);
+    if(board.active.rot!==this.plan.rot){const distance=(this.plan.rot-board.active.rot+4)%4;if(!game.applyCommand('rival',distance!==3?'cw':'ccw',now))return this.replan();this.nextAction=now+profile.step;return;}
+    if(board.active.x!==this.plan.x){if(!game.applyCommand('rival',this.plan.x>board.active.x?'right':'left',now))return this.replan();this.nextAction=now+profile.step;return;}
+    if(!this.aligned){this.aligned=true;if(this.willRush){const base=game.difficulty==='impossible'?[540,950]:game.difficulty==='hard'?[1050,1750]:profile.drop||[1900,2750];let delay=base[0]+game.random('bot')*(base[1]-base[0]);if(board.maxHeight>13)delay*=.72;if(this.plan.lines>=2)delay*=.75;this.readyAt=now+delay;}}
+    if(this.willRush&&now>=this.readyAt&&game.canRush('rival',now))game.applyCommand('rival','drop',now);
   }
 }
 const botAgent=new BotAgent();

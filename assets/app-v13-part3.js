@@ -3,7 +3,7 @@ const DAS=115,ARR=32,SOFT=22;
 const softDropButton=document.querySelector('[data-action="down"]'),softDropHint=softDropButton?.querySelector('small');
 function applyAction(action,{predicted=false}={}){
   if(!game.started||activeScreen!=='game')return false;if(game.mode==='online'&&action==='pause')return false;if(game.mode==='online'&&network.role==='guest'&&!predicted)return network.sendInput(action);
-  let changed=false;if(action==='left')changed=game.move(game.player,-1,0);else if(action==='right')changed=game.move(game.player,1,0);else if(action==='down')changed=game.move(game.player,0,1,true,performance.now());else if(action==='ccw')changed=game.rotate(game.player,false);else if(action==='cw')changed=game.rotate(game.player,true);else if(action==='drop'){navigator.vibrate?.(8);changed=game.commit('player');}else if(action==='pause')changed=game.togglePause();
+  const now=performance.now();if(action==='drop')navigator.vibrate?.(8);const changed=game.applyCommand('player',action,now);
   if(changed){if(['left','right'].includes(action))playTone('move');else if(action==='down')playTone('soft');else if(['ccw','cw'].includes(action))playTone('rotate');if(game.mode==='online'&&network.role==='host')network.broadcast(true);}return changed;
 }
 function processHeld(now){for(const source of ['key','touch']){const horizontal=held[source].horizontal;if(horizontal&&held[source][horizontal]&&now>=repeat[source][horizontal]){applyAction(horizontal);repeat[source][horizontal]=now+ARR;}if(held[source].down&&now>=repeat[source].down){applyAction('down');repeat[source].down=now+SOFT;}}}
@@ -41,6 +41,7 @@ function runAppTests(){
     check('online transport loaded',NetworkDuel.available(),'window.Peer missing');
     check('responsive board size',29*ROWS/620>=.93);
     check('soft-drop spawn grace is exposed',typeof game.softDropRemaining==='function'&&typeof game.canSoftDrop==='function');
+    check('normalized command API is exposed',typeof game.applyCommand==='function');
     check('difficulty ordering',DIFFICULTIES.easy.forceChance<DIFFICULTIES.medium.forceChance&&DIFFICULTIES.medium.forceChance<DIFFICULTIES.hard.forceChance&&DIFFICULTIES.hard.forceChance<DIFFICULTIES.impossible.forceChance);
     const ids=[...document.querySelectorAll('[id]')].map(element=>element.id),duplicates=ids.filter((id,index)=>ids.indexOf(id)!==index);check('unique interface ids',duplicates.length===0,duplicates.join(','));
   }catch(error){check('app test runner',false,error?.message||String(error));}
