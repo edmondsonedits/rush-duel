@@ -1,0 +1,20 @@
+{
+  "name": "crush-climb-duel",
+  "private": true,
+  "version": "0.1.0-phase1",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^7.1.3",
+    "vitest": "^3.2.4"
+  }
+}
