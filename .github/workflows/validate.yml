@@ -22,6 +22,8 @@ jobs:
         run: node --check assets/story-playtest-v80.js && node --check assets/story-production-v80.js
       - name: Validate production build
         run: node tests/validate.mjs && node tests/validate-story-editor.mjs && node tests/story-curriculum-validate.mjs
+      - name: Validate Custom Assist architecture
+        run: node tests/custom-assist-architecture.mjs
       - name: Validate Story strategy foundation
         run: node tests/story-playtest-v76-strategy.mjs
       - name: Validate continuous Story foundation
