@@ -20,16 +20,16 @@ jobs:
           node --check crush-climb/ai.js
           node --check crush-climb/render.js
           node --check crush-climb/features.js
+          node --check crush-climb/vertical.js
       - name: Check playable wiring
         run: |
-          grep -q 'Crush Climb Duel V6.2' crush-climb/index.html
+          grep -q 'Crush Climb Duel V6.3' crush-climb/index.html
           grep -q 'core.js' crush-climb/index.html
           grep -q 'runner.js' crush-climb/index.html
           grep -q 'ai.js' crush-climb/index.html
           grep -q 'render.js' crush-climb/index.html
           grep -q 'features.js' crush-climb/index.html
-          grep -q 'ARENA_COLS' crush-climb/features.js
-          grep -q 'LAVA_RISE_SPEED' crush-climb/features.js
-          grep -q 'FLAT_CRUSH_COVERAGE' crush-climb/features.js
-          grep -q 'beginBoardTouch' crush-climb/features.js
+          grep -q 'vertical.js' crush-climb/index.html
+          grep -q 'LOWER_LAVA_START=1.0' crush-climb/vertical.js
+          grep -q 'rebaseVertical' crush-climb/vertical.js
           test -s crush-climb/style.css
