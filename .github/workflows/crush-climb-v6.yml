@@ -1,0 +1,29 @@
+name: Validate Crush Climb V6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crush-climb/**'
+      - '.github/workflows/crush-climb-v6.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check crush-climb/core.js
+          node --check crush-climb/runner.js
+          node --check crush-climb/ai.js
+          node --check crush-climb/render.js
+      - name: Check playable wiring
+        run: |
+          grep -q 'Crush Climb Duel V6' crush-climb/index.html
+          grep -q 'core.js' crush-climb/index.html
+          grep -q 'runner.js' crush-climb/index.html
+          grep -q 'ai.js' crush-climb/index.html
+          grep -q 'render.js' crush-climb/index.html
+          test -s crush-climb/style.css
