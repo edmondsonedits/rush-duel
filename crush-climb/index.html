@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#060817" />
+<title>Crush Climb Duel V6</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+<section id="menuScreen" class="screen active">
+  <div class="logo">CRUSH<br>CLIMB<small>DUEL · V6</small></div>
+  <div class="tag">Build the mountain or survive it. Tetris pieces fall automatically while a runner climbs the structure in real time.</div>
+  <div class="card">
+    <div class="sectionTitle">Choose your role</div>
+    <div class="grid2">
+      <button class="choice selected" data-role="runner">🏃 RUNNER<span>Climb, wall-jump and escape the falling pieces.</span></button>
+      <button class="choice" data-role="block">🧱 BLOCK MASTER<span>Plan legal placements, build traps and clear lines.</span></button>
+    </div>
+    <div class="sectionTitle" style="margin-top:14px">Bot difficulty</div>
+    <div class="diffs">
+      <button class="difficulty selected" data-diff="easy">Easy</button>
+      <button class="difficulty" data-diff="medium">Medium</button>
+      <button class="difficulty" data-diff="hard">Hard</button>
+      <button class="difficulty" data-diff="impossible">Impossible</button>
+    </div>
+    <button id="startBtn" class="bigbtn">START DUEL</button>
+    <div class="rules"><b>Runner:</b> touch is safe; only real downward compression kills you. Hold toward a settled wall + Jump to climb it. <b>Block Master:</b> 7-bag, Hold, CW/CCW SRS wall kicks, 1.30s planning timer, no steering after release. Line clears attack the runner. Impossible uses better planning—not better physics.</div>
+  </div>
+  <div class="version">ARCHITECTURE PASS · FAIR AI</div>
+</section>
+
+<section id="gameScreen" class="screen">
+  <div class="hud">
+    <div class="hudbox"><div class="label">You</div><div id="roleLabel" class="value">RUNNER</div></div>
+    <div class="centerHud"><div id="statusText" class="status">GET READY</div><button id="pauseBtn" class="iconbtn" aria-label="Pause">Ⅱ</button></div>
+    <div class="hudbox right"><div class="label">Bot</div><div id="diffLabel" class="value">EASY</div></div>
+  </div>
+  <div class="queuebar">
+    <div class="mini">Hold <strong id="holdLabel">—</strong></div>
+    <div class="mini">Next <span id="nextPieces" class="queuePieces"></span></div>
+    <div class="mini" style="justify-content:flex-end">Lines <strong id="lineLabel">0</strong></div>
+  </div>
+  <div class="boardWrap">
+    <canvas id="gameCanvas"></canvas>
+    <div id="resultOverlay"><div class="resultCard"><div id="resultTitle" class="resultTitle">YOU WIN</div><div id="resultReason" class="resultReason"></div><div class="resultBtns"><button id="rematchBtn" class="smallbtn">REMATCH</button><button id="menuBtn" class="smallbtn">MENU</button></div></div></div>
+    <div id="pauseOverlay"><div class="resultCard"><div class="resultTitle">PAUSED</div><div class="resultReason">The simulation is frozen.</div><div class="resultBtns"><button id="resumeBtn" class="smallbtn">RESUME</button><button id="pauseMenuBtn" class="smallbtn">MENU</button></div></div></div>
+  </div>
+  <div id="controls"></div>
+  <div id="tip" class="tip"></div>
+</section>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
