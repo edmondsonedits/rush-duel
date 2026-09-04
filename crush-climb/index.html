@@ -4,19 +4,19 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
 <meta name="theme-color" content="#060817" />
-<title>Crush Climb Duel V6.5</title>
+<title>Crush Climb Duel V7.0</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div id="app">
 <section id="menuScreen" class="screen active">
-  <div class="logo">CRUSH<br>CLIMB<small>DUEL · V6.5</small></div>
-  <div class="tag">Build the mountain or survive it. Tetris pieces fall automatically while a runner climbs the structure in real time.</div>
+  <div class="logo">CRUSH<br>CLIMB<small>DUEL · V7.0</small></div>
+  <div class="tag">A sabotage duel: Tetris builds for score and survival while the runner fights back by kicking falling pieces and moving through a foreground lane.</div>
   <div class="card">
     <div class="sectionTitle">Choose your role</div>
     <div class="grid2">
-      <button class="choice selected" data-role="runner">🏃 RUNNER<span>Climb, wall-jump and escape the falling pieces.</span></button>
-      <button class="choice" data-role="block">🧱 BLOCK MASTER<span>Plan legal placements, build traps and clear lines.</span></button>
+      <button class="choice selected" data-role="runner">🏃 RUNNER<span>Survive, jump-kick falling pieces and sabotage the Tetris board.</span></button>
+      <button class="choice" data-role="block">🧱 TETRIS PLAYER<span>Build a strong board, clear lines, score big and eliminate the runner.</span></button>
     </div>
     <div class="sectionTitle" style="margin-top:14px">Bot difficulty</div>
     <div class="diffs">
@@ -26,9 +26,9 @@
       <button class="difficulty" data-diff="impossible">Impossible</button>
     </div>
     <button id="startBtn" class="bigbtn">START DUEL</button>
-    <div class="rules"><b>Runner:</b> lava is visible immediately, pauses for 6 seconds, then visibly rises about one row every 45 seconds. Falling-block corners are safe; only a broad flat squish kills. Hold the left/right half of the board to move; quick tap to jump. <b>Block Master:</b> no stack-height top-out; the world rebases upward as the structure grows.</div>
+    <div class="rules"><b>Runner:</b> survive and break Tetris Stability. Jump-kick falling pieces sideways; new holes damage stability. Use FRONT to walk around settled blocks, but falling pieces can still flat-squish you. <b>Tetris:</b> prioritize line clears and board quality. Clears repair stability. Win by crushing the runner, catching them in lava, or reaching 4,000 points.</div>
   </div>
-  <div class="version">VISIBLE RISING LAVA · UNLIMITED BUILD HEIGHT</div>
+  <div class="version">SABOTAGE DUEL · JUMP KICKS · FRONT LANE</div>
 </section>
 <section id="gameScreen" class="screen">
   <div class="hud">
@@ -56,5 +56,6 @@
 <script src="render.js"></script>
 <script src="features.js"></script>
 <script src="vertical.js"></script>
+<script src="duel.js"></script>
 </body>
 </html>
