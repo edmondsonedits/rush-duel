@@ -416,6 +416,6 @@ window.CRUSH_CLIMB_TESTS=()=>{
   checks.push(['jump-kick',typeof tryRunnerKick==='function'&&typeof duelCanShiftFalling==='function']);
   checks.push(['foreground-depth',typeof duelToggleDepth==='function'&&solidCell.toString().includes("runner?.depth==='front'" )]);
   checks.push(['tetris-first-ai',!evaluatePlacement.toString().includes('threatValue')]);
-  checks.push(['runner-sabotage-ai',runnerPlan.toString().includes('duelNearestKickTarget'));
+  checks.push(['runner-sabotage-ai',runnerPlan.toString().includes('duelNearestKickTarget')]);
   return checks;
 };
