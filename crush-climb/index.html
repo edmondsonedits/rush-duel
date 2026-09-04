@@ -4,19 +4,19 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
 <meta name="theme-color" content="#060817" />
-<title>Crush Climb Duel V7.0</title>
+<title>Crush Climb Duel V7.1</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div id="app">
 <section id="menuScreen" class="screen active">
-  <div class="logo">CRUSH<br>CLIMB<small>DUEL · V7.0</small></div>
-  <div class="tag">A sabotage duel: Tetris builds for score and survival while the runner fights back by kicking falling pieces and moving through a foreground lane.</div>
+  <div class="logo">CRUSH<br>CLIMB<small>DUEL · V7.1</small></div>
+  <div class="tag">Two asymmetric game modes: escape the Avalanche, or fight over a live Tetris board in the no-lava Sabotage Duel.</div>
   <div class="card">
     <div class="sectionTitle">Choose your role</div>
     <div class="grid2">
-      <button class="choice selected" data-role="runner">🏃 RUNNER<span>Survive, jump-kick falling pieces and sabotage the Tetris board.</span></button>
-      <button class="choice" data-role="block">🧱 TETRIS PLAYER<span>Build a strong board, clear lines, score big and eliminate the runner.</span></button>
+      <button class="choice selected" data-role="runner">🏃 RUNNER<span>Climb, survive, and fight back against falling pieces.</span></button>
+      <button class="choice" data-role="block">🧱 BLOCK / TETRIS<span>Place tetrominoes, clear lines, and stop the runner.</span></button>
     </div>
     <div class="sectionTitle" style="margin-top:14px">Bot difficulty</div>
     <div class="diffs">
@@ -26,9 +26,9 @@
       <button class="difficulty" data-diff="impossible">Impossible</button>
     </div>
     <button id="startBtn" class="bigbtn">START DUEL</button>
-    <div class="rules"><b>Runner:</b> survive and break Tetris Stability. Jump-kick falling pieces sideways; new holes damage stability. Use FRONT to walk around settled blocks, but falling pieces can still flat-squish you. <b>Tetris:</b> prioritize line clears and board quality. Clears repair stability. Win by crushing the runner, catching them in lava, or reaching 4,000 points.</div>
+    <div class="rules">Choose a mode above. Avalanche keeps the original rising-lava summit race. Sabotage Duel has no lava and focuses on runner jump-kicks versus real Tetris scoring.</div>
   </div>
-  <div class="version">SABOTAGE DUEL · JUMP KICKS · FRONT LANE</div>
+  <div class="version">TWO GAME MODES · V7.1</div>
 </section>
 <section id="gameScreen" class="screen">
   <div class="hud">
@@ -57,5 +57,6 @@
 <script src="features.js"></script>
 <script src="vertical.js"></script>
 <script src="duel.js"></script>
+<script src="modes.js"></script>
 </body>
 </html>
