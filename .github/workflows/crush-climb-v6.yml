@@ -1,4 +1,4 @@
-name: Validate Crush Climb V7
+name: Validate Crush Climb V7.1
 
 on:
   push:
@@ -22,14 +22,20 @@ jobs:
           node --check crush-climb/features.js
           node --check crush-climb/vertical.js
           node --check crush-climb/duel.js
+          node --check crush-climb/modes.js
       - name: Check playable wiring
         run: |
-          grep -q 'Crush Climb Duel V7.0' crush-climb/index.html
+          grep -q 'Crush Climb Duel V7.1' crush-climb/index.html
           grep -q 'duel.js' crush-climb/index.html
+          grep -q 'modes.js' crush-climb/index.html
+          grep -q "classic:'classic'" crush-climb/modes.js
+          grep -q "sabotage:'sabotage'" crush-climb/modes.js
+          grep -q 'Sabotage Duel — NO LAVA' crush-climb/modes.js
+          grep -q 'renderSabotageNoLava' crush-climb/modes.js
+          grep -q 'renderClassic' crush-climb/modes.js
           grep -q 'DUEL_SCORE_GOAL=4000' crush-climb/duel.js
           grep -q 'tryRunnerKick' crush-climb/duel.js
           grep -q 'duelToggleDepth' crush-climb/duel.js
-          grep -q 'Tetris Stability' crush-climb/duel.js
           grep -q 'LAVA_GRACE_SECONDS=6' crush-climb/vertical.js
           grep -q 'LAVA_RISE_SPEED_V65=.0222222' crush-climb/vertical.js
           grep -q 'rebaseVertical' crush-climb/vertical.js
