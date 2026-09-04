@@ -1,4 +1,4 @@
-name: Validate Crush Climb V6
+name: Validate Crush Climb V7
 
 on:
   push:
@@ -21,15 +21,15 @@ jobs:
           node --check crush-climb/render.js
           node --check crush-climb/features.js
           node --check crush-climb/vertical.js
+          node --check crush-climb/duel.js
       - name: Check playable wiring
         run: |
-          grep -q 'Crush Climb Duel V6.5' crush-climb/index.html
-          grep -q 'core.js' crush-climb/index.html
-          grep -q 'runner.js' crush-climb/index.html
-          grep -q 'ai.js' crush-climb/index.html
-          grep -q 'render.js' crush-climb/index.html
-          grep -q 'features.js' crush-climb/index.html
-          grep -q 'vertical.js' crush-climb/index.html
+          grep -q 'Crush Climb Duel V7.0' crush-climb/index.html
+          grep -q 'duel.js' crush-climb/index.html
+          grep -q 'DUEL_SCORE_GOAL=4000' crush-climb/duel.js
+          grep -q 'tryRunnerKick' crush-climb/duel.js
+          grep -q 'duelToggleDepth' crush-climb/duel.js
+          grep -q 'Tetris Stability' crush-climb/duel.js
           grep -q 'LAVA_GRACE_SECONDS=6' crush-climb/vertical.js
           grep -q 'LAVA_RISE_SPEED_V65=.0222222' crush-climb/vertical.js
           grep -q 'rebaseVertical' crush-climb/vertical.js
